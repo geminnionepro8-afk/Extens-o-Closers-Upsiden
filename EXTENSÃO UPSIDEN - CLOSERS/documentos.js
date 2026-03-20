@@ -88,6 +88,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (result && result.length) documentos.unshift(result[0]);
       } catch (err) { console.error('Upload failed:', err); alert(`Erro ao fazer upload de ${file.name}`); }
     }
+    
+    filtroCategoria = 'todos';
+    const catContainer = document.getElementById('container-categorias-doc');
+    if (catContainer) {
+      catContainer.querySelectorAll('.cat-chip').forEach(c => {
+        c.style.background = 'transparent';
+        c.style.color = '#8696a0';
+        c.style.border = '1px solid rgba(42,57,66,0.8)';
+        c.classList.remove('active');
+      });
+      const chipTodos = catContainer.querySelector('.cat-chip[data-categoria="todos"]');
+      if (chipTodos) {
+        chipTodos.classList.add('active');
+        chipTodos.style.background = '#FF6200';
+        chipTodos.style.color = '#fff';
+        chipTodos.style.border = 'none';
+      }
+    }
+
     renderizar();
     e.target.value = '';
   });
