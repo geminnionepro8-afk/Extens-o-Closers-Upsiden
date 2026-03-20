@@ -93,6 +93,6 @@ formRegistro.addEventListener('submit', async (e) => {
 (async () => {
   const loggedIn = await verificarAuth();
   if (loggedIn) {
-    window.location.href = 'audios.html';
+    window.location.href = 'painel.html';
   }
 })();
