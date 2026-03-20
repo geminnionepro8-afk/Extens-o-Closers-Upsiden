@@ -1,0 +1,1 @@
+(async()=>{window.addEventListener("_3930c9c472e98a67bc29c5a73c33b18c",t=>{"_3930c9c472e98a67bc29c5a73c33b18c"===(null==t?void 0:t.type)&&null!=t&&t.detail&&(t=t.detail).url&&import(t.url)});var t=document.createElement("div");t.id="ZVLoaderInjected",document.body.appendChild(t)})().catch(t=>alert(t.toString()));

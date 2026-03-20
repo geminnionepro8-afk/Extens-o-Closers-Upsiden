@@ -1,0 +1,121 @@
+/* =========================================================
+   Upsiden — Single Toggle + Tool Menu Styles
+   ========================================================= */
+
+/* ── Logo toggle button (sempre visível no topo da nav) ── */
+.ups-logo-toggle {
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  width: 40px !important; height: 40px !important;
+  border-radius: 50% !important; background: transparent !important;
+  border: none !important; cursor: pointer !important;
+  padding: 0 !important; margin: 8px auto 4px !important;
+  transition: all 0.2s ease !important; outline: none !important;
+  opacity: 0.7 !important;
+  position: relative !important;
+}
+.ups-logo-toggle:hover { opacity: 1 !important; background: rgba(255,255,255,0.06) !important; }
+.ups-logo-toggle.ups-logo-ativo {
+  opacity: 1 !important;
+  background: rgba(0,168,132,0.15) !important;
+}
+/* Indicador verde abaixo do logo quando ativo */
+.ups-logo-toggle.ups-logo-ativo::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -2px !important; left: 50% !important; transform: translateX(-50%) !important;
+  width: 16px !important; height: 3px !important;
+  background: #00a884 !important; border-radius: 2px !important;
+}
+
+/* ── Tool buttons (modo Upsiden) ── */
+.ups-tool-btn {
+  position: relative !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  width: 42px !important; height: 42px !important;
+  border-radius: 50% !important; background: transparent !important;
+  border: none !important; cursor: pointer !important;
+  color: #aebac1 !important; padding: 0 !important; margin: 1px auto !important;
+  transition: background 0.15s, color 0.15s !important; outline: none !important;
+  z-index: 2147483647 !important;
+}
+.ups-tool-btn:hover { background: rgba(255,255,255,0.08) !important; color: #e9edef !important; }
+.ups-tool-btn.ativo { color: #00a884 !important; background: rgba(0,168,132,0.12) !important; }
+.ups-tool-btn svg { width: 22px !important; height: 22px !important; fill: currentColor !important; display: block !important; pointer-events: none !important; }
+
+/* Tooltip */
+.ups-tool-btn::after {
+  content: attr(data-title) !important;
+  position: absolute !important;
+  left: calc(100% + 14px) !important; top: 50% !important; transform: translateY(-50%) !important;
+  background: #233138 !important; color: #e9edef !important;
+  padding: 6px 12px !important; border-radius: 6px !important;
+  font-size: 13px !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  white-space: nowrap !important; opacity: 0 !important; visibility: hidden !important;
+  pointer-events: none !important; transition: opacity 0.15s !important;
+  z-index: 2147483647 !important; box-shadow: 0 4px 14px rgba(0,0,0,0.5) !important;
+}
+.ups-tool-btn:hover::after { opacity: 1 !important; visibility: visible !important; }
+
+/* Scroll invisível no container de tools */
+#ups-tools-container::-webkit-scrollbar { width: 0 !important; }
+#ups-tools-container { z-index: 2147483645 !important; position: relative !important; }
+
+/* ── Painel drawer (direita) ── */
+#upsiden-panel {
+  position: fixed !important; top: 0 !important; right: 0 !important;
+  width: 420px !important; height: 100vh !important;
+  background: #111b21 !important; border-left: 1px solid #222e35 !important;
+  z-index: 2147483646 !important;
+  display: none !important; flex-direction: column !important;
+  box-shadow: -6px 0 28px rgba(0,0,0,0.6) !important;
+}
+#upsiden-panel.aberto { display: flex !important; }
+
+#ups-panel-header {
+  display: flex !important; align-items: center !important; justify-content: space-between !important;
+  padding: 16px 20px !important; border-bottom: 1px solid #222e35 !important; flex-shrink: 0 !important;
+}
+#ups-panel-titulo {
+  font-size: 16px !important; font-weight: 500 !important; color: #e9edef !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+#ups-fechar {
+  background: transparent !important; border: none !important; color: #8696a0 !important;
+  cursor: pointer !important; padding: 6px !important; border-radius: 8px !important;
+  display: flex !important; align-items: center !important; transition: 0.2s !important;
+}
+#ups-fechar:hover { background: #2a3942 !important; color: #e9edef !important; }
+
+#ups-panel-body {
+  flex: 1 !important; overflow: hidden !important;
+  display: flex !important; flex-direction: column !important;
+}
+#ups-panel-body iframe {
+  width: 100% !important; height: 100% !important;
+  border: none !important; flex: 1 !important; display: block !important;
+}
+
+/* ── Blur Mode (Desfoque de Privacidade) ── */
+body.ups-blur-active div[data-testid="msg-container"] span[dir="ltr"] {
+  filter: blur(5px) !important;
+  transition: filter 0.3s ease !important;
+}
+body.ups-blur-active div[data-testid="msg-container"] span[dir="ltr"]:hover {
+  filter: blur(0px) !important;
+}
+body.ups-blur-active div[data-testid="cell-frame-title"] span,
+body.ups-blur-active div[data-testid="cell-frame-secondary"] span {
+  filter: blur(4px) !important;
+  transition: filter 0.3s ease !important;
+}
+body.ups-blur-active div[data-testid="cell-frame-title"] span:hover,
+body.ups-blur-active div[data-testid="cell-frame-secondary"] span:hover {
+  filter: blur(0px) !important;
+}
+body.ups-blur-active img {
+  filter: blur(10px) !important;
+  transition: filter 0.3s ease !important;
+}
+body.ups-blur-active img:hover {
+  filter: blur(0px) !important;
+}

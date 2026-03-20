@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upsiden — Painel de Controle</title>
+  <link rel="stylesheet" href="opcoes.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-logo">
+        <img src="icones/upsiden_logo.png" alt="Upsiden Logo" style="height: 32px; max-width: 160px; object-fit: contain;">
+      </div>
+      <div class="header-title">
+        <h1>Painel de Controle</h1>
+        <p>Gerencie a segurança e integridade da sua biblioteca de áudios para o WhatsApp Web</p>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- Seção Backup -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon">💾</div>
+          <h2>Backup da Biblioteca</h2>
+        </div>
+        <p class="card-desc">
+          Mantenha seus áudios seguros! Exporte todos os seus áudios e pastas para um arquivo que você pode guardar no seu computador. Assim, você nunca perde nada se o navegador for desinstalado ou formatado.
+        </p>
+        
+        <div class="actions-row">
+          <button class="btn btn-primary" id="btn-exportar">
+            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Exportar Backup (Download)
+          </button>
+          
+          <div class="import-wrapper">
+            <button class="btn btn-secondary" id="btn-importar-click">
+              <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+              Restaurar Backup
+            </button>
+            <input type="file" id="input-importar" accept=".json" style="display:none">
+          </div>
+        </div>
+      </section>
+
+      <!-- Seção Pastas (Em breve / Status) -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon">📁</div>
+          <h2>Status do Armazenamento</h2>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-value" id="stat-audios">0</span>
+            <span class="stat-label">Áudios Salvos</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value" id="stat-pastas">0</span>
+            <span class="stat-label">Pastas Criadas</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value" id="stat-tamanho">0 MB</span>
+            <span class="stat-label">Espaço Utilizado</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Zona de Perigo -->
+      <section class="card border-danger">
+        <div class="card-header">
+          <div class="card-icon text-danger">⚠️</div>
+          <h2 class="text-danger">Zona de Perigo</h2>
+        </div>
+        <p class="card-desc">
+          Ao clicar neste botão, todos os áudios e pastas salvos nesta extensão serão permanentemente apagados do seu navegador. <strong>Esta ação não pode ser desfeita.</strong> Faça um backup primeiro!
+        </p>
+        <button class="btn btn-danger" id="btn-apagar-tudo">
+          Esvaziar Toda a Biblioteca
+        </button>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Upsiden Extension v2.0 - Desenvolvido para máxima conversão</p>
+    </footer>
+
+    <!-- Toast de Notificação -->
+    <div class="toast" id="toast">Operação concluída com sucesso!</div>
+  </div>
+
+  <script src="opcoes.js"></script>
+</body>
+</html>

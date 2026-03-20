@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="modulo.css">
+  <style>
+    body { margin: 0; display: flex; flex-direction: column; height: 100vh; background: #111b21; color: #e9edef; font-family: -apple-system, system-ui, sans-serif; }
+    .header { padding: 16px; border-bottom: 1px solid #222e35; background: #202c33; display: flex; flex-direction: column; gap: 8px; }
+    .nome-cliente { font-size: 18px; font-weight: 500; color: #d1d7db; margin: 0; }
+    .tel-cliente { font-size: 13px; color: #8696a0; margin: 0; }
+    
+    .secao { padding: 16px; border-bottom: 1px solid #222e35; display: flex; flex-direction: column; gap: 12px; }
+    .secao-titulo { font-size: 14px; color: #00a884; font-weight: 500; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .funil-select { background: #2a3942; color: #d1d7db; border: 1px solid #374045; padding: 10px; border-radius: 8px; width: 100%; font-size: 14px; outline: none; }
+    .funil-select:focus { border-color: #00a884; }
+    
+    .editor-notas { background: #2a3942; border: 1px solid #374045; border-radius: 8px; padding: 10px; color: #d1d7db; width: 100%; box-sizing: border-box; min-height: 200px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.5; outline: none; }
+    .editor-notas:focus { border-color: #00a884; }
+    
+    .etiquetas-container { display: flex; flex-wrap: wrap; gap: 8px; }
+    .etiqueta { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; background: #374045; color: #d1d7db; display: flex; align-items: center; gap: 6px; }
+    .etiqueta-excluir { cursor: pointer; color: #8696a0; }
+    .etiqueta-excluir:hover { color: #f15c6d; }
+    
+    .input-valor { background: #2a3942; color: #d1d7db; border: 1px solid #374045; padding: 10px; border-radius: 8px; width: 100%; font-size: 14px; box-sizing: border-box; outline: none; }
+    .input-valor:focus { border-color: #00a884; }
+    
+    .btn-salvar { background: #00a884; color: #111b21; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; margin-top: auto; margin: 16px; }
+    .btn-salvar:hover { background: #02c098; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2 class="nome-cliente" id="ui-nome">Carregando...</h2>
+    <p class="tel-cliente" id="ui-telefone">aguardando contato</p>
+  </div>
+
+  <div class="secao">
+    <h3 class="secao-titulo">Fase do Funil</h3>
+    <select class="funil-select" id="ui-funil">
+      <option value="lead">Novo Lead</option>
+      <option value="negociacao">Em Negociação</option>
+      <option value="fechamento">Aguardando Pagamento</option>
+      <option value="ganho">Venda Realizada</option>
+      <option value="perdido">Venda Perdida</option>
+    </select>
+  </div>
+
+  <div class="secao">
+    <h3 class="secao-titulo">Etiquetas / Tags</h3>
+    <div class="etiquetas-container" id="ui-etiquetas">
+      <div class="etiqueta" style="border-left: 3px solid #ff9800;">Urgente <span class="etiqueta-excluir">✕</span></div>
+      <div class="etiqueta" style="border-left: 3px solid #00bcd4;">VIP <span class="etiqueta-excluir">✕</span></div>
+      <button style="background:none; border: 1px dashed #8696a0; color: #8696a0; border-radius: 12px; padding: 4px 12px; cursor:pointer; font-size: 12px;">+ Adicionar</button>
+    </div>
+  </div>
+
+  <div class="secao">
+    <h3 class="secao-titulo">Anotações Fixas</h3>
+    <textarea class="editor-notas" id="ui-notas" placeholder="Escreva observações importantes sobre este cliente..."></textarea>
+  </div>
+
+  <div class="secao" style="border-bottom: none;">
+    <h3 class="secao-titulo">Valor Estimado (R$)</h3>
+    <input type="number" class="input-valor" id="ui-valor" placeholder="Ex: 1500.00">
+  </div>
+
+  <button class="btn-salvar" id="btn-salvar">Salvar Alterações</button>
+
+  <script src="notas.js"></script>
+</body>
+</html>

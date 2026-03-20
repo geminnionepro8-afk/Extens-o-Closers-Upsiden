@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mídias</title>
+  <link rel="stylesheet" href="modulo.css">
+</head>
+<body>
+  <div class="mod-app">
+    <header class="mod-header">
+      <h2>🖼️ Mídias</h2>
+      <label class="btn-primary" for="media-upload">+ Importar</label>
+      <input type="file" id="media-upload" accept="image/*,video/*" multiple hidden>
+    </header>
+    <div class="mod-search">
+      <input type="text" id="media-busca" placeholder="Buscar mídia...">
+    </div>
+    <div class="mod-grid" id="media-grid"></div>
+    <div class="mod-empty" id="media-vazio">
+      <p>Nenhuma mídia na biblioteca</p>
+      <p class="sub">Clique em <strong>+ Importar</strong> para adicionar imagens e vídeos</p>
+    </div>
+    <div class="mod-footer" id="media-footer">
+      <span id="media-count">0 mídias</span>
+    </div>
+  </div>
+  <script src="midias.js"></script>
+</body>
+</html>

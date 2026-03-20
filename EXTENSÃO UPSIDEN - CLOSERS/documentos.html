@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentos</title>
+  <link rel="stylesheet" href="modulo.css">
+</head>
+<body>
+  <div class="mod-app">
+    <header class="mod-header">
+      <h2>📄 Documentos</h2>
+      <label class="btn-primary" for="doc-upload">+ Importar</label>
+      <input type="file" id="doc-upload" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" multiple hidden>
+    </header>
+    <div class="mod-search">
+      <input type="text" id="doc-busca" placeholder="Buscar documento...">
+    </div>
+    <div class="mod-list" id="doc-lista"></div>
+    <div class="mod-empty" id="doc-vazio">
+      <p>Nenhum documento na biblioteca</p>
+      <p class="sub">Clique em <strong>+ Importar</strong> para adicionar seus arquivos</p>
+    </div>
+    <div class="mod-footer" id="doc-footer">
+      <span id="doc-count">0 documentos</span>
+    </div>
+  </div>
+  <script src="documentos.js"></script>
+</body>
+</html>

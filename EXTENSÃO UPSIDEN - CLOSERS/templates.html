@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Templates</title>
+  <link rel="stylesheet" href="modulo.css">
+</head>
+<body>
+  <div class="mod-app">
+    <header class="mod-header">
+      <h2>💬 Templates</h2>
+      <button class="btn-primary" id="tmpl-novo">+ Novo Template</button>
+    </header>
+    <div class="mod-search">
+      <input type="text" id="tmpl-busca" placeholder="Buscar template...">
+    </div>
+    <div class="mod-list" id="tmpl-lista"></div>
+    <div class="mod-empty" id="tmpl-vazio">
+      <p>Nenhum template criado</p>
+      <p class="sub">Crie templates de texto com variáveis como <code>{{nome}}</code></p>
+    </div>
+    <div class="mod-footer" id="tmpl-footer">
+      <span id="tmpl-count">0 templates</span>
+    </div>
+  </div>
+
+  <!-- Modal de edição -->
+  <div class="modal-overlay" id="tmpl-modal" style="display:none">
+    <div class="modal-box">
+      <h3 id="tmpl-modal-titulo">Novo Template</h3>
+      <input type="text" id="tmpl-nome" placeholder="Nome do template" class="modal-input">
+      <textarea id="tmpl-texto" placeholder="Texto da mensagem... use {{nome}} para variáveis" class="modal-textarea" rows="6"></textarea>
+      <div class="modal-preview" id="tmpl-preview"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="tmpl-cancelar">Cancelar</button>
+        <button class="btn-primary" id="tmpl-salvar">Salvar</button>
+      </div>
+    </div>
+  </div>
+  <script src="templates.js"></script>
+</body>
+</html>

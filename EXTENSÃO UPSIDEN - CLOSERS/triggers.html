@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="modulo.css">
+  <style>
+    body { margin: 0; padding: 16px; display: flex; flex-direction: column; height: 100vh; background: #111b21; color: #e9edef; font-family: -apple-system, system-ui, sans-serif; box-sizing: border-box; overflow-x: hidden; }
+    h2 { color: #d1d7db; margin-top: 0; font-weight: 500; font-size: 18px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .dica { font-size: 13px; color: #8696a0; margin-top: 0; margin-bottom: 16px; line-height: 1.4; }
+    
+    .card-config { background: #202c33; border: 1px solid #2a3942; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    
+    .input-group { margin-bottom: 12px; }
+    .input-label { display: block; font-size: 13px; color: #8696a0; margin-bottom: 6px; }
+    .input-text { background: #2a3942; border: 1px solid #374045; border-radius: 8px; padding: 10px 12px; color: #d1d7db; width: 100%; box-sizing: border-box; font-size: 14px; outline: none; }
+    .input-text:focus { border-color: #00a884; }
+    
+    .textarea-msg { background: #2a3942; border: 1px solid #374045; border-radius: 8px; padding: 10px 12px; color: #d1d7db; width: 100%; box-sizing: border-box; min-height: 80px; resize: vertical; font-family: inherit; font-size: 14px; outline: none; }
+    .textarea-msg:focus { border-color: #00a884; }
+
+    .btn-adicionar { background: #00a884; color: #111b21; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-adicionar:hover { background: #02c098; }
+
+    .lista-gatilhos { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1; margin-bottom: 16px; }
+    
+    .gatilho-item { background: #2a3942; border-radius: 8px; padding: 12px; position: relative; border-left: 3px solid #00a884; display: flex; flex-direction: column; gap: 6px; }
+    .gatilho-header { display: flex; justify-content: space-between; align-items: center; }
+    .gatilho-keyword { font-weight: 600; font-size: 14px; color: #e9edef; background: #111b21; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+    .gatilho-condicao { font-size: 12px; color: #8696a0; }
+    .gatilho-msg { font-size: 13px; color: #d1d7db; margin: 0; white-space: pre-wrap; word-break: break-word; }
+    
+    .btn-remover { background: transparent; border: none; color: #f15c6d; cursor: pointer; padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .btn-remover:hover { background: rgba(241, 92, 109, 0.1); }
+
+    .radio-group { display: flex; gap: 16px; margin-top: 6px; }
+    .radio-label { font-size: 13px; color: #d1d7db; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .radio-label input { accent-color: #00a884; }
+  </style>
+</head>
+<body>
+
+  <h2>
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="#00a884"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    Gatilhos (Triggers)
+  </h2>
+  <p class="dica">Crie palavras-chave que quando enviadas pelo cliente, farão a Upsiden responder automaticamente de imediato.</p>
+
+  <div class="card-config">
+    <div class="input-group">
+      <span class="input-label">Palavra ou Frase (Gatilho)</span>
+      <input type="text" id="inp-palavra" class="input-text" placeholder="Ex: preço, onde fica, qual o valor">
+    </div>
+    
+    <div class="input-group">
+      <span class="input-label">Condição de Disparo</span>
+      <div class="radio-group">
+        <label class="radio-label">
+          <input type="radio" name="condicao" value="exata" checked> Frase Exata
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="condicao" value="contem"> Contém a Palavra
+        </label>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <span class="input-label">Mensagem de Resposta</span>
+      <textarea id="inp-resposta" class="textarea-msg" placeholder="Ex: O nosso preço é R$ 99,00. Gostaria de fechar?"></textarea>
+    </div>
+
+    <button class="btn-adicionar" id="btn-add">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      Adicionar Gatilho
+    </button>
+  </div>
+
+  <h3 style="font-size: 15px; font-weight: 500; color: #d1d7db; margin-top: 0; margin-bottom: 12px;">Gatilhos Ativos</h3>
+  
+  <div class="lista-gatilhos" id="lista-gatilhos">
+    <!-- Items injectados via JS -->
+  </div>
+
+  <script src="triggers.js"></script>
+</body>
+</html>

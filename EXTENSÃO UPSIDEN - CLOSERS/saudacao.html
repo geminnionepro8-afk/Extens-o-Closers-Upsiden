@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="modulo.css">
+  <style>
+    body { margin: 0; padding: 16px; display: flex; flex-direction: column; height: 100vh; background: #111b21; color: #e9edef; font-family: -apple-system, system-ui, sans-serif; box-sizing: border-box; }
+    h2 { color: #d1d7db; margin-top: 0; font-weight: 500; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+    
+    .card-config { background: #202c33; border: 1px solid #2a3942; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    
+    .toggle-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .toggle-label { font-size: 15px; font-weight: 500; }
+    
+    /* Toggle Switch Switcher */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374045; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #00a884; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .textarea-msg { background: #2a3942; border: 1px solid #374045; border-radius: 8px; padding: 12px; color: #d1d7db; width: 100%; box-sizing: border-box; min-height: 120px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.5; outline: none; margin-bottom: 12px; }
+    .textarea-msg:focus { border-color: #00a884; }
+    
+    .row-horarios { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+    .input-time { background: #2a3942; color: #d1d7db; border: 1px solid #374045; padding: 8px 12px; border-radius: 6px; outline: none; font-size: 14px; }
+    
+    .dica { font-size: 12px; color: #8696a0; margin-top: 0; }
+    
+    .btn-salvar { background: #00a884; color: #111b21; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; width: 100%; margin-top: auto; }
+    .btn-salvar:hover { background: #02c098; }
+  </style>
+</head>
+<body>
+
+  <h2>
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="#00a884"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+    Saudação Automática
+  </h2>
+  <p class="dica">Envie uma mensagem automaticamente quando um novo lead falar com você pela primeira vez no dia.</p>
+
+  <div class="card-config">
+    <div class="toggle-container">
+      <span class="toggle-label">Ativar Saudação</span>
+      <label class="switch">
+        <input type="checkbox" id="chk-ativo">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <label style="font-size: 13px; color: #8696a0; display: block; margin-bottom: 6px;">Mensagem de Saudação</label>
+    <textarea id="txt-msg" class="textarea-msg" placeholder="Olá! Tudo bem? Como posso te ajudar hoje?"></textarea>
+    <p class="dica">Variáveis suportadas: {{nome}}</p>
+  </div>
+
+  <div class="card-config">
+    <div class="toggle-container">
+      <span class="toggle-label">Apenas Fora do Horário Comercial</span>
+      <label class="switch">
+        <input type="checkbox" id="chk-horario">
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div id="container-horarios" style="display: none;">
+      <p class="dica" style="margin-bottom: 8px;">Defina seu horário de atendimento. A saudação só será enviada FORA deste horário.</p>
+      <div class="row-horarios">
+        <label style="font-size: 13px; color: #d1d7db;">Início:</label>
+        <input type="time" id="inp-hora-inicio" class="input-time" value="09:00">
+        
+        <label style="font-size: 13px; color: #d1d7db; margin-left: 8px;">Fim:</label>
+        <input type="time" id="inp-hora-fim" class="input-time" value="18:00">
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-salvar" id="btn-salvar">Salvar Configurações</button>
+
+  <script src="saudacao.js"></script>
+</body>
+</html>
