@@ -44,8 +44,8 @@ formLogin.addEventListener('submit', async (e) => {
         window.opener.postMessage({ type: 'upsiden_auth_success' }, '*');
         window.close();
       } else {
-        // Redirect to audios or reload
-        window.location.href = 'audios.html';
+        // Redirect to painel dashboard
+        window.location.href = 'painel.html';
       }
     }, 500);
   } catch (err) {
@@ -75,7 +75,7 @@ formRegistro.addEventListener('submit', async (e) => {
           window.opener.postMessage({ type: 'upsiden_auth_success' }, '*');
           window.close();
         } else {
-          window.location.href = 'audios.html';
+          window.location.href = 'painel.html';
         }
       }, 500);
     } else {
