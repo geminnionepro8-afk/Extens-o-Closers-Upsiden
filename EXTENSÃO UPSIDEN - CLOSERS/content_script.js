@@ -50,10 +50,12 @@ function encontrarNavLeft() {
   const allEls = app.querySelectorAll('div, nav, aside, header');
   for (const el of allEls) {
     const r = el.getBoundingClientRect();
-    // Aumentado a tolerancia: WPP web atualiza muito a largura (pode passar de 70px ou não ter buttons explícitos)
+    // Aumentado a tolerancia, mas MANTENDO O FILTRO DE BOTÕES para não pegar divs vazias!
     if (r.width >= 30 && r.width <= 110 && r.height > window.innerHeight * 0.5 && r.left < 15) {
-      // Se for a barra vertical principal, injeta
-      return el;
+      const temBotoes = el.querySelectorAll('button, a, [role="button"], span[data-icon]');
+      if (temBotoes.length >= 3) {
+        return el;
+      }
     }
   }
   return null;
