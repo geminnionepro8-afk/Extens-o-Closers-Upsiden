@@ -263,29 +263,64 @@ chrome.runtime.onMessage.addListener((msg, _, responder) => {
     enviarParaPagina(msg.dados).then(r => responder(r));
     return true;
   }
+  // ── BULK SEND: Receber comando do Painel (via background) ──
+  if (msg.tipo === 'bulk_send_start') {
+    enviarParaPagina({ tipoMensagem: 'bulk_send_start', dados: msg.dados });
+    responder({ sucesso: true, msg: 'Bulk send iniciado.' });
+    return false;
+  }
+  if (msg.tipo === 'bulk_pausar') {
+    enviarParaPagina({ tipoMensagem: 'bulk_pausar' });
+    responder({ sucesso: true });
+    return false;
+  }
+  if (msg.tipo === 'bulk_continuar') {
+    enviarParaPagina({ tipoMensagem: 'bulk_continuar' });
+    responder({ sucesso: true });
+    return false;
+  }
+  if (msg.tipo === 'bulk_cancelar') {
+    enviarParaPagina({ tipoMensagem: 'bulk_cancelar' });
+    responder({ sucesso: true });
+    return false;
+  }
 });
+
+// ── Helper: enviar toda a config de automação pro injetor ──
+function sincronizarConfigAutomacao() {
+  chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers'], (res) => {
+    window.postMessage({
+      origem: 'CONTENT_SCRIPT',
+      msgId: Date.now().toString(),
+      tipoMensagem: 'set_config_auto_reply',
+      dados: res.ups_config_saudacao || null
+    }, '*');
+    window.postMessage({
+      origem: 'CONTENT_SCRIPT',
+      msgId: Date.now().toString() + 'T',
+      tipoMensagem: 'set_config_triggers',
+      dados: res.ups_config_triggers || []
+    }, '*');
+  });
+}
 
 // ── Receber mensagens dos iframes (Modulos) ──
 window.addEventListener('message', async (ev) => {
   if (!ev.data || !ev.data.type) return;
 
   if (ev.data.type === 'upsiden_send_text') {
-    // Ex: { type: 'upsiden_send_text', data: { texto: "Olá" } }
     console.log(CTX, 'Enviando texto a partir do iframe', ev.data.data);
     await enviarParaPagina({ ...ev.data.data, tipoMensagem: 'texto' });
   }
 
   if (ev.data.type === 'upsiden_send_file') {
-    // Ex: { type: 'upsiden_send_file', data: { nome, tipo, base64 } }
     console.log(CTX, 'Enviando arquivo a partir do iframe', ev.data.data);
     await enviarParaPagina({ ...ev.data.data, tipoMensagem: 'arquivo' });
   }
 
   if (ev.data.type === 'upsiden_get_active_chat') {
-    // Solicitação do painel de Notas para saber de quem é o chat aberto
     const chatData = await enviarParaPagina({ tipoMensagem: 'get_active_chat' });
     if (chatData && chatData.sucesso) {
-      // Enviar de volta para os iframes (todos os painéis abertos receberão)
       document.querySelectorAll('#ups-panel-body iframe').forEach(ifr => {
         ifr.contentWindow.postMessage({
           type: 'init_chat_data',
@@ -299,8 +334,6 @@ window.addEventListener('message', async (ev) => {
 
   if (ev.data.type === 'upsiden_crm_updated') {
     console.log(CTX, 'CRM Atualizado, sincronizando UI...', ev.data.data);
-    
-    // Tentar encontrar o contato selecionado na lista (para injetar a tag visual)
     const contatoAtivo = document.querySelector('div[aria-selected="true"]');
     if (contatoAtivo) {
       const containerTitulo = contatoAtivo.querySelector('div[data-testid="cell-frame-title"]');
@@ -319,58 +352,25 @@ window.addEventListener('message', async (ev) => {
 
   if (ev.data.type === 'upsiden_reload_automation') {
     console.log(CTX, 'Recarregando regras de automação...');
-    // Lê do storage e manda pro injetor
-    chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers'], (res) => {
-      window.postMessage({
-        origem: 'CONTENT_SCRIPT',
-        msgId: Date.now().toString(),
-        tipoMensagem: 'set_config_auto_reply',
-        dados: res.ups_config_saudacao || null
-      }, '*');
-      window.postMessage({
-        origem: 'CONTENT_SCRIPT',
-        msgId: Date.now().toString() + 'T',
-        tipoMensagem: 'set_config_triggers',
-        dados: res.ups_config_triggers || []
-      }, '*');
-    });
+    sincronizarConfigAutomacao();
   }
 
-  // Quando o injetor estiver pronto para automação e nos pedir a config
+  // Quando o injetor estiver pronto para automação
   if (ev.data.origem === 'INJETOR_PAGINA' && ev.data.ev === 'engine_pronto_para_automacao') {
-    chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers'], (res) => {
-      window.postMessage({
-        origem: 'CONTENT_SCRIPT',
-        msgId: Date.now().toString(),
-        tipoMensagem: 'set_config_auto_reply',
-        dados: res.ups_config_saudacao || null
-      }, '*');
-      window.postMessage({
-        origem: 'CONTENT_SCRIPT',
-        msgId: Date.now().toString() + 'T',
-        tipoMensagem: 'set_config_triggers',
-        dados: res.ups_config_triggers || []
-      }, '*');
-    });
+    sincronizarConfigAutomacao();
   }
 
-  // Fallback que adicionamos na inicialização local
+  // Polling do injetor
   if (ev.data.origem === 'INJETOR_PAGINA_INIT' && ev.data.ev === 'puxar_config_auto_reply') {
-    chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers'], (res) => {
-      console.log(CTX, 'Enviando config auto_reply para o WPP Engine (Polling):', res.ups_config_saudacao);
-      window.postMessage({
-        origem: 'CONTENT_SCRIPT',
-        msgId: Date.now().toString(),
-        tipoMensagem: 'set_config_auto_reply',
-        dados: res.ups_config_saudacao || null
-      }, '*');
-      window.postMessage({
-        origem: 'CONTENT_SCRIPT',
-        msgId: Date.now().toString() + 'T',
-        tipoMensagem: 'set_config_triggers',
-        dados: res.ups_config_triggers || []
-      }, '*');
-    });
+    sincronizarConfigAutomacao();
+  }
+
+  // ── BULK: Progresso e conclusão — relay pro Painel via chrome.runtime ──
+  if (ev.data.origem === 'INJETOR_PAGINA' && ev.data.ev === 'bulk_progresso') {
+    chrome.runtime.sendMessage({ tipo: 'bulk_progresso', dados: ev.data.dados });
+  }
+  if (ev.data.origem === 'INJETOR_PAGINA' && ev.data.ev === 'bulk_concluido') {
+    chrome.runtime.sendMessage({ tipo: 'bulk_concluido', dados: ev.data.dados });
   }
 });
 

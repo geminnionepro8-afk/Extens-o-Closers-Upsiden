@@ -1269,3 +1269,71 @@ html, body {
 @keyframes fadeInUp  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 .animate-in { animation: fadeInUp 0.25s ease forwards; }
+
+/* ═══ AUTO TABS (Sub-navigation in Automações/Campanhas) ═ */
+
+.auto-tab {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  white-space: nowrap;
+}
+.auto-tab:hover {
+  border-color: rgba(255, 98, 0, 0.3);
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+.auto-tab.active {
+  background: var(--accent);
+  color: #111;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ═══ TOGGLE SWITCH ═════════════════════════════════════ */
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--border);
+  transition: 0.3s;
+  border-radius: 22px;
+}
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--accent);
+}
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(18px);
+}
+

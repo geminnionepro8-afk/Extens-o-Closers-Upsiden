@@ -1,5 +1,6 @@
 /* =========================================
    Upsiden — Saudação Automática (Supabase)
+   v2 — Com simulação, delay e horário
    ========================================= */
 
 const chkAtivo = document.getElementById('chk-ativo');
@@ -36,7 +37,6 @@ async function carregarConfig() {
       if (data.usar_horario) containerHorarios.style.display = 'block';
     }
 
-    // Sync to local for automation engine
     sincronizarLocal(data);
   } catch (err) {
     console.error('[Saudação] Erro ao carregar:', err);
@@ -49,7 +49,15 @@ function sincronizarLocal(data) {
     mensagem: data.saudacao_mensagem,
     usarHorario: data.usar_horario,
     horaInicio: data.hora_inicio,
-    horaFim: data.hora_fim
+    horaFim: data.hora_fim,
+    simularDigitacao: data.simular_digitacao !== false,
+    simularGravacao: data.simular_gravacao !== false,
+    delayMin: data.delay_min || 2,
+    delayMax: data.delay_max || 5,
+    diasSemana: data.dias_semana || ['seg','ter','qua','qui','sex'],
+    msgForaHorario: data.msg_fora_horario || '',
+    apenasPrivado: data.apenas_privado || false,
+    apenasGrupo: data.apenas_grupo || false,
   } : null;
   chrome.storage.local.set({ ups_config_saudacao: config });
   window.parent.postMessage({ type: 'upsiden_reload_automation' }, '*');
