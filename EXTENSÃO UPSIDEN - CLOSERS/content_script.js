@@ -47,12 +47,13 @@ const MODULOS = [
 function encontrarNavLeft() {
   const app = document.querySelector('#app');
   if (!app) return null;
-  const allEls = app.querySelectorAll('div, nav, aside, span');
+  const allEls = app.querySelectorAll('div, nav, aside, header');
   for (const el of allEls) {
     const r = el.getBoundingClientRect();
-    if (r.width >= 30 && r.width <= 70 && r.height > window.innerHeight * 0.7 && r.left < 10) {
-      const temBotoes = el.querySelectorAll('button, a, [role="button"]');
-      if (temBotoes.length >= 3) return el;
+    // Aumentado a tolerancia: WPP web atualiza muito a largura (pode passar de 70px ou não ter buttons explícitos)
+    if (r.width >= 30 && r.width <= 110 && r.height > window.innerHeight * 0.5 && r.left < 15) {
+      // Se for a barra vertical principal, injeta
+      return el;
     }
   }
   return null;
@@ -232,8 +233,8 @@ function tentarInjetar() {
     }, 3000);
     return;
   }
-  if (tentativas < 30) { setTimeout(tentarInjetar, 500); return; }
-  console.log(CTX, 'Nav não encontrada no carregamento inicial.');
+  if (tentativas < 60) { setTimeout(tentarInjetar, 500); return; }
+  console.log(CTX, 'Nav não encontrada no carregamento inicial (Timeout).');
 }
 
 function enviarParaPagina(dados) {
@@ -372,9 +373,13 @@ window.addEventListener('message', async (ev) => {
 // ══════════════════════════════════════════════════════════
 function inicializarObserverDoChat() {
   const observer = new MutationObserver(() => {
-    injetarQuickActions();
-    injetarInputActions();
-    injetarTopTabs();
+    try {
+      injetarQuickActions();
+      injetarInputActions();
+      injetarTopTabs();
+    } catch(e) {
+      console.log(CTX, 'Silenciando erro de inject:', e);
+    }
   });
   observer.observe(document.body, { childList: true, subtree: true });
 }
