@@ -47,15 +47,12 @@ const MODULOS = [
 function encontrarNavLeft() {
   const app = document.querySelector('#app');
   if (!app) return null;
-  const allEls = app.querySelectorAll('div, nav, aside, header');
+  const allEls = app.querySelectorAll('div, nav, aside, span');
   for (const el of allEls) {
     const r = el.getBoundingClientRect();
-    // Aumentado a tolerancia, mas MANTENDO O FILTRO DE BOTÕES para não pegar divs vazias!
-    if (r.width >= 30 && r.width <= 110 && r.height > window.innerHeight * 0.5 && r.left < 15) {
-      const temBotoes = el.querySelectorAll('button, a, [role="button"], span[data-icon]');
-      if (temBotoes.length >= 3) {
-        return el;
-      }
+    if (r.width >= 30 && r.width <= 70 && r.height > window.innerHeight * 0.7 && r.left < 10) {
+      const temBotoes = el.querySelectorAll('button, a, [role="button"]');
+      if (temBotoes.length >= 3) return el;
     }
   }
   return null;
