@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Upsiden — Biblioteca de Áudios</title>
-  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="audios.css">
 </head>
 <body>
   <div class="app">
@@ -36,6 +36,7 @@
     <!-- Category Filter -->
     <div class="categories" id="container-categorias">
       <button class="cat-chip active" data-categoria="todos">Todos</button>
+      <button class="cat-chip" style="color: var(--accent); border-color: var(--accent);" data-categoria="equipe">🤝 Time</button>
       <button class="cat-chip" data-categoria="favoritos">⭐ Favoritos</button>
     </div>
 
@@ -80,7 +81,8 @@
     </div>
   </div>
 
-  <script src="popup.js"></script>
+  <script src="supabase_client.js"></script>
+  <script src="audios.js"></script>
 </body>
 </html>
 

@@ -1,33 +1,19 @@
 /* =========================================
-   Upsiden — Biblioteca de Mídias Engine
+   Upsiden — Biblioteca de Mídias (Supabase)
    ========================================= */
 
-const STORAGE_KEY = 'upsiden_medias';
 let midias = [];
 let buscaAtual = '';
+let userId = null;
+let isAdmin = false;
 
-async function carregar() {
-  return new Promise(resolve => {
-    chrome.storage.local.get(STORAGE_KEY, r => { midias = r[STORAGE_KEY] || []; resolve(); });
-  });
-}
-
-async function salvar() {
-  return new Promise(resolve => {
-    chrome.storage.local.set({ [STORAGE_KEY]: midias }, resolve);
-  });
-}
-
-function gerarId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 function formatarTamanho(b) { return b < 1048576 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(1)+' MB'; }
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+async function carregar() {
+  userId = await UpsidenAuth.getUserId();
+  isAdmin = await UpsidenAuth.isAdmin();
+  const data = await UpsidenDB.from('midias').select('*').order('created_at', false).execute();
+  midias = data || [];
 }
 
 function renderizar() {
@@ -50,14 +36,15 @@ function renderizar() {
       thumb.className = 'media-thumb';
 
       const isVideo = m.tipo.startsWith('video');
-      const preview = isVideo
-        ? `<video src="${m.base64}" muted></video>`
-        : `<img src="${m.base64}" alt="${m.nome}">`;
+      // Use a placeholder since files are in Supabase Storage
+      const preview = `<div style="width:100%;height:80px;background:#1a2730;display:flex;align-items:center;justify-content:center;color:#8696a0;font-size:24px;">${isVideo ? '🎬' : '🖼️'}</div>`;
+
+      const compartilhadoBadge = m.compartilhado ? ' <span style="font-size:8px;background:#FF6200;color:white;padding:1px 3px;border-radius:2px;">TIME</span>' : '';
 
       thumb.innerHTML = `
         ${preview}
         <div class="media-thumb-bar">
-          <span class="media-thumb-name">${m.nome}</span>
+          <span class="media-thumb-name">${m.nome}${compartilhadoBadge}</span>
           <button class="btn-send" data-id="${m.id}" style="font-size:9px;padding:2px 5px;">▶</button>
           <button class="btn-danger" data-del="${m.id}" style="font-size:9px;padding:2px 4px;">✕</button>
         </div>
@@ -70,53 +57,62 @@ function renderizar() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!(await verificarAuth())) {
+    document.querySelector('.mod-app').innerHTML = '<p style="padding:20px;color:#8696a0;text-align:center;">Faça login para acessar as mídias.</p>';
+    return;
+  }
+
   await carregar();
   renderizar();
 
   document.getElementById('media-upload').addEventListener('change', async (e) => {
     const files = Array.from(e.target.files);
     for (const file of files) {
-      // Limitar tamanho a ~5MB para storage
-      if (file.size > 5 * 1024 * 1024) {
-        alert(`${file.name} excede 5MB. Por favor use arquivos menores.`);
-        continue;
-      }
-      const base64 = await fileToBase64(file);
-      midias.push({
-        id: gerarId(),
-        nome: file.name,
-        tipo: file.type,
-        tamanho: file.size,
-        base64: base64,
-        criadoEm: Date.now()
-      });
+      if (file.size > 25 * 1024 * 1024) { alert(`${file.name} excede 25MB.`); continue; }
+      try {
+        const storagePath = `${userId}/${Date.now()}_${file.name}`;
+        await UpsidenStorage.upload('midias', storagePath, file, file.type);
+        const result = await UpsidenDB.from('midias').insert({
+          nome: file.name, tipo: file.type, tamanho: file.size,
+          storage_path: storagePath, criado_por: userId, compartilhado: isAdmin
+        }).execute();
+        if (result && result.length) midias.unshift(result[0]);
+      } catch (err) { console.error('Upload failed:', err); alert(`Erro ao fazer upload de ${file.name}`); }
     }
-    await salvar();
     renderizar();
     e.target.value = '';
   });
 
-  document.getElementById('media-busca').addEventListener('input', (e) => {
-    buscaAtual = e.target.value;
-    renderizar();
-  });
+  document.getElementById('media-busca').addEventListener('input', (e) => { buscaAtual = e.target.value; renderizar(); });
 
   document.getElementById('media-grid').addEventListener('click', async (e) => {
     const btnSend = e.target.closest('[data-id]');
     const btnDel = e.target.closest('[data-del]');
 
     if (btnDel) {
-      midias = midias.filter(m => m.id !== btnDel.dataset.del);
-      await salvar();
-      renderizar();
+      const m = midias.find(x => x.id === btnDel.dataset.del);
+      if (m) {
+        await UpsidenStorage.remove('midias', [m.storage_path]).catch(() => {});
+        await UpsidenDB.from('midias').eq('id', m.id).delete().execute();
+        midias = midias.filter(x => x.id !== m.id);
+        renderizar();
+      }
     }
-    if (btnSend) {
+    if (btnSend && !btnSend.closest('[data-del]')) {
       const m = midias.find(x => x.id === btnSend.dataset.id);
       if (m) {
-        window.parent.postMessage({
-          type: 'upsiden_send_file',
-          data: { nome: m.nome, tipo: m.tipo, base64: m.base64 }
-        }, '*');
+        try {
+          const blob = await UpsidenStorage.download('midias', m.storage_path);
+          const reader = new FileReader();
+          reader.onload = () => {
+            window.parent.postMessage({
+              type: 'upsiden_send_file',
+              data: { nome: m.nome, tipo: m.tipo, base64: reader.result }
+            }, '*');
+            UpsidenMetrics.registrar('midia', m.id);
+          };
+          reader.readAsDataURL(blob);
+        } catch (err) { alert('Erro ao enviar mídia'); }
       }
     }
   });

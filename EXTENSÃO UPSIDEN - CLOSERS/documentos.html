@@ -10,10 +10,14 @@
   <div class="mod-app">
     <header class="mod-header">
       <h2>📄 Documentos</h2>
-      <label class="btn-primary" for="doc-upload">+ Importar</label>
+      <label class="btn-primary" for="doc-upload" style="background:#FF6200; color:#fff; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600;">+ Importar</label>
       <input type="file" id="doc-upload" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" multiple hidden>
     </header>
-    <div class="mod-search">
+    <div class="categories" id="container-categorias-doc" style="display:flex; gap:8px; padding:0 24px 16px; border-bottom:1px solid rgba(42,57,66,0.8);">
+      <button class="cat-chip active" data-categoria="todos" style="background:#FF6200; color:#fff; border-radius:12px; padding:6px 14px; border:none; cursor:pointer; font-size:12px; font-weight:600;">Todos</button>
+      <button class="cat-chip" data-categoria="equipe" style="background:transparent; color:#FF6200; border:1px solid #FF6200; border-radius:12px; padding:6px 14px; cursor:pointer; font-size:12px; font-weight:600;">🤝 Time</button>
+    </div>
+    <div class="mod-search" style="padding:16px 24px 0;">
       <input type="text" id="doc-busca" placeholder="Buscar documento...">
     </div>
     <div class="mod-list" id="doc-lista"></div>
@@ -25,6 +29,7 @@
       <span id="doc-count">0 documentos</span>
     </div>
   </div>
+  <script src="supabase_client.js"></script>
   <script src="documentos.js"></script>
 </body>
 </html>

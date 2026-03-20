@@ -1,6 +1,5 @@
 /* ==============================
-   Upsiden — Popup Logic
-   Biblioteca de Áudios + Envio
+   Upsiden — Biblioteca de Áudios (Supabase)
    ============================== */
 
 const CONTEXTO_POPUP = '[Popup]';
@@ -11,34 +10,30 @@ const ESTADO_POPUP = {
   audioTocando: null,
   elementoAudioPreview: null,
   audioEditandoId: null,
-  pastas: []
+  pastas: [],
+  userId: null,
+  isAdmin: false
 };
 
 // ============== LOGGER ==============
 class Logger {
-  static info(msg, data = null) {
-    data ? console.log(`${CONTEXTO_POPUP} ℹ️ ${msg}`, data) : console.log(`${CONTEXTO_POPUP} ℹ️ ${msg}`);
-  }
-  static ok(msg, data = null) {
-    data ? console.log(`${CONTEXTO_POPUP} ✅ ${msg}`, data) : console.log(`${CONTEXTO_POPUP} ✅ ${msg}`);
-  }
-  static warn(msg, data = null) {
-    data ? console.warn(`${CONTEXTO_POPUP} ⚠️ ${msg}`, data) : console.warn(`${CONTEXTO_POPUP} ⚠️ ${msg}`);
-  }
-  static error(msg, err = null) {
-    console.error(`${CONTEXTO_POPUP} ❌ ${msg}`);
-    if (err) console.error(err);
-  }
+  static info(msg, data = null) { data ? console.log(`${CONTEXTO_POPUP} ℹ️ ${msg}`, data) : console.log(`${CONTEXTO_POPUP} ℹ️ ${msg}`); }
+  static ok(msg, data = null) { data ? console.log(`${CONTEXTO_POPUP} ✅ ${msg}`, data) : console.log(`${CONTEXTO_POPUP} ✅ ${msg}`); }
+  static warn(msg, data = null) { data ? console.warn(`${CONTEXTO_POPUP} ⚠️ ${msg}`, data) : console.warn(`${CONTEXTO_POPUP} ⚠️ ${msg}`); }
+  static error(msg, err = null) { console.error(`${CONTEXTO_POPUP} ❌ ${msg}`); if (err) console.error(err); }
 }
 
-// ============== STORAGE ==============
+// ============== STORAGE MANAGER (SUPABASE) ==============
 class StorageManager {
   static async carregarAudios() {
-    Logger.info('Carregando dados do storage...');
+    Logger.info('Carregando dados do Supabase...');
     try {
-      const resultado = await chrome.storage.local.get({ upsiden_audios: [], upsiden_pastas: [] });
-      ESTADO_POPUP.audios = resultado.upsiden_audios;
-      ESTADO_POPUP.pastas = resultado.upsiden_pastas;
+      const audios = await UpsidenDB.from('audios').select('*').order('created_at', false).execute();
+      ESTADO_POPUP.audios = audios || [];
+
+      const pastas = await UpsidenDB.from('pastas_audio').select('*').order('nome').execute();
+      ESTADO_POPUP.pastas = pastas || [];
+
       Logger.ok(`${ESTADO_POPUP.audios.length} áudios e ${ESTADO_POPUP.pastas.length} pastas`);
       return ESTADO_POPUP.audios;
     } catch (err) {
@@ -47,49 +42,61 @@ class StorageManager {
     }
   }
 
-  static async salvarAudios() {
-    Logger.info(`Salvando ${ESTADO_POPUP.audios.length} áudios no storage...`);
-    try {
-      await chrome.storage.local.set({ upsiden_audios: ESTADO_POPUP.audios });
-      Logger.ok('Áudios salvos com sucesso');
-    } catch (err) {
-      Logger.error('Falha ao salvar áudios', err);
-      StatusBar.mostrar('Erro ao salvar áudios', 'error');
-    }
-  }
-
   static async adicionarAudio(audioObj) {
-    ESTADO_POPUP.audios.push(audioObj);
-    await StorageManager.salvarAudios();
+    try {
+      const result = await UpsidenDB.from('audios').insert(audioObj).execute();
+      if (result && result.length > 0) {
+        ESTADO_POPUP.audios.unshift(result[0]);
+      }
+    } catch (err) {
+      Logger.error('Falha ao salvar áudio', err);
+      throw err;
+    }
   }
 
   static async removerAudio(id) {
-    ESTADO_POPUP.audios = ESTADO_POPUP.audios.filter(a => a.id !== id);
-    await StorageManager.salvarAudios();
+    try {
+      // Get the audio to find its storage path
+      const audio = ESTADO_POPUP.audios.find(a => a.id === id);
+      if (audio && audio.storage_path) {
+        await UpsidenStorage.remove('audios', [audio.storage_path]).catch(() => {});
+      }
+      await UpsidenDB.from('audios').eq('id', id).delete().execute();
+      ESTADO_POPUP.audios = ESTADO_POPUP.audios.filter(a => a.id !== id);
+    } catch (err) {
+      Logger.error('Falha ao remover áudio', err);
+    }
   }
 
   static async atualizarAudio(id, dados) {
-    const idx = ESTADO_POPUP.audios.findIndex(a => a.id === id);
-    if (idx !== -1) {
-      ESTADO_POPUP.audios[idx] = { ...ESTADO_POPUP.audios[idx], ...dados };
-      await StorageManager.salvarAudios();
+    try {
+      await UpsidenDB.from('audios').eq('id', id).update(dados).execute();
+      const idx = ESTADO_POPUP.audios.findIndex(a => a.id === id);
+      if (idx !== -1) {
+        ESTADO_POPUP.audios[idx] = { ...ESTADO_POPUP.audios[idx], ...dados };
+      }
+    } catch (err) {
+      Logger.error('Falha ao atualizar áudio', err);
     }
   }
-  
+
   static async adicionarPasta(nome) {
-    const nova = { id: 'pasta_' + Date.now(), nome: nome, criadoEm: Date.now() };
-    ESTADO_POPUP.pastas.push(nova);
-    await chrome.storage.local.set({ upsiden_pastas: ESTADO_POPUP.pastas });
-    UIRenderer.atualizarCategorias();
+    try {
+      const result = await UpsidenDB.from('pastas_audio').insert({
+        nome, criado_por: ESTADO_POPUP.userId
+      }).execute();
+      if (result && result.length > 0) {
+        ESTADO_POPUP.pastas.push(result[0]);
+      }
+      UIRenderer.atualizarCategorias();
+    } catch (err) {
+      Logger.error('Falha ao criar pasta', err);
+    }
   }
 }
 
 // ============== AUDIO PROCESSOR ==============
 class AudioProcessor {
-  static gerarId() {
-    return `vs_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-  }
-
   static formatarDuracao(segundos) {
     const min = Math.floor(segundos / 60);
     const seg = Math.floor(segundos % 60);
@@ -103,7 +110,7 @@ class AudioProcessor {
   }
 
   static async processarArquivo(arquivo) {
-    Logger.info(`Processando: ${arquivo.name} (${arquivo.type}, ${AudioProcessor.formatarTamanho(arquivo.size)})`);
+    Logger.info(`Processando: ${arquivo.name}`);
     try {
       const arrayBuffer = await arquivo.arrayBuffer();
       const contexto = new (window.AudioContext || window.webkitAudioContext)();
@@ -111,20 +118,21 @@ class AudioProcessor {
       const duracao = buffer.duration;
       await contexto.close();
 
-      // Converter para base64
-      const base64 = await AudioProcessor.arrayBufferToBase64(arrayBuffer);
+      // Upload to Supabase Storage
+      const storagePath = `${ESTADO_POPUP.userId}/${Date.now()}_${arquivo.name}`;
+      await UpsidenStorage.upload('audios', storagePath, arquivo, arquivo.type);
 
       const audioObj = {
-        id: AudioProcessor.gerarId(),
         nome: arquivo.name.replace(/\.[^/.]+$/, ''),
-        nomeOriginal: arquivo.name,
-        tipoMime: arquivo.type || 'audio/mpeg',
+        nome_original: arquivo.name,
+        tipo_mime: arquivo.type || 'audio/mpeg',
         duracao: duracao,
         tamanho: arquivo.size,
-        base64: base64,
-        pastaId: '',
-        favorito: false,
-        criadoEm: Date.now()
+        storage_path: storagePath,
+        pasta_id: null,
+        criado_por: ESTADO_POPUP.userId,
+        compartilhado: ESTADO_POPUP.isAdmin, // Admin shares by default
+        favorito: false
       };
 
       Logger.ok(`Áudio processado: ${audioObj.nome} (${AudioProcessor.formatarDuracao(duracao)})`);
@@ -133,26 +141,6 @@ class AudioProcessor {
       Logger.error(`Falha ao processar ${arquivo.name}`, err);
       throw err;
     }
-  }
-
-  static async arrayBufferToBase64(buffer) {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.subarray(i, i + chunkSize);
-      binary += String.fromCharCode.apply(null, chunk);
-    }
-    return btoa(binary);
-  }
-
-  static base64ToArrayBuffer(base64) {
-    const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
   }
 }
 
@@ -163,10 +151,7 @@ class StatusBar {
     el.className = `status-text ${tipo}`;
     el.innerHTML = tipo === 'sending' ? `<span class="spinner"></span> ${texto}` : texto;
     if (tipo !== 'sending' && duracao > 0) {
-      setTimeout(() => {
-        el.className = 'status-text';
-        el.textContent = 'Pronto';
-      }, duracao);
+      setTimeout(() => { el.className = 'status-text'; el.textContent = 'Pronto'; }, duracao);
     }
   }
 
@@ -182,10 +167,11 @@ class UIRenderer {
   static renderizarLista() {
     const container = document.getElementById('lista-audios');
     const estadoVazio = document.getElementById('estado-vazio');
+    const estadoLoading = document.getElementById('estado-loading');
     const audiosFiltrados = UIRenderer.filtrarAudios();
 
-    // Limpar lista e estados vazios injetados (exceto o estado vazio principal)
-    container.querySelectorAll('.audio-card, .empty-state:not(#estado-vazio)').forEach(el => el.remove());
+    if (estadoLoading) estadoLoading.style.display = 'none';
+    container.querySelectorAll('.audio-card, .empty-state:not(#estado-vazio):not(#estado-loading)').forEach(el => el.remove());
 
     if (ESTADO_POPUP.audios.length === 0) {
       if (estadoVazio) estadoVazio.style.display = 'flex';
@@ -218,16 +204,17 @@ class UIRenderer {
 
     if (busca) {
       audios = audios.filter(a => {
-        const pasta = ESTADO_POPUP.pastas.find(p => p.id === a.pastaId);
-        return a.nome.toLowerCase().includes(busca) ||
-               (pasta && pasta.nome.toLowerCase().includes(busca));
+        const pasta = ESTADO_POPUP.pastas.find(p => p.id === a.pasta_id);
+        return a.nome.toLowerCase().includes(busca) || (pasta && pasta.nome.toLowerCase().includes(busca));
       });
     }
 
     if (categoria === 'favoritos') {
       audios = audios.filter(a => a.favorito);
+    } else if (categoria === 'equipe') {
+      audios = audios.filter(a => a.compartilhado);
     } else if (categoria !== 'todos') {
-      audios = audios.filter(a => a.pastaId === categoria);
+      audios = audios.filter(a => a.pasta_id === categoria);
     }
 
     return audios;
@@ -244,6 +231,8 @@ class UIRenderer {
       ? '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>'
       : '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
 
+    const compartilhadoBadge = audio.compartilhado ? '<span style="font-size:9px;background:#FF6200;color:white;padding:1px 4px;border-radius:3px;margin-left:4px;">TIME</span>' : '';
+
     card.innerHTML = `
       <div class="audio-card-fav">
         <button class="btn-fav ${audio.favorito ? 'active' : ''}" data-id="${audio.id}" title="Favoritar">⭐</button>
@@ -252,10 +241,10 @@ class UIRenderer {
         ${iconPlay}
       </button>
       <div class="audio-info">
-        <div class="audio-name" title="${audio.nome}">${audio.nome}</div>
+        <div class="audio-name" title="${audio.nome}">${audio.nome}${compartilhadoBadge}</div>
         <div class="audio-meta">
           <span class="audio-duration">${AudioProcessor.formatarDuracao(audio.duracao)}</span>
-          ${audio.pastaId && ESTADO_POPUP.pastas.find(p=>p.id===audio.pastaId) ? `<span class="audio-category">${ESTADO_POPUP.pastas.find(p=>p.id===audio.pastaId).nome}</span>` : ''}
+          ${audio.pasta_id && ESTADO_POPUP.pastas.find(p=>p.id===audio.pasta_id) ? `<span class="audio-category">${ESTADO_POPUP.pastas.find(p=>p.id===audio.pasta_id).nome}</span>` : ''}
         </div>
       </div>
       <div class="audio-actions">
@@ -277,12 +266,9 @@ class UIRenderer {
 
   static atualizarCategorias() {
     const container = document.getElementById('container-categorias');
-
-    // Manter chips fixos (Todos, Favoritos)
     const chipsExistentes = container.querySelectorAll('.cat-chip:not([data-categoria="todos"]):not([data-categoria="favoritos"])');
     chipsExistentes.forEach(chip => chip.remove());
 
-    // Adicionar abas dinâmicas das pastas
     ESTADO_POPUP.pastas.forEach(pasta => {
       const chip = document.createElement('button');
       chip.className = `cat-chip ${ESTADO_POPUP.categoriaAtiva === pasta.id ? 'active' : ''}`;
@@ -290,8 +276,7 @@ class UIRenderer {
       chip.textContent = pasta.nome;
       container.appendChild(chip);
     });
-    
-    // Botão de Nova Pasta
+
     const btnNova = document.createElement('button');
     btnNova.className = 'cat-chip chip-add';
     btnNova.style.borderStyle = 'dashed';
@@ -299,7 +284,7 @@ class UIRenderer {
     btnNova.textContent = '+ Nova Pasta';
     btnNova.onclick = () => {
       const nome = prompt("Nome da nova pasta:");
-      if(nome && nome.trim()) StorageManager.adicionarPasta(nome.trim());
+      if (nome && nome.trim()) StorageManager.adicionarPasta(nome.trim());
     };
     container.appendChild(btnNova);
   }
@@ -308,35 +293,33 @@ class UIRenderer {
 // ============== PREVIEW ==============
 class PreviewManager {
   static toggle(audioId) {
-    if (ESTADO_POPUP.audioTocando === audioId) {
-      PreviewManager.parar();
-      return;
-    }
+    if (ESTADO_POPUP.audioTocando === audioId) { PreviewManager.parar(); return; }
     PreviewManager.parar();
     PreviewManager.tocar(audioId);
   }
 
-  static tocar(audioId) {
+  static async tocar(audioId) {
     const audio = ESTADO_POPUP.audios.find(a => a.id === audioId);
     if (!audio) return;
 
     Logger.info(`Preview: ${audio.nome}`);
-    const arrayBuffer = AudioProcessor.base64ToArrayBuffer(audio.base64);
-    const blob = new Blob([arrayBuffer], { type: audio.tipoMime });
-    const url = URL.createObjectURL(blob);
+    StatusBar.mostrar('Carregando preview...', 'sending');
 
-    const elemento = new Audio(url);
-    elemento.volume = 0.5;
-    elemento.play();
-
-    elemento.addEventListener('ended', () => {
-      PreviewManager.parar();
+    try {
+      const blob = await UpsidenStorage.download('audios', audio.storage_path);
+      const url = URL.createObjectURL(blob);
+      const elemento = new Audio(url);
+      elemento.volume = 0.5;
+      elemento.play();
+      elemento.addEventListener('ended', () => { PreviewManager.parar(); UIRenderer.renderizarLista(); });
+      ESTADO_POPUP.audioTocando = audioId;
+      ESTADO_POPUP.elementoAudioPreview = elemento;
+      StatusBar.mostrar('Pronto', 'normal', 1000);
       UIRenderer.renderizarLista();
-    });
-
-    ESTADO_POPUP.audioTocando = audioId;
-    ESTADO_POPUP.elementoAudioPreview = elemento;
-    UIRenderer.renderizarLista();
+    } catch (err) {
+      Logger.error('Falha no preview', err);
+      StatusBar.mostrar('Erro ao carregar preview', 'error');
+    }
   }
 
   static parar() {
@@ -352,71 +335,63 @@ class PreviewManager {
 class SendManager {
   static async enviar(audioId) {
     const audio = ESTADO_POPUP.audios.find(a => a.id === audioId);
-    if (!audio) {
-      Logger.error('Áudio não encontrado para envio');
-      StatusBar.mostrar('Áudio não encontrado', 'error');
-      return;
-    }
+    if (!audio) { StatusBar.mostrar('Áudio não encontrado', 'error'); return; }
 
     Logger.info(`Enviando áudio: ${audio.nome}`);
     StatusBar.mostrar(`Enviando "${audio.nome}"...`, 'sending');
 
-    // Destacar card
     const card = document.querySelector(`.audio-card[data-id="${audioId}"]`);
     if (card) card.classList.add('sending');
 
     try {
-      // Enviar para o background, que redireciona ao content script
+      // Download from Supabase Storage
+      const blob = await UpsidenStorage.download('audios', audio.storage_path);
+      const arrayBuffer = await blob.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      const base64 = btoa(binary);
+
       StatusBar.mostrar(`Conectando ao WhatsApp Web...`, 'sending');
 
       const resposta = await chrome.runtime.sendMessage({
         tipo: 'enviar_audio_biblioteca',
-        dados: {
-          base64: audio.base64,
-          tipoMime: audio.tipoMime,
-          duracao: audio.duracao,
-          nome: audio.nome
-        }
+        dados: { base64, tipoMime: audio.tipo_mime, duracao: audio.duracao, nome: audio.nome }
       });
 
       if (resposta && resposta.sucesso) {
         Logger.ok(`Áudio "${audio.nome}" enviado com sucesso`);
         StatusBar.mostrar(`"${audio.nome}" enviado! ⚡`, 'success');
+        // Register metric
+        UpsidenMetrics.registrar('audio', audio.id);
       } else {
-        const msgErro = resposta?.erro || 'Sem resposta do WhatsApp Web';
-        throw new Error(msgErro);
+        throw new Error(resposta?.erro || 'Sem resposta do WhatsApp Web');
       }
     } catch (err) {
       Logger.error('Falha ao enviar áudio', err);
-      const msgUsuario = err.message.includes('F5')
-        ? err.message
-        : err.message.includes('WhatsApp')
-        ? err.message
-        : 'Atualize o WhatsApp Web (F5) e tente novamente';
+      const msgUsuario = err.message.includes('F5') ? err.message :
+        err.message.includes('WhatsApp') ? err.message : 'Atualize o WhatsApp Web (F5) e tente novamente';
       StatusBar.mostrar(msgUsuario, 'error', 5000);
     } finally {
-      if (card) {
-        setTimeout(() => card.classList.remove('sending'), 2000);
-      }
+      if (card) setTimeout(() => card.classList.remove('sending'), 2000);
     }
   }
 }
 
 // ============== IMPORT MANAGER ==============
 class ImportManager {
-  static abrir() {
-    document.getElementById('input-importar').click();
-  }
+  static abrir() { document.getElementById('input-importar').click(); }
 
   static async processar(arquivos) {
     if (!arquivos || arquivos.length === 0) return;
-
     Logger.info(`Importando ${arquivos.length} arquivo(s)...`);
     StatusBar.mostrar(`Importando ${arquivos.length} áudio(s)...`, 'sending');
 
-    let sucesso = 0;
-    let falhas = 0;
-
+    let sucesso = 0, falhas = 0;
     for (const arquivo of arquivos) {
       try {
         const audioObj = await AudioProcessor.processarArquivo(arquivo);
@@ -430,9 +405,7 @@ class ImportManager {
     }
 
     UIRenderer.renderizarLista();
-    const msg = falhas > 0
-      ? `${sucesso} importado(s), ${falhas} falha(s)`
-      : `${sucesso} áudio(s) importado(s)! ✨`;
+    const msg = falhas > 0 ? `${sucesso} importado(s), ${falhas} falha(s)` : `${sucesso} áudio(s) importado(s)! ✨`;
     StatusBar.mostrar(msg, falhas > 0 ? 'error' : 'success');
   }
 }
@@ -445,8 +418,7 @@ class ModalManager {
 
     ESTADO_POPUP.audioEditandoId = audioId;
     document.getElementById('modal-nome').value = audio.nome;
-    
-    // Preparar Options no select
+
     const select = document.getElementById('modal-pasta');
     select.innerHTML = '<option value="">Sem Pasta</option>';
     ESTADO_POPUP.pastas.forEach(p => {
@@ -455,8 +427,10 @@ class ModalManager {
       opt.textContent = p.nome;
       select.appendChild(opt);
     });
-    
-    select.value = audio.pastaId || '';
+    select.value = audio.pasta_id || '';
+
+    const chkCompartilhado = document.getElementById('modal-compartilhado');
+    if (chkCompartilhado) chkCompartilhado.checked = audio.compartilhado || false;
 
     document.getElementById('modal-overlay').style.display = 'flex';
     document.getElementById('modal-nome').focus();
@@ -472,14 +446,12 @@ class ModalManager {
     if (!id) return;
 
     const nome = document.getElementById('modal-nome').value.trim();
-    const pastaId = document.getElementById('modal-pasta').value;
+    const pastaId = document.getElementById('modal-pasta').value || null;
+    const compartilhado = document.getElementById('modal-compartilhado')?.checked || false;
 
-    if (!nome) {
-      document.getElementById('modal-nome').focus();
-      return;
-    }
+    if (!nome) { document.getElementById('modal-nome').focus(); return; }
 
-    await StorageManager.atualizarAudio(id, { nome, pastaId });
+    await StorageManager.atualizarAudio(id, { nome, pasta_id: pastaId, compartilhado });
     ModalManager.fechar();
     UIRenderer.renderizarLista();
     StatusBar.mostrar('Áudio atualizado ✓', 'success');
@@ -490,52 +462,39 @@ class ModalManager {
 function registrarEventos() {
   Logger.info('Registrando eventos...');
 
-  // Import
   document.getElementById('btn-importar').addEventListener('click', ImportManager.abrir);
   document.getElementById('input-importar').addEventListener('change', (e) => {
     ImportManager.processar(e.target.files);
     e.target.value = '';
   });
 
-  // Search
   document.getElementById('input-busca').addEventListener('input', (e) => {
     ESTADO_POPUP.buscaAtiva = e.target.value;
     UIRenderer.renderizarLista();
   });
 
-  // Categories (delegated)
   document.getElementById('container-categorias').addEventListener('click', (e) => {
     const chip = e.target.closest('.cat-chip');
     if (!chip || chip.classList.contains('chip-add')) return;
-
     document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
     ESTADO_POPUP.categoriaAtiva = chip.dataset.categoria;
     UIRenderer.renderizarLista();
   });
 
-  // Audio list (delegated events)
   document.getElementById('lista-audios').addEventListener('click', (e) => {
     const target = e.target.closest('button');
     if (!target) return;
-
     const id = target.dataset.id;
     if (!id) return;
 
-    if (target.classList.contains('btn-send')) {
-      SendManager.enviar(id);
-    } else if (target.classList.contains('audio-play')) {
-      PreviewManager.toggle(id);
-    } else if (target.classList.contains('btn-edit')) {
-      ModalManager.abrir(id);
-    } else if (target.classList.contains('btn-delete')) {
-      confirmarExclusao(id);
-    } else if (target.classList.contains('btn-fav')) {
-      toggleFavorito(id);
-    }
+    if (target.classList.contains('btn-send')) SendManager.enviar(id);
+    else if (target.classList.contains('audio-play')) PreviewManager.toggle(id);
+    else if (target.classList.contains('btn-edit')) ModalManager.abrir(id);
+    else if (target.classList.contains('btn-delete')) confirmarExclusao(id);
+    else if (target.classList.contains('btn-fav')) toggleFavorito(id);
   });
 
-  // Modal
   document.getElementById('btn-fechar-modal').addEventListener('click', ModalManager.fechar);
   document.getElementById('btn-cancelar-modal').addEventListener('click', ModalManager.fechar);
   document.getElementById('btn-salvar-modal').addEventListener('click', ModalManager.salvar);
@@ -543,19 +502,21 @@ function registrarEventos() {
     if (e.target === e.currentTarget) ModalManager.fechar();
   });
 
-  // Modal keyboard
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && ESTADO_POPUP.audioEditandoId) {
-      ModalManager.fechar();
-    }
-    if (e.key === 'Enter' && ESTADO_POPUP.audioEditandoId) {
-      ModalManager.salvar();
-    }
+    if (e.key === 'Escape' && ESTADO_POPUP.audioEditandoId) ModalManager.fechar();
+    if (e.key === 'Enter' && ESTADO_POPUP.audioEditandoId) ModalManager.salvar();
   });
 
-  // Settings button
-  document.getElementById('btn-opcoes').addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
+  document.getElementById('btn-opcoes').addEventListener('click', () => chrome.runtime.openOptionsPage());
+
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    await UpsidenAuth.signOut();
+    document.getElementById('main-app').style.display = 'none';
+    document.getElementById('auth-guard').style.display = 'flex';
+  });
+
+  document.getElementById('btn-abrir-login').addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('login.html') });
   });
 
   Logger.ok('Eventos registrados');
@@ -565,10 +526,8 @@ async function confirmarExclusao(id) {
   const audio = ESTADO_POPUP.audios.find(a => a.id === id);
   if (!audio) return;
 
-  // Simple inline confirm
   const card = document.querySelector(`.audio-card[data-id="${id}"]`);
   if (card && card.dataset.confirmando) {
-    // Second click = confirm
     await StorageManager.removerAudio(id);
     UIRenderer.renderizarLista();
     StatusBar.mostrar(`"${audio.nome}" excluído`, 'success');
@@ -579,16 +538,10 @@ async function confirmarExclusao(id) {
     card.dataset.confirmando = 'true';
     card.style.borderColor = 'var(--danger)';
     const btnDelete = card.querySelector('.btn-delete');
-    if (btnDelete) {
-      btnDelete.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--danger)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
-    }
+    if (btnDelete) btnDelete.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--danger)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
     StatusBar.mostrar('Clique novamente para confirmar exclusão', 'error', 3000);
     setTimeout(() => {
-      if (card) {
-        delete card.dataset.confirmando;
-        card.style.borderColor = '';
-        UIRenderer.renderizarLista();
-      }
+      if (card) { delete card.dataset.confirmando; card.style.borderColor = ''; UIRenderer.renderizarLista(); }
     }, 3000);
   }
 }
@@ -596,7 +549,6 @@ async function confirmarExclusao(id) {
 async function toggleFavorito(id) {
   const audio = ESTADO_POPUP.audios.find(a => a.id === id);
   if (!audio) return;
-
   await StorageManager.atualizarAudio(id, { favorito: !audio.favorito });
   UIRenderer.renderizarLista();
 }
@@ -605,6 +557,39 @@ async function toggleFavorito(id) {
 async function inicializar() {
   Logger.info('=== Inicializando Upsiden Popup ===');
   try {
+    // Check auth
+    const loggedIn = await verificarAuth();
+    if (!loggedIn) {
+      document.getElementById('auth-guard').style.display = 'flex';
+      document.getElementById('main-app').style.display = 'none';
+      document.getElementById('btn-abrir-login').addEventListener('click', () => {
+        chrome.tabs.create({ url: chrome.runtime.getURL('login.html') });
+      });
+      // Listen for auth success
+      window.addEventListener('message', async (ev) => {
+        if (ev.data?.type === 'upsiden_auth_success') {
+          window.location.reload();
+        }
+      });
+      return;
+    }
+
+    // Show main app
+    document.getElementById('auth-guard').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+
+    // Get user info
+    ESTADO_POPUP.userId = await UpsidenAuth.getUserId();
+    ESTADO_POPUP.isAdmin = await UpsidenAuth.isAdmin();
+
+    // Show user badge
+    const profile = await UpsidenAuth.getProfile();
+    if (profile) {
+      const badge = document.getElementById('user-badge');
+      badge.textContent = profile.nome || profile.email.split('@')[0];
+      if (ESTADO_POPUP.isAdmin) badge.textContent += ' (Admin)';
+    }
+
     await StorageManager.carregarAudios();
     UIRenderer.renderizarLista();
     registrarEventos();
@@ -617,5 +602,3 @@ async function inicializar() {
 }
 
 document.addEventListener('DOMContentLoaded', inicializar);
-
-

@@ -1,3 +1,7 @@
+/* =========================================
+   Upsiden — Saudação Automática (Supabase)
+   ========================================= */
+
 const chkAtivo = document.getElementById('chk-ativo');
 const txtMsg = document.getElementById('txt-msg');
 const chkHorario = document.getElementById('chk-horario');
@@ -6,53 +10,90 @@ const inpHoraInicio = document.getElementById('inp-hora-inicio');
 const inpHoraFim = document.getElementById('inp-hora-fim');
 const btnSalvar = document.getElementById('btn-salvar');
 
-const STORAGE_KEY = 'ups_config_saudacao';
+let userId = null;
 
-// Toggle da exibição dos horários
 chkHorario.addEventListener('change', () => {
   containerHorarios.style.display = chkHorario.checked ? 'block' : 'none';
 });
 
-// Carregar Dados Salvos
-function carregarConfig() {
-  chrome.storage.local.get([STORAGE_KEY], (res) => {
-    const data = res[STORAGE_KEY];
+async function carregarConfig() {
+  userId = await UpsidenAuth.getUserId();
+  if (!userId) return;
+
+  try {
+    const results = await UpsidenDB.from('config_automacao')
+      .select('*')
+      .eq('closer_id', userId)
+      .execute();
+
+    const data = results && results.length > 0 ? results[0] : null;
     if (data) {
-      chkAtivo.checked = data.ativo || false;
-      txtMsg.value = data.mensagem || '';
-      chkHorario.checked = data.usarHorario || false;
-      inpHoraInicio.value = data.horaInicio || '09:00';
-      inpHoraFim.value = data.horaFim || '18:00';
-      
-      if (data.usarHorario) {
-        containerHorarios.style.display = 'block';
-      }
+      chkAtivo.checked = data.saudacao_ativa || false;
+      txtMsg.value = data.saudacao_mensagem || '';
+      chkHorario.checked = data.usar_horario || false;
+      inpHoraInicio.value = data.hora_inicio || '09:00';
+      inpHoraFim.value = data.hora_fim || '18:00';
+      if (data.usar_horario) containerHorarios.style.display = 'block';
     }
-  });
+
+    // Sync to local for automation engine
+    sincronizarLocal(data);
+  } catch (err) {
+    console.error('[Saudação] Erro ao carregar:', err);
+  }
 }
 
-// Salvar Configurações
-btnSalvar.addEventListener('click', () => {
+function sincronizarLocal(data) {
+  const config = data ? {
+    ativo: data.saudacao_ativa,
+    mensagem: data.saudacao_mensagem,
+    usarHorario: data.usar_horario,
+    horaInicio: data.hora_inicio,
+    horaFim: data.hora_fim
+  } : null;
+  chrome.storage.local.set({ ups_config_saudacao: config });
+  window.parent.postMessage({ type: 'upsiden_reload_automation' }, '*');
+}
+
+btnSalvar.addEventListener('click', async () => {
+  if (!userId) return;
+
   const config = {
-    ativo: chkAtivo.checked,
-    mensagem: txtMsg.value,
-    usarHorario: chkHorario.checked,
-    horaInicio: inpHoraInicio.value,
-    horaFim: inpHoraFim.value
+    closer_id: userId,
+    saudacao_ativa: chkAtivo.checked,
+    saudacao_mensagem: txtMsg.value,
+    usar_horario: chkHorario.checked,
+    hora_inicio: inpHoraInicio.value,
+    hora_fim: inpHoraFim.value,
+    updated_at: new Date().toISOString()
   };
 
-  chrome.storage.local.set({ [STORAGE_KEY]: config }, () => {
+  try {
+    await UpsidenDB.from('config_automacao').upsert(config).execute();
+
+    sincronizarLocal(config);
+
     btnSalvar.textContent = 'Configurações Salvas ✓';
     btnSalvar.style.background = '#02c098';
-    
-    // Avisar o script principal recarregar a regra em memória
-    window.parent.postMessage({ type: 'upsiden_reload_automation' }, '*');
-
     setTimeout(() => {
       btnSalvar.textContent = 'Salvar Configurações';
       btnSalvar.style.background = '#00a884';
     }, 2000);
-  });
+  } catch (err) {
+    console.error('[Saudação] Erro ao salvar:', err);
+    btnSalvar.textContent = 'Erro ao salvar!';
+    btnSalvar.style.background = '#dc3545';
+    setTimeout(() => {
+      btnSalvar.textContent = 'Salvar Configurações';
+      btnSalvar.style.background = '#00a884';
+    }, 2000);
+  }
 });
 
-carregarConfig();
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!(await verificarAuth())) {
+    document.body.innerHTML = '<p style="padding:20px;color:#8696a0;text-align:center;">Faça login para configurar saudação.</p>';
+    return;
+  }
+  await carregarConfig();
+});

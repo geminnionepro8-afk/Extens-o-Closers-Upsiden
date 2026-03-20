@@ -1,28 +1,22 @@
 /* =========================================
-   Upsiden — Templates de Texto Engine
+   Upsiden — Templates de Texto (Supabase)
    ========================================= */
 
-const STORAGE_KEY = 'upsiden_text_templates';
 let templates = [];
 let buscaAtual = '';
 let editandoId = null;
-
-async function carregar() {
-  return new Promise(resolve => {
-    chrome.storage.local.get(STORAGE_KEY, r => { templates = r[STORAGE_KEY] || []; resolve(); });
-  });
-}
-
-async function salvar() {
-  return new Promise(resolve => {
-    chrome.storage.local.set({ [STORAGE_KEY]: templates }, resolve);
-  });
-}
-
-function gerarId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+let userId = null;
+let isAdmin = false;
 
 function renderizarPreview(texto) {
   return texto.replace(/\{\{(\w+)\}\}/g, '<span style="color:#00a884;font-weight:600;">[$1]</span>');
+}
+
+async function carregar() {
+  userId = await UpsidenAuth.getUserId();
+  isAdmin = await UpsidenAuth.isAdmin();
+  const data = await UpsidenDB.from('templates').select('*').order('created_at', false).execute();
+  templates = data || [];
 }
 
 function renderizar() {
@@ -37,20 +31,18 @@ function renderizar() {
 
   lista.innerHTML = '';
   if (filtrados.length === 0) {
-    lista.style.display = 'none';
-    vazio.style.display = 'flex';
+    lista.style.display = 'none'; vazio.style.display = 'flex';
   } else {
-    lista.style.display = 'flex';
-    vazio.style.display = 'none';
-
+    lista.style.display = 'flex'; vazio.style.display = 'none';
     filtrados.forEach(tmpl => {
       const card = document.createElement('div');
       card.className = 'mod-card';
       const preview = tmpl.texto.length > 60 ? tmpl.texto.slice(0, 60) + '...' : tmpl.texto;
+      const compartilhadoBadge = tmpl.compartilhado ? ' <span style="font-size:8px;background:#FF6200;color:white;padding:1px 3px;border-radius:2px;">TIME</span>' : '';
       card.innerHTML = `
         <div class="mod-card-icon">💬</div>
         <div class="mod-card-info">
-          <div class="mod-card-title">${tmpl.nome}</div>
+          <div class="mod-card-title">${tmpl.nome}${compartilhadoBadge}</div>
           <div class="mod-card-meta">${preview}</div>
         </div>
         <div class="mod-card-actions">
@@ -86,13 +78,16 @@ function atualizarPreview() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!(await verificarAuth())) {
+    document.querySelector('.mod-app').innerHTML = '<p style="padding:20px;color:#8696a0;text-align:center;">Faça login para acessar os templates.</p>';
+    return;
+  }
+
   await carregar();
   renderizar();
 
   document.getElementById('tmpl-novo').addEventListener('click', () => abrirModal());
-
   document.getElementById('tmpl-texto').addEventListener('input', atualizarPreview);
-
   document.getElementById('tmpl-cancelar').addEventListener('click', fecharModal);
 
   document.getElementById('tmpl-salvar').addEventListener('click', async () => {
@@ -101,21 +96,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!nome || !texto) return;
 
     if (editandoId) {
-      const tmpl = templates.find(t => t.id === editandoId);
-      if (tmpl) { tmpl.nome = nome; tmpl.texto = texto; }
+      await UpsidenDB.from('templates').eq('id', editandoId).update({ nome, texto }).execute();
+      const t = templates.find(x => x.id === editandoId);
+      if (t) { t.nome = nome; t.texto = texto; }
     } else {
-      templates.push({ id: gerarId(), nome, texto, criadoEm: Date.now() });
+      const result = await UpsidenDB.from('templates').insert({
+        nome, texto, criado_por: userId, compartilhado: isAdmin
+      }).execute();
+      if (result && result.length) templates.unshift(result[0]);
     }
-
-    await salvar();
     renderizar();
     fecharModal();
   });
 
-  document.getElementById('tmpl-busca').addEventListener('input', (e) => {
-    buscaAtual = e.target.value;
-    renderizar();
-  });
+  document.getElementById('tmpl-busca').addEventListener('input', (e) => { buscaAtual = e.target.value; renderizar(); });
 
   document.getElementById('tmpl-lista').addEventListener('click', async (e) => {
     const btnSend = e.target.closest('[data-send]');
@@ -123,23 +117,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnDel = e.target.closest('[data-del]');
 
     if (btnDel) {
+      await UpsidenDB.from('templates').eq('id', btnDel.dataset.del).delete().execute();
       templates = templates.filter(t => t.id !== btnDel.dataset.del);
-      await salvar();
       renderizar();
     }
-
     if (btnEdit) {
       const tmpl = templates.find(t => t.id === btnEdit.dataset.edit);
       if (tmpl) abrirModal(tmpl);
     }
-
     if (btnSend) {
       const tmpl = templates.find(t => t.id === btnSend.dataset.send);
       if (tmpl) {
-        window.parent.postMessage({
-          type: 'upsiden_send_text',
-          data: { texto: tmpl.texto }
-        }, '*');
+        window.parent.postMessage({ type: 'upsiden_send_text', data: { texto: tmpl.texto } }, '*');
+        UpsidenMetrics.registrar('template', tmpl.id);
       }
     }
   });

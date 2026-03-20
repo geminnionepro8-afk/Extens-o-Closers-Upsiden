@@ -13,20 +13,21 @@
       <button id="btn-add-lead" class="btn-primary">+ Novo Lead</button>
     </header>
     <div class="kanban-board" id="kanban">
-      <div class="kanban-column" data-etapa="1">
+      <div class="kanban-column" data-etapa="prospeccao">
         <h3>🎯 Prospecção <span class="badge">0</span></h3>
         <div class="kanban-cards" id="coluna-prospeccao"></div>
       </div>
-      <div class="kanban-column" data-etapa="2">
+      <div class="kanban-column" data-etapa="negociacao">
         <h3>💬 Negociação <span class="badge">0</span></h3>
         <div class="kanban-cards" id="coluna-negociacao"></div>
       </div>
-      <div class="kanban-column" data-etapa="3">
+      <div class="kanban-column" data-etapa="fechado">
         <h3>✅ Fechado <span class="badge">0</span></h3>
         <div class="kanban-cards" id="coluna-fechado"></div>
       </div>
     </div>
   </div>
+  <script src="supabase_client.js"></script>
   <script src="crm.js"></script>
 </body>
 </html>

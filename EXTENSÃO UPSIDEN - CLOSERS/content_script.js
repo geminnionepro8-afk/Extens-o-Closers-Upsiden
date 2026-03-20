@@ -23,7 +23,7 @@ function injetarScripts() {
 
 // ── Módulos ──────────────────────────────────────────────
 const MODULOS = [
-  { tela: 'audios',       title: 'Biblioteca de Áudios',  iframe: 'popup.html',
+  { tela: 'audios',       title: 'Biblioteca de Áudios',  iframe: 'audios.html',
     svg: '<path d="M12 3v9.28A4.39 4.39 0 0010.5 12C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>' },
   { tela: 'documentos',   title: 'Documentos',            iframe: 'documentos.html',
     svg: '<path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>' },
@@ -33,22 +33,12 @@ const MODULOS = [
     svg: '<path d="M21 6h-2v9H6v2c0 1.1.9 2 2 2h11l4 4V8c0-1.1-.9-2-2-2zm-4 2H3c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/>' },
   { tela: 'crm',          title: 'CRM e Funil',           iframe: 'crm.html',
     svg: '<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>' },
-  { tela: 'massamento',   title: 'Envios em Massa',        iframe: null,
-    svg: '<path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>' },
-  { tela: 'agendamentos', title: 'Agendamentos',           iframe: null,
-    svg: '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>' },
   { tela: 'auto_reply',   title: 'Resposta Automática',    iframe: 'saudacao.html',
     svg: '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>' },
   { tela: 'gatilhos',     title: 'Gatilhos Inteligentes',  iframe: 'triggers.html',
     svg: '<path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/>' },
-  { tela: 'clientes',     title: 'Painel de Clientes',     iframe: null,
-    svg: '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>' },
-  { tela: 'links',        title: 'Links & Status',         iframe: null,
-    svg: '<path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>' },
-  { tela: 'notificacoes', title: 'Notificações',           iframe: null,
-    svg: '<path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>' },
-  { tela: 'config',       title: 'Configurações',          iframe: null,
-    svg: '<path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.44.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.4-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.21.08-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>' },
+  { tela: 'admin',        title: 'Gestão da Equipe',       iframe: 'admin.html',
+    svg: '<path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>' },
 ];
 
 // ══════════════════════════════════════════════════════════
@@ -242,8 +232,8 @@ function tentarInjetar() {
     }, 3000);
     return;
   }
-  if (tentativas < 15) { setTimeout(tentarInjetar, 500); return; }
-  console.warn(CTX, 'Nav não encontrada.');
+  if (tentativas < 30) { setTimeout(tentarInjetar, 500); return; }
+  console.log(CTX, 'Nav não encontrada no carregamento inicial.');
 }
 
 function enviarParaPagina(dados) {
@@ -410,13 +400,7 @@ function injetarInputActions() {
     abrirPainel('templates', 'Respostas Rápidas', 'templates.html');
   });
 
-  // 2. Assistente IA (Gemini)
-  const btnIA = criarBotaoQuickAction('🤖', 'Assistente IA (Gerar Resposta)', () => {
-    alert('Assistente IA em desenvolvimento (Sprint 3).');
-  });
-
   inputActions.appendChild(btnQuickReplies);
-  inputActions.appendChild(btnIA);
 
   // Inserir logo após os botões da esquerda
   leftTools.appendChild(inputActions);
@@ -445,11 +429,6 @@ function injetarQuickActions() {
     abrirPainel('notas', `Notas: ${nome}`, 'notas.html'); // Sprint 2: Abre o notas.html
   });
 
-  // 2. Lembretes (Reminder)
-  const btnLembrete = criarBotaoQuickAction('🔔', 'Agendar Lembrete', () => {
-    alert('Funcionalidade Lembretes em desenvolvimento no Sprint 4.');
-  });
-
   // 3. Agendamento Google Calendar
   const btnCalendar = criarBotaoQuickAction('📅', 'Google Calendar', () => {
     window.open('https://calendar.google.com/calendar/render?action=TEMPLATE', '_blank');
@@ -463,7 +442,6 @@ function injetarQuickActions() {
   });
 
   quickActions.appendChild(btnNotas);
-  quickActions.appendChild(btnLembrete);
   quickActions.appendChild(btnCalendar);
   quickActions.appendChild(btnBlur);
 

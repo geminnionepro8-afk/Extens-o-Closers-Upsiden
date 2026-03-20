@@ -1,5 +1,5 @@
 /* ==============================================================
-   Upsiden — Painel de Notas & CRM Integrado (notas.js)
+   Upsiden — Painel de Notas & CRM Integrado (Supabase)
    ============================================================== */
 
 const elNome = document.getElementById('ui-nome');
@@ -10,46 +10,56 @@ const inpValor = document.getElementById('ui-valor');
 const btnSalvar = document.getElementById('btn-salvar');
 
 let contatoAtualId = null;
+let userId = null;
 
-// Solicitar ao host (content_script) os dados do chat atual
 window.addEventListener('message', (ev) => {
   if (ev.data && ev.data.type === 'init_chat_data') {
-    contatoAtualId = ev.data.chatId; // ex: 5511999999999@c.us
+    contatoAtualId = ev.data.chatId;
     elNome.textContent = ev.data.nome || 'Desconhecido';
     elTelefone.textContent = ev.data.telefone || contatoAtualId.split('@')[0];
-
     carregarDadosContato(contatoAtualId);
   }
 });
 
-// Pedir os dados init logo que abrir (Sprint 2 refactor)
 window.parent.postMessage({ type: 'upsiden_get_active_chat' }, '*');
 
 async function carregarDadosContato(chatId) {
-  const chave = `ups_crm_${chatId}`;
-  chrome.storage.local.get([chave], (result) => {
-    const dados = result[chave] || {};
+  userId = await UpsidenAuth.getUserId();
+  if (!userId) return;
+
+  try {
+    const results = await UpsidenDB.from('notas_contato')
+      .select('*')
+      .eq('chat_id', chatId)
+      .eq('closer_id', userId)
+      .execute();
+
+    const dados = results && results.length > 0 ? results[0] : {};
     selFunil.value = dados.funil || 'lead';
     txtNotas.value = dados.notas || '';
     inpValor.value = dados.valor || '';
-    // Etiquetas serão carregadas em uma função dedicada futuramente
-  });
+  } catch (err) {
+    console.error('[Notas] Erro ao carregar:', err);
+  }
 }
 
-btnSalvar.addEventListener('click', () => {
-  if (!contatoAtualId) return;
+btnSalvar.addEventListener('click', async () => {
+  if (!contatoAtualId || !userId) return;
 
-  const chave = `ups_crm_${contatoAtualId}`;
   const dadosParaSalvar = {
-    nome: elNome.textContent,
+    chat_id: contatoAtualId,
+    closer_id: userId,
+    nome_contato: elNome.textContent,
     telefone: elTelefone.textContent,
     funil: selFunil.value,
     notas: txtNotas.value,
     valor: inpValor.value,
-    atualizadoEm: Date.now()
+    updated_at: new Date().toISOString()
   };
 
-  chrome.storage.local.set({ [chave]: dadosParaSalvar }, () => {
+  try {
+    await UpsidenDB.from('notas_contato').upsert(dadosParaSalvar).execute();
+
     btnSalvar.textContent = 'Salvo com Sucesso! ✓';
     btnSalvar.style.background = '#02c098';
     setTimeout(() => {
@@ -57,7 +67,17 @@ btnSalvar.addEventListener('click', () => {
       btnSalvar.style.background = '#00a884';
     }, 2000);
 
-    // Notificar o pai que o funil mudou para atualizar kanban e listas (Futuro)
-    window.parent.postMessage({ type: 'upsiden_crm_updated', data: { chatId: contatoAtualId, ...dadosParaSalvar } }, '*');
-  });
+    window.parent.postMessage({
+      type: 'upsiden_crm_updated',
+      data: { chatId: contatoAtualId, ...dadosParaSalvar }
+    }, '*');
+  } catch (err) {
+    console.error('[Notas] Erro ao salvar:', err);
+    btnSalvar.textContent = 'Erro ao salvar!';
+    btnSalvar.style.background = '#dc3545';
+    setTimeout(() => {
+      btnSalvar.textContent = 'Salvar Alterações';
+      btnSalvar.style.background = '#00a884';
+    }, 2000);
+  }
 });

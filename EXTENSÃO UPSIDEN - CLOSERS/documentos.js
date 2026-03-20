@@ -1,29 +1,12 @@
 /* =========================================
-   Upsiden — Biblioteca de Documentos Engine
+   Upsiden — Biblioteca de Documentos (Supabase)
    ========================================= */
 
-const STORAGE_KEY = 'upsiden_documents';
 let documentos = [];
 let buscaAtual = '';
-
-// ── Storage ──
-async function carregarDocs() {
-  return new Promise(resolve => {
-    chrome.storage.local.get(STORAGE_KEY, r => {
-      documentos = r[STORAGE_KEY] || [];
-      resolve();
-    });
-  });
-}
-
-async function salvarDocs() {
-  return new Promise(resolve => {
-    chrome.storage.local.set({ [STORAGE_KEY]: documentos }, resolve);
-  });
-}
-
-// ── Utilitários ──
-function gerarId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+let filtroCategoria = 'todos';
+let userId = null;
+let isAdmin = false;
 
 function formatarTamanho(bytes) {
   if (bytes < 1024) return bytes + ' B';
@@ -39,40 +22,36 @@ function iconeDoTipo(tipo) {
   return '📄';
 }
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+async function carregarDocs() {
+  userId = await UpsidenAuth.getUserId();
+  isAdmin = await UpsidenAuth.isAdmin();
+  const data = await UpsidenDB.from('documentos').select('*').order('created_at', false).execute();
+  documentos = data || [];
 }
 
-// ── Renderizar ──
 function renderizar() {
   const lista = document.getElementById('doc-lista');
   const vazio = document.getElementById('doc-vazio');
   const count = document.getElementById('doc-count');
 
-  const filtrados = documentos.filter(d =>
-    d.nome.toLowerCase().includes(buscaAtual.toLowerCase())
-  );
+  let filtrados = documentos.filter(d => d.nome.toLowerCase().includes(buscaAtual.toLowerCase()));
+  if (filtroCategoria === 'equipe') {
+    filtrados = filtrados.filter(d => d.compartilhado);
+  }
 
   lista.innerHTML = '';
   if (filtrados.length === 0) {
-    lista.style.display = 'none';
-    vazio.style.display = 'flex';
+    lista.style.display = 'none'; vazio.style.display = 'flex';
   } else {
-    lista.style.display = 'flex';
-    vazio.style.display = 'none';
-
+    lista.style.display = 'flex'; vazio.style.display = 'none';
     filtrados.forEach(doc => {
       const card = document.createElement('div');
       card.className = 'mod-card';
+      const compartilhadoBadge = doc.compartilhado ? ' <span style="font-size:8px;background:#FF6200;color:white;padding:1px 3px;border-radius:2px;">TIME</span>' : '';
       card.innerHTML = `
         <div class="mod-card-icon">${iconeDoTipo(doc.tipo)}</div>
         <div class="mod-card-info">
-          <div class="mod-card-title">${doc.nome}</div>
+          <div class="mod-card-title">${doc.nome}${compartilhadoBadge}</div>
           <div class="mod-card-meta">${formatarTamanho(doc.tamanho)}</div>
         </div>
         <div class="mod-card-actions">
@@ -87,54 +66,84 @@ function renderizar() {
   count.textContent = `${documentos.length} documento${documentos.length !== 1 ? 's' : ''}`;
 }
 
-// ── Eventos ──
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!(await verificarAuth())) {
+    document.querySelector('.mod-app').innerHTML = '<p style="padding:20px;color:#8696a0;text-align:center;">Faça login para acessar os documentos.</p>';
+    return;
+  }
+
   await carregarDocs();
   renderizar();
 
-  // Upload
   document.getElementById('doc-upload').addEventListener('change', async (e) => {
     const files = Array.from(e.target.files);
     for (const file of files) {
-      const base64 = await fileToBase64(file);
-      documentos.push({
-        id: gerarId(),
-        nome: file.name,
-        tipo: file.type,
-        tamanho: file.size,
-        base64: base64,
-        criadoEm: Date.now()
-      });
+      try {
+        const storagePath = `${userId}/${Date.now()}_${file.name}`;
+        await UpsidenStorage.upload('documentos', storagePath, file, file.type);
+        const result = await UpsidenDB.from('documentos').insert({
+          nome: file.name, tipo: file.type, tamanho: file.size,
+          storage_path: storagePath, criado_por: userId, compartilhado: isAdmin
+        }).execute();
+        if (result && result.length) documentos.unshift(result[0]);
+      } catch (err) { console.error('Upload failed:', err); alert(`Erro ao fazer upload de ${file.name}`); }
     }
-    await salvarDocs();
     renderizar();
     e.target.value = '';
   });
 
-  // Busca
-  document.getElementById('doc-busca').addEventListener('input', (e) => {
-    buscaAtual = e.target.value;
-    renderizar();
-  });
+  document.getElementById('doc-busca').addEventListener('input', (e) => { buscaAtual = e.target.value; renderizar(); });
 
-  // Cliques (enviar/excluir)
+  const catContainer = document.getElementById('container-categorias-doc');
+  if (catContainer) {
+    catContainer.addEventListener('click', (e) => {
+      const chip = e.target.closest('.cat-chip');
+      if (!chip) return;
+      catContainer.querySelectorAll('.cat-chip').forEach(c => {
+        c.style.background = 'transparent';
+        c.style.color = '#8696a0';
+        c.style.border = '1px solid rgba(42,57,66,0.8)';
+        c.classList.remove('active');
+      });
+      chip.classList.add('active');
+      chip.style.background = '#FF6200';
+      chip.style.color = '#fff';
+      chip.style.border = 'none';
+      
+      filtroCategoria = chip.dataset.categoria;
+      renderizar();
+    });
+  }
+
   document.getElementById('doc-lista').addEventListener('click', async (e) => {
     const btnSend = e.target.closest('[data-id]');
     const btnDel = e.target.closest('[data-del]');
 
     if (btnDel) {
-      documentos = documentos.filter(d => d.id !== btnDel.dataset.del);
-      await salvarDocs();
-      renderizar();
+      const doc = documentos.find(d => d.id === btnDel.dataset.del);
+      if (doc) {
+        await UpsidenStorage.remove('documentos', [doc.storage_path]).catch(() => {});
+        await UpsidenDB.from('documentos').eq('id', doc.id).delete().execute();
+        documentos = documentos.filter(d => d.id !== doc.id);
+        renderizar();
+      }
     }
 
-    if (btnSend) {
+    if (btnSend && !btnSend.closest('[data-del]')) {
       const doc = documentos.find(d => d.id === btnSend.dataset.id);
       if (doc) {
-        window.parent.postMessage({
-          type: 'upsiden_send_file',
-          data: { nome: doc.nome, tipo: doc.tipo, base64: doc.base64 }
-        }, '*');
+        try {
+          const blob = await UpsidenStorage.download('documentos', doc.storage_path);
+          const reader = new FileReader();
+          reader.onload = () => {
+            window.parent.postMessage({
+              type: 'upsiden_send_file',
+              data: { nome: doc.nome, tipo: doc.tipo, base64: reader.result }
+            }, '*');
+            UpsidenMetrics.registrar('documento', doc.id);
+          };
+          reader.readAsDataURL(blob);
+        } catch (err) { alert('Erro ao enviar documento'); }
       }
     }
   });

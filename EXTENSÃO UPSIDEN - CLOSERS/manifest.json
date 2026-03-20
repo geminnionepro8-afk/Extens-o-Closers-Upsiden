@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Upsiden — Áudio Instantâneo",
-  "version": "2.0.0",
-  "description": "Biblioteca de áudios com envio instantâneo como mensagem de voz no WhatsApp Web.",
+  "version": "3.0.0",
+  "description": "Biblioteca de áudios com envio instantâneo como mensagem de voz no WhatsApp Web. Backend Supabase.",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -10,19 +10,11 @@
     "activeTab"
   ],
   "host_permissions": [
-    "https://web.whatsapp.com/*"
+    "https://web.whatsapp.com/*",
+    "https://imxwpacwtphekrbgwbph.supabase.co/*"
   ],
   "background": {
     "service_worker": "servico_background.js"
-  },
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "Upsiden — Biblioteca de Áudios",
-    "default_icon": {
-      "16": "icones/icone16.png",
-      "48": "icones/icone48.png",
-      "128": "icones/icone128.png"
-    }
   },
   "content_scripts": [
     {
@@ -46,9 +38,16 @@
         "injetor_pagina.js",
         "injetado.css",
         "icones/*",
-        "popup.html",
-        "popup.css",
-        "popup.js",
+        "supabase_client.js",
+        "login.html",
+        "login.css",
+        "login.js",
+        "audios.html",
+        "audios.css",
+        "audios.js",
+        "admin.html",
+        "admin.css",
+        "admin.js",
         "crm.html",
         "crm.css",
         "crm.js",
@@ -82,6 +81,8 @@
       },
       "description": "Abrir seletor de arquivo de áudio"
     }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://imxwpacwtphekrbgwbph.supabase.co https://*.supabase.co"
   }
 }
-
