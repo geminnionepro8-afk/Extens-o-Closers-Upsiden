@@ -23,6 +23,8 @@ function injetarScripts() {
 
 // ── Módulos ──────────────────────────────────────────────
 const MODULOS = [
+  { tela: 'painel',       title: 'Painel Upsiden',        iframe: '__OPEN_TAB__',
+    svg: '<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>' },
   { tela: 'audios',       title: 'Biblioteca de Áudios',  iframe: 'audios.html',
     svg: '<path d="M12 3v9.28A4.39 4.39 0 0010.5 12C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>' },
   { tela: 'documentos',   title: 'Documentos',            iframe: 'documentos.html',
@@ -191,6 +193,11 @@ function criarPainel() {
 }
 
 function abrirPainel(tela, titulo, iframeSrc) {
+  // Painel full-page abre em nova aba
+  if (iframeSrc === '__OPEN_TAB__') {
+    chrome.runtime.sendMessage({ tipo: 'abrir_painel' });
+    return;
+  }
   criarPainel();
   const body = document.getElementById('ups-panel-body');
   document.getElementById('ups-panel-titulo').textContent = titulo;

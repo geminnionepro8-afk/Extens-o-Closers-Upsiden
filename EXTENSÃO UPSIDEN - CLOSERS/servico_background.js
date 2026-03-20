@@ -19,6 +19,11 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
     });
     return true; 
   }
+
+  if (mensagem.tipo === 'abrir_painel') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('painel.html') });
+    return false;
+  }
 });
 
 chrome.runtime.onInstalled.addListener(() => {
