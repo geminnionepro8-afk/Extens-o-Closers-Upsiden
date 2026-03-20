@@ -1,5 +1,11 @@
 const CONTEXTO = '[Upsiden-Background]';
 
+try {
+  importScripts('supabase.min.js', 'supabase_config.js');
+} catch (e) {
+  console.error("Failed to load Supabase scripts.", e);
+}
+
 chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
   if (mensagem.tipo === 'enviar_audio_biblioteca') {
     chrome.tabs.query({ url: '*://web.whatsapp.com/*' }).then((abas) => {

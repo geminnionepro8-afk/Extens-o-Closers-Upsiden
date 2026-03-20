@@ -13,6 +13,14 @@
     "https://web.whatsapp.com/*",
     "https://imxwpacwtphekrbgwbph.supabase.co/*"
   ],
+  "action": {
+    "default_popup": "painel.html",
+    "default_icon": {
+      "16": "icones/icone16.png",
+      "48": "icones/icone48.png",
+      "128": "icones/icone128.png"
+    }
+  },
   "background": {
     "service_worker": "servico_background.js"
   },
@@ -66,7 +74,9 @@
         "saudacao.html",
         "saudacao.js",
         "triggers.html",
-        "triggers.js"
+        "triggers.js",
+        "supabase.min.js",
+        "supabase_config.js"
       ],
       "matches": [
         "https://web.whatsapp.com/*"
