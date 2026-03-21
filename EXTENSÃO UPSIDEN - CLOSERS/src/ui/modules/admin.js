@@ -1,12 +1,12 @@
 /* =========================================
-   Upsiden — Painel Admin (Supabase)
+   Upsiden  Painel Admin (Supabase)
    ========================================= */
 
 let equipe = [];
 let arquivosGlobais = [];
 let buscaAtual = '';
 
-// ======================== RENDERIZAÇÃO EQUIPE ========================
+// ======================== RENDERIZAO EQUIPE ========================
 function renderizarEquipe() {
   const lista = document.getElementById('lista-equipe');
   lista.innerHTML = '';
@@ -34,7 +34,7 @@ function renderizarEquipe() {
   });
 }
 
-// ======================== RENDERIZAÇÃO ARQUIVOS ========================
+// ======================== RENDERIZAO ARQUIVOS ========================
 function renderizarArquivos() {
   const lista = document.getElementById('lista-arquivos');
   lista.innerHTML = '';
@@ -59,12 +59,12 @@ function renderizarArquivos() {
     const nomeDono = dono ? (dono.nome || dono.email.split('@')[0]) : 'Desconhecido';
     
     // Identificar de onde vem o arquivo pela estrutura
-    let tipoIcone = '🎵';
+    let tipoIcone = '<';
     let tabela = 'audios';
     if (arq.hasOwnProperty('tamanho') && !arq.hasOwnProperty('duracao')) {
-      tipoIcone = '📄'; tabela = 'documentos';
+      tipoIcone = '='; tabela = 'documentos';
     } else if (arq.hasOwnProperty('url')) {
-      tipoIcone = '🖼️'; tabela = 'midias';
+      tipoIcone = '='; tabela = 'midias';
     }
 
     const ehCompartilhado = arq.compartilhado === true;
@@ -74,7 +74,7 @@ function renderizarArquivos() {
         <div class="card-title">${tipoIcone} ${arq.nome}</div>
         <div class="card-meta">
           <span>Criado por: <strong>${nomeDono}</strong></span>
-          <span>•</span>
+          <span>"</span>
           <span>Tipo: ${tabela.charAt(0).toUpperCase() + tabela.slice(1)}</span>
         </div>
       </div>
@@ -106,7 +106,7 @@ async function carregarDadosAdmin() {
       console.warn("Nao foi possivel carregar perfis via Rest Admin", await resPerfis.text());
     }
 
-    // 2. Carregar Arquivos (Podemos fazer union ou requisições paralelas)
+    // 2. Carregar Arquivos (Podemos fazer union ou requisies paralelas)
     const [audios, docs] = await Promise.all([
       UpsidenDB.from('audios').select('*').order('created_at', false).execute(),
       UpsidenDB.from('documentos').select('*').order('created_at', false).execute()
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         arquivo.compartilhado = novoEstado;
         renderizarArquivos();
       } catch (err) {
-        alert('Erro ao atualizar permissão.');
+        alert('Erro ao atualizar permisso.');
         renderizarArquivos();
       }
     }

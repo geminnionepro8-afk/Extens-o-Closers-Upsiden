@@ -1,4 +1,4 @@
-/* Upsiden — Login Logic */
+﻿/* Upsiden â€” Login Logic */
 
 const formLogin = document.getElementById('form-login');
 const formRegistro = document.getElementById('form-registro');
@@ -20,7 +20,7 @@ btnToggle.addEventListener('click', () => {
   modoRegistro = !modoRegistro;
   formLogin.style.display = modoRegistro ? 'none' : 'block';
   formRegistro.style.display = modoRegistro ? 'block' : 'none';
-  btnToggle.textContent = modoRegistro ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma';
+  btnToggle.textContent = modoRegistro ? 'JÃ¡ tem conta? Entrar' : 'NÃ£o tem conta? Criar uma';
   limparStatus();
 });
 
@@ -45,7 +45,7 @@ formLogin.addEventListener('submit', async (e) => {
         window.close();
       } else {
         // Redirect to painel dashboard
-        window.location.href = 'painel.html';
+        window.location.href = '../painel/painel.html';
       }
     }, 500);
   } catch (err) {
@@ -75,7 +75,7 @@ formRegistro.addEventListener('submit', async (e) => {
           window.opener.postMessage({ type: 'upsiden_auth_success' }, '*');
           window.close();
         } else {
-          window.location.href = 'painel.html';
+          window.location.href = '../painel/painel.html';
         }
       }, 500);
     } else {
@@ -93,6 +93,7 @@ formRegistro.addEventListener('submit', async (e) => {
 (async () => {
   const loggedIn = await verificarAuth();
   if (loggedIn) {
-    window.location.href = 'painel.html';
+    window.location.href = '../painel/painel.html';
   }
 })();
+

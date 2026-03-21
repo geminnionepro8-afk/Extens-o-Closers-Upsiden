@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upsiden — Painel</title>
-  <link rel="icon" href="icones/icone48.png" type="image/png">
-  <link rel="stylesheet" href="painel.css">
+  <title>Upsiden  Painel</title>
+  <link rel="icon" href="../../../public/icons/icone48.png" type="image/png">
+  <link rel="stylesheet" href="../styles/painel.css">
 </head>
 <body>
   <!-- Loading -->
@@ -18,7 +18,7 @@
   <div id="auth-guard" style="display:none;">
     <div class="loading-page">
       <div style="text-align:center;">
-        <img src="icones/icone128.png" style="width:64px;height:64px;opacity:0.3;margin-bottom:16px;" alt="Upsiden">
+        <img src="../../../public/icons/icone128.png" style="width:64px;height:64px;opacity:0.3;margin-bottom:16px;" alt="Upsiden">
         <h2 style="font-size:20px;margin-bottom:8px;">Faça login para acessar o Painel</h2>
         <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Você precisa estar autenticado para usar o Painel Upsiden.</p>
         <button class="btn btn-primary" id="btn-goto-login">Fazer Login</button>
@@ -29,14 +29,14 @@
   <!-- Main Layout -->
   <div id="painel-app" class="painel-layout" style="display:none;">
 
-    <!-- ══ SIDEBAR ══ -->
+    <!-- "" SIDEBAR "" -->
     <aside class="painel-sidebar" id="painel-sidebar">
 
 
       <div class="sidebar-brand">
         <div class="brand-icon">
-          <img src="icones/upsiden_logo.png" alt="Upsiden" onerror="this.src='icones/icone48.png'" class="brand-logo-full">
-          <img src="icones/icone48.png" alt="U" class="brand-logo-mini">
+          <img src="../../../public/icons/upsiden_logo.png" alt="Upsiden" onerror="this.src='../../../public/icons/icone48.png'" class="brand-logo-full">
+          <img src="../../../public/icons/icone48.png" alt="U" class="brand-logo-mini">
         </div>
         <span class="brand-name">Upsiden</span>
         <!-- Toggle Button -->
@@ -144,7 +144,7 @@
 
     </aside>
 
-    <!-- ══ USER MENU POPUP ══ -->
+    <!-- "" USER MENU POPUP "" -->
     <div class="user-menu-popup" id="user-menu-popup">
       <div class="user-menu-header">
         <div class="user-avatar-lg" id="user-avatar-popup">U</div>
@@ -180,7 +180,7 @@
     <!-- Popup overlay -->
     <div class="user-menu-overlay" id="user-menu-overlay"></div>
 
-    <!-- ══ MAIN ══ -->
+    <!-- "" MAIN "" -->
     <main class="painel-main">
       <header class="main-header">
         <div class="main-header-left">
@@ -201,7 +201,23 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toast-container"></div>
 
-  <script src="supabase_client.js"></script>
-  <script src="painel.js"></script>
+  <script src="../../libs/supabase.min.js"></script>
+  <script src="../../libs/supabase-config.js"></script>
+  <script src="../../services/auth.service.js"></script>
+  <script src="../../services/db.service.js"></script>
+  <script src="../../services/storage.service.js"></script>
+  <script src="../../services/metrics.service.js"></script>
+  <script src="painel-helpers.js"></script>
+  <script src="painel-dashboard.js"></script>
+  <script src="painel-biblioteca.js"></script>
+  <script src="painel-templates-crm.js"></script>
+  <script src="painel-automacoes.js"></script>
+  <script src="painel-campanhas.js"></script>
+  <script src="painel-admin.js"></script>
+  <script src="painel-init.js"></script>
 </body>
 </html>
+
+
+
+

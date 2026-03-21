@@ -1,5 +1,5 @@
-/* ==============================
-   Upsiden — Biblioteca de Áudios (Supabase)
+﻿/* ==============================
+   Upsiden â€” Biblioteca de Ãudios (Supabase)
    ============================== */
 
 const CONTEXTO_POPUP = '[Popup]';
@@ -17,10 +17,10 @@ const ESTADO_POPUP = {
 
 // ============== LOGGER ==============
 class Logger {
-  static info(msg, data = null) { data ? console.log(`${CONTEXTO_POPUP} ℹ️ ${msg}`, data) : console.log(`${CONTEXTO_POPUP} ℹ️ ${msg}`); }
-  static ok(msg, data = null) { data ? console.log(`${CONTEXTO_POPUP} ✅ ${msg}`, data) : console.log(`${CONTEXTO_POPUP} ✅ ${msg}`); }
-  static warn(msg, data = null) { data ? console.warn(`${CONTEXTO_POPUP} ⚠️ ${msg}`, data) : console.warn(`${CONTEXTO_POPUP} ⚠️ ${msg}`); }
-  static error(msg, err = null) { console.error(`${CONTEXTO_POPUP} ❌ ${msg}`); if (err) console.error(err); }
+  static info(msg, data = null) { data ? console.log(`${CONTEXTO_POPUP} â„¹ï¸ ${msg}`, data) : console.log(`${CONTEXTO_POPUP} â„¹ï¸ ${msg}`); }
+  static ok(msg, data = null) { data ? console.log(`${CONTEXTO_POPUP} âœ… ${msg}`, data) : console.log(`${CONTEXTO_POPUP} âœ… ${msg}`); }
+  static warn(msg, data = null) { data ? console.warn(`${CONTEXTO_POPUP} âš ï¸ ${msg}`, data) : console.warn(`${CONTEXTO_POPUP} âš ï¸ ${msg}`); }
+  static error(msg, err = null) { console.error(`${CONTEXTO_POPUP} âŒ ${msg}`); if (err) console.error(err); }
 }
 
 // ============== STORAGE MANAGER (SUPABASE) ==============
@@ -34,7 +34,7 @@ class StorageManager {
       const pastas = await UpsidenDB.from('pastas_audio').select('*').order('nome').execute();
       ESTADO_POPUP.pastas = pastas || [];
 
-      Logger.ok(`${ESTADO_POPUP.audios.length} áudios e ${ESTADO_POPUP.pastas.length} pastas`);
+      Logger.ok(`${ESTADO_POPUP.audios.length} Ã¡udios e ${ESTADO_POPUP.pastas.length} pastas`);
       return ESTADO_POPUP.audios;
     } catch (err) {
       Logger.error('Falha ao carregar dados', err);
@@ -49,7 +49,7 @@ class StorageManager {
         ESTADO_POPUP.audios.unshift(result[0]);
       }
     } catch (err) {
-      Logger.error('Falha ao salvar áudio', err);
+      Logger.error('Falha ao salvar Ã¡udio', err);
       throw err;
     }
   }
@@ -64,7 +64,7 @@ class StorageManager {
       await UpsidenDB.from('audios').eq('id', id).delete().execute();
       ESTADO_POPUP.audios = ESTADO_POPUP.audios.filter(a => a.id !== id);
     } catch (err) {
-      Logger.error('Falha ao remover áudio', err);
+      Logger.error('Falha ao remover Ã¡udio', err);
     }
   }
 
@@ -76,7 +76,7 @@ class StorageManager {
         ESTADO_POPUP.audios[idx] = { ...ESTADO_POPUP.audios[idx], ...dados };
       }
     } catch (err) {
-      Logger.error('Falha ao atualizar áudio', err);
+      Logger.error('Falha ao atualizar Ã¡udio', err);
     }
   }
 
@@ -135,7 +135,7 @@ class AudioProcessor {
         favorito: false
       };
 
-      Logger.ok(`Áudio processado: ${audioObj.nome} (${AudioProcessor.formatarDuracao(duracao)})`);
+      Logger.ok(`Ãudio processado: ${audioObj.nome} (${AudioProcessor.formatarDuracao(duracao)})`);
       return audioObj;
     } catch (err) {
       Logger.error(`Falha ao processar ${arquivo.name}`, err);
@@ -158,7 +158,7 @@ class StatusBar {
   static atualizarContagem() {
     const el = document.getElementById('contagem-audios');
     const total = ESTADO_POPUP.audios.length;
-    el.textContent = `${total} ${total === 1 ? 'áudio' : 'áudios'}`;
+    el.textContent = `${total} ${total === 1 ? 'Ã¡udio' : 'Ã¡udios'}`;
   }
 }
 
@@ -184,7 +184,7 @@ class UIRenderer {
     if (audiosFiltrados.length === 0) {
       const msgVazia = document.createElement('div');
       msgVazia.className = 'empty-state';
-      msgVazia.innerHTML = '<p class="empty-desc">Nenhum áudio encontrado para o filtro atual</p>';
+      msgVazia.innerHTML = '<p class="empty-desc">Nenhum Ã¡udio encontrado para o filtro atual</p>';
       container.appendChild(msgVazia);
     } else {
       audiosFiltrados.forEach((audio, index) => {
@@ -235,9 +235,9 @@ class UIRenderer {
 
     card.innerHTML = `
       <div class="audio-card-fav">
-        <button class="btn-fav ${audio.favorito ? 'active' : ''}" data-id="${audio.id}" title="Favoritar">⭐</button>
+        <button class="btn-fav ${audio.favorito ? 'active' : ''}" data-id="${audio.id}" title="Favoritar">â­</button>
       </div>
-      <button class="audio-play" data-id="${audio.id}" title="${estaPreviewando ? 'Pausar' : 'Pré-escuta'}">
+      <button class="audio-play" data-id="${audio.id}" title="${estaPreviewando ? 'Pausar' : 'PrÃ©-escuta'}">
         ${iconPlay}
       </button>
       <div class="audio-info">
@@ -335,9 +335,9 @@ class PreviewManager {
 class SendManager {
   static async enviar(audioId) {
     const audio = ESTADO_POPUP.audios.find(a => a.id === audioId);
-    if (!audio) { StatusBar.mostrar('Áudio não encontrado', 'error'); return; }
+    if (!audio) { StatusBar.mostrar('Ãudio nÃ£o encontrado', 'error'); return; }
 
-    Logger.info(`Enviando áudio: ${audio.nome}`);
+    Logger.info(`Enviando Ã¡udio: ${audio.nome}`);
     StatusBar.mostrar(`Enviando "${audio.nome}"...`, 'sending');
 
     const card = document.querySelector(`.audio-card[data-id="${audioId}"]`);
@@ -364,15 +364,15 @@ class SendManager {
       });
 
       if (resposta && resposta.sucesso) {
-        Logger.ok(`Áudio "${audio.nome}" enviado com sucesso`);
-        StatusBar.mostrar(`"${audio.nome}" enviado! ⚡`, 'success');
+        Logger.ok(`Ãudio "${audio.nome}" enviado com sucesso`);
+        StatusBar.mostrar(`"${audio.nome}" enviado! âš¡`, 'success');
         // Register metric
         UpsidenMetrics.registrar('audio', audio.id);
       } else {
         throw new Error(resposta?.erro || 'Sem resposta do WhatsApp Web');
       }
     } catch (err) {
-      Logger.error('Falha ao enviar áudio', err);
+      Logger.error('Falha ao enviar Ã¡udio', err);
       const msgUsuario = err.message.includes('F5') ? err.message :
         err.message.includes('WhatsApp') ? err.message : 'Atualize o WhatsApp Web (F5) e tente novamente';
       StatusBar.mostrar(msgUsuario, 'error', 5000);
@@ -389,7 +389,7 @@ class ImportManager {
   static async processar(arquivos) {
     if (!arquivos || arquivos.length === 0) return;
     Logger.info(`Importando ${arquivos.length} arquivo(s)...`);
-    StatusBar.mostrar(`Importando ${arquivos.length} áudio(s)...`, 'sending');
+    StatusBar.mostrar(`Importando ${arquivos.length} Ã¡udio(s)...`, 'sending');
 
     let sucesso = 0, falhas = 0;
     for (const arquivo of arquivos) {
@@ -405,7 +405,7 @@ class ImportManager {
     }
 
     UIRenderer.renderizarLista();
-    const msg = falhas > 0 ? `${sucesso} importado(s), ${falhas} falha(s)` : `${sucesso} áudio(s) importado(s)! ✨`;
+    const msg = falhas > 0 ? `${sucesso} importado(s), ${falhas} falha(s)` : `${sucesso} Ã¡udio(s) importado(s)! âœ¨`;
     StatusBar.mostrar(msg, falhas > 0 ? 'error' : 'success');
   }
 }
@@ -454,7 +454,7 @@ class ModalManager {
     await StorageManager.atualizarAudio(id, { nome, pasta_id: pastaId, compartilhado });
     ModalManager.fechar();
     UIRenderer.renderizarLista();
-    StatusBar.mostrar('Áudio atualizado ✓', 'success');
+    StatusBar.mostrar('Ãudio atualizado âœ“', 'success');
   }
 }
 
@@ -516,7 +516,7 @@ function registrarEventos() {
   });
 
   document.getElementById('btn-abrir-login').addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('login.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('src/ui/login/login.html') });
   });
 
   Logger.ok('Eventos registrados');
@@ -530,7 +530,7 @@ async function confirmarExclusao(id) {
   if (card && card.dataset.confirmando) {
     await StorageManager.removerAudio(id);
     UIRenderer.renderizarLista();
-    StatusBar.mostrar(`"${audio.nome}" excluído`, 'success');
+    StatusBar.mostrar(`"${audio.nome}" excluÃ­do`, 'success');
     return;
   }
 
@@ -539,7 +539,7 @@ async function confirmarExclusao(id) {
     card.style.borderColor = 'var(--danger)';
     const btnDelete = card.querySelector('.btn-delete');
     if (btnDelete) btnDelete.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--danger)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
-    StatusBar.mostrar('Clique novamente para confirmar exclusão', 'error', 3000);
+    StatusBar.mostrar('Clique novamente para confirmar exclusÃ£o', 'error', 3000);
     setTimeout(() => {
       if (card) { delete card.dataset.confirmando; card.style.borderColor = ''; UIRenderer.renderizarLista(); }
     }, 3000);
@@ -563,7 +563,7 @@ async function inicializar() {
       document.getElementById('auth-guard').style.display = 'flex';
       document.getElementById('main-app').style.display = 'none';
       document.getElementById('btn-abrir-login').addEventListener('click', () => {
-        chrome.tabs.create({ url: chrome.runtime.getURL('login.html') });
+        chrome.tabs.create({ url: chrome.runtime.getURL('src/ui/login/login.html') });
       });
       // Listen for auth success
       window.addEventListener('message', async (ev) => {
@@ -596,9 +596,10 @@ async function inicializar() {
     StatusBar.atualizarContagem();
     Logger.ok('=== Upsiden Popup inicializado ===');
   } catch (err) {
-    Logger.error('Falha na inicialização', err);
+    Logger.error('Falha na inicializaÃ§Ã£o', err);
     StatusBar.mostrar('Erro ao inicializar', 'error');
   }
 }
 
 document.addEventListener('DOMContentLoaded', inicializar);
+

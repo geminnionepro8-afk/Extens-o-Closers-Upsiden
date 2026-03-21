@@ -14,15 +14,15 @@
     "https://imxwpacwtphekrbgwbph.supabase.co/*"
   ],
   "action": {
-    "default_popup": "painel.html",
+    "default_popup": "src/ui/painel/painel.html",
     "default_icon": {
-      "16": "icones/icone16.png",
-      "48": "icones/icone48.png",
-      "128": "icones/icone128.png"
+      "16": "public/icons/icone16.png",
+      "48": "public/icons/icone48.png",
+      "128": "public/icons/icone128.png"
     }
   },
   "background": {
-    "service_worker": "servico_background.js"
+    "service_worker": "src/core/background/service-worker.js"
   },
   "content_scripts": [
     {
@@ -30,53 +30,48 @@
         "https://web.whatsapp.com/*"
       ],
       "css": [
-        "injetado.css"
+        "src/ui/styles/injetado.css"
       ],
       "js": [
-        "content_script.js"
+        "src/core/content-scripts/nav-injector.js",
+        "src/core/content-scripts/panel-drawer.js",
+        "src/core/content-scripts/quick-actions.js",
+        "src/core/content-scripts/chat-filters.js",
+        "src/core/content-scripts/ipc-bridge.js",
+        "src/core/content-scripts/content-script.js"
       ],
       "run_at": "document_idle"
     }
   ],
-  "options_page": "opcoes.html",
+  "options_page": "src/ui/options/opcoes.html",
   "web_accessible_resources": [
     {
       "resources": [
-        "wppconnect-wa.js",
-        "injetor_pagina.js",
-        "injetado.css",
-        "icones/*",
-        "supabase_client.js",
-        "login.html",
-        "login.css",
-        "login.js",
-        "painel.html",
-        "painel.css",
-        "painel.js",
-        "audios.html",
-        "audios.css",
-        "audios.js",
-        "admin.html",
-        "admin.css",
-        "admin.js",
-        "crm.html",
-        "crm.css",
-        "crm.js",
-        "modulo.css",
-        "documentos.html",
-        "documentos.js",
-        "midias.html",
-        "midias.js",
-        "templates.html",
-        "templates.js",
-        "notas.html",
-        "notas.js",
-        "saudacao.html",
-        "saudacao.js",
-        "triggers.html",
-        "triggers.js",
-        "supabase.min.js",
-        "supabase_config.js"
+        "src/libs/wppconnect-wa.js",
+        "src/core/page-scripts/wpp-engine.js",
+        "src/ui/styles/injetado.css",
+        "public/icons/*",
+        "src/services/auth.service.js",
+        "src/services/db.service.js",
+        "src/services/storage.service.js",
+        "src/services/metrics.service.js",
+        "src/libs/supabase.min.js",
+        "src/libs/supabase-config.js",
+        "src/ui/login/login.html",
+        "src/ui/login/login.css",
+        "src/ui/login/login.js",
+        "src/ui/painel/painel.html",
+        "src/ui/painel/painel-init.js",
+        "src/ui/painel/painel-helpers.js",
+        "src/ui/painel/painel-dashboard.js",
+        "src/ui/painel/painel-biblioteca.js",
+        "src/ui/painel/painel-templates-crm.js",
+        "src/ui/painel/painel-automacoes.js",
+        "src/ui/painel/painel-campanhas.js",
+        "src/ui/painel/painel-admin.js",
+        "src/ui/styles/painel.css",
+        "src/ui/styles/modulo.css",
+        "src/ui/modules/*"
       ],
       "matches": [
         "https://web.whatsapp.com/*"
@@ -84,9 +79,9 @@
     }
   ],
   "icons": {
-    "16": "icones/icone16.png",
-    "48": "icones/icone48.png",
-    "128": "icones/icone128.png"
+    "16": "public/icons/icone16.png",
+    "48": "public/icons/icone48.png",
+    "128": "public/icons/icone128.png"
   },
   "commands": {
     "acionar-seletor-audio": {

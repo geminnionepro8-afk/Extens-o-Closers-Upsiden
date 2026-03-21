@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upsiden — Login</title>
+  <title>Upsiden  Login</title>
   <link rel="stylesheet" href="login.css">
 </head>
 <body>
   <div class="login-app">
     <div class="login-card">
       <div class="login-logo">
-        <img src="icones/icone128.png" alt="Upsiden" style="width:56px;height:56px;">
+        <img src="../../../public/icons/icone128.png" alt="Upsiden" style="width:56px;height:56px;">
       </div>
       <h1>Upsiden</h1>
       <p class="login-subtitle">Acesse sua conta para continuar</p>
@@ -22,7 +22,7 @@
         </div>
         <div class="field">
           <label for="login-senha">Senha</label>
-          <input type="password" id="login-senha" placeholder="••••••••" required autocomplete="current-password">
+          <input type="password" id="login-senha" placeholder="⬢⬢⬢⬢⬢⬢⬢⬢" required autocomplete="current-password">
         </div>
         <button type="submit" class="btn-login" id="btn-entrar">Entrar</button>
       </form>
@@ -50,7 +50,12 @@
       <div class="login-status" id="login-status"></div>
     </div>
   </div>
-  <script src="supabase_client.js"></script>
+  <script src="../../libs/supabase.min.js"></script>
+  <script src="../../libs/supabase-config.js"></script>
+  <script src="../../services/auth.service.js"></script><script src="../../services/db.service.js"></script><script src="../../services/storage.service.js"></script><script src="../../services/metrics.service.js"></script>
   <script src="login.js"></script>
 </body>
 </html>
+
+
+

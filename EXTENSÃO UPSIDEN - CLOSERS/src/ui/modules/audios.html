@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upsiden — Biblioteca de Áudios</title>
+  <title>Upsiden  Biblioteca de Áudios</title>
   <link rel="stylesheet" href="audios.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
     <header class="header">
       <div class="header-brand">
         <div class="header-logo">
-          <img src="icones/upsiden_logo.png" alt="Upsiden Logo" style="height: 24px; max-width: 140px; object-fit: contain;">
+          <img src="../../../public/icons/upsiden_logo.png" alt="Upsiden Logo" style="height: 24px; max-width: 140px; object-fit: contain;">
         </div>
       </div>
       <button class="btn-icon btn-settings" id="btn-opcoes" title="Configurações">
@@ -36,7 +36,7 @@
     <!-- Category Filter -->
     <div class="categories" id="container-categorias">
       <button class="cat-chip active" data-categoria="todos">Todos</button>
-      <button class="cat-chip" style="color: var(--accent); border-color: var(--accent);" data-categoria="equipe">🤝 Time</button>
+      <button class="cat-chip" style="color: var(--accent); border-color: var(--accent);" data-categoria="equipe">x Time</button>
       <button class="cat-chip" data-categoria="favoritos">⭐ Favoritos</button>
     </div>
 
@@ -45,7 +45,7 @@
       <!-- Estado vazio -->
       <div class="empty-state" id="estado-vazio">
         <div class="empty-icon">
-          <img src="icones/icone128.png" alt="Upsiden Icon" style="width: 64px; height: 64px; opacity: 0.15; filter: drop-shadow(0 0 10px rgba(255, 98, 0, 0.2)); margin-bottom: 8px;">
+          <img src="../../../public/icons/icone128.png" alt="Upsiden Icon" style="width: 64px; height: 64px; opacity: 0.15; filter: drop-shadow(0 0 10px rgba(255, 98, 0, 0.2)); margin-bottom: 8px;">
         </div>
         <p class="empty-title">Nenhum áudio na biblioteca</p>
         <p class="empty-desc">Clique em <strong>Importar</strong> para adicionar seus áudios</p>
@@ -64,7 +64,7 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Editar Áudio</h3>
-        <button class="btn-icon btn-close-modal" id="btn-fechar-modal">✕</button>
+        <button class="btn-icon btn-close-modal" id="btn-fechar-modal">S"</button>
       </div>
       <div class="modal-body">
         <label class="field-label">Nome do Áudio</label>
@@ -81,8 +81,14 @@
     </div>
   </div>
 
-  <script src="supabase_client.js"></script>
+  <script src="../../libs/supabase.min.js"></script>
+  <script src="../../libs/supabase-config.js"></script>
+  <script src="../../services/auth.service.js"></script><script src="../../services/db.service.js"></script><script src="../../services/storage.service.js"></script><script src="../../services/metrics.service.js"></script>
   <script src="audios.js"></script>
 </body>
 </html>
+
+
+
+
 

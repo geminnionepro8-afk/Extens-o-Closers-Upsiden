@@ -1,13 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════
-   Upsiden Painel — Full-Page Dashboard (Vanilla JS SPA)
-   ═══════════════════════════════════════════════════════════════ */
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Upsiden Painel â€” Full-Page Dashboard (Vanilla JS SPA)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 const P = '[Painel]';
 let currentSection = 'dashboard';
 let userData = { userId: null, nome: '', email: '', isAdmin: false };
 let painelData = { audios: [], documentos: [], midias: [], templates: [], leads: [], membros: [] };
 
-// ═══ TOAST ═══════════════════════════════════════════════════
+// â•â•â• TOAST â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function toast(msg, tipo = 'info') {
   const container = document.getElementById('toast-container');
   const el = document.createElement('div');
@@ -17,17 +17,17 @@ function toast(msg, tipo = 'info') {
   setTimeout(() => el.remove(), 3500);
 }
 
-// ═══ HELPERS ═════════════════════════════════════════════════
+// â•â•â• HELPERS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function fmtSize(b) { return b < 1024 ? b+' B' : b < 1048576 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(1)+' MB'; }
 function fmtDur(s) { return `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; }
-function fmtDate(d) { if (!d) return '—'; const dt = new Date(d); return dt.toLocaleDateString('pt-BR'); }
+function fmtDate(d) { if (!d) return 'â€”'; const dt = new Date(d); return dt.toLocaleDateString('pt-BR'); }
 function docIcon(t) {
-  if (!t) return '📄';
-  if (t.includes('pdf')) return '📕'; if (t.includes('word')||t.includes('doc')) return '📘';
-  if (t.includes('sheet')||t.includes('excel')||t.includes('csv')) return '📗'; return '📄';
+  if (!t) return 'ðŸ“„';
+  if (t.includes('pdf')) return 'ðŸ“•'; if (t.includes('word')||t.includes('doc')) return 'ðŸ“˜';
+  if (t.includes('sheet')||t.includes('excel')||t.includes('csv')) return 'ðŸ“—'; return 'ðŸ“„';
 }
 
-// ═══ NAVIGATION ══════════════════════════════════════════════
+// â•â•â• NAVIGATION â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function navigate(section) {
   currentSection = section;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -35,9 +35,9 @@ function navigate(section) {
   if (active) active.classList.add('active');
 
   const titles = {
-    dashboard: 'Dashboard', audios: 'Biblioteca de Áudios', documentos: 'Documentos',
-    midias: 'Mídias', templates: 'Templates de Texto', crm: 'CRM / Funil',
-    automacoes: 'Automações', campanhas: 'Campanhas de Envio', admin: 'Gestão da Equipe', config: 'Configurações'
+    dashboard: 'Dashboard', audios: 'Biblioteca de Ãudios', documentos: 'Documentos',
+    midias: 'MÃ­dias', templates: 'Templates de Texto', crm: 'CRM / Funil',
+    automacoes: 'AutomaÃ§Ãµes', campanhas: 'Campanhas de Envio', admin: 'GestÃ£o da Equipe', config: 'ConfiguraÃ§Ãµes'
   };
   const title = titles[section] || section;
   document.getElementById('page-title').textContent = title;
@@ -47,7 +47,7 @@ function navigate(section) {
   renderSection(section);
 }
 
-// ═══ RENDER SECTIONS ═════════════════════════════════════════
+// â•â•â• RENDER SECTIONS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function renderSection(section) {
   const c = document.getElementById('main-content');
   c.scrollTop = 0;
@@ -61,11 +61,11 @@ function renderSection(section) {
     case 'automacoes': return renderAutomacoes(c);
     case 'campanhas': return renderCampanhas(c);
     case 'admin': return renderAdmin(c);
-    default: c.innerHTML = `<div class="empty-state"><div class="empty-icon">🚧</div><h3>Em desenvolvimento</h3><p>Esta seção estará disponível em breve.</p></div>`;
+    default: c.innerHTML = `<div class="empty-state"><div class="empty-icon">ðŸš§</div><h3>Em desenvolvimento</h3><p>Esta seÃ§Ã£o estarÃ¡ disponÃ­vel em breve.</p></div>`;
   }
 }
 
-// ═══ DASHBOARD ══════════════════════════════════════════
+// â•â•â• DASHBOARD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function renderDashboard(c) {
   const nome = userData.nome || 'Closer';
   const hora = new Date().getHours();
@@ -80,9 +80,9 @@ function renderDashboard(c) {
 
   // Stat cards data
   const stats = [
-    { icon: iconAudio, value: painelData.audios.length,     label: 'Áudios na Biblioteca',  section: 'audios' },
+    { icon: iconAudio, value: painelData.audios.length,     label: 'Ãudios na Biblioteca',  section: 'audios' },
     { icon: iconDoc,   value: painelData.documentos.length, label: 'Documentos',             section: 'documentos' },
-    { icon: iconImg,   value: painelData.midias.length,     label: 'Mídias',                 section: 'midias' },
+    { icon: iconImg,   value: painelData.midias.length,     label: 'MÃ­dias',                 section: 'midias' },
     { icon: iconMsg,   value: painelData.templates.length,  label: 'Templates de Texto',    section: 'templates' },
   ];
 
@@ -98,7 +98,7 @@ function renderDashboard(c) {
       <div class="stat-label">${s.label}</div>
     </div>`).join('');
 
-  // Quick actions — SVG icons
+  // Quick actions â€” SVG icons
   const qIcons = {
     audios: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
     documentos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
@@ -106,9 +106,9 @@ function renderDashboard(c) {
     crm: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
   };
   const actions = [
-    { key: 'audios',     title: 'Importar Áudios',    sub: 'Adicione novos áudios',   bg: 'rgba(255,98,0,0.12)',     color: 'var(--accent)' },
+    { key: 'audios',     title: 'Importar Ãudios',    sub: 'Adicione novos Ã¡udios',   bg: 'rgba(255,98,0,0.12)',     color: 'var(--accent)' },
     { key: 'documentos', title: 'Upload Documentos', sub: 'PDFs, Word, planilhas',  bg: 'rgba(0,168,132,0.12)',    color: 'var(--success)' },
-    { key: 'templates',  title: 'Novo Template',     sub: 'Crie um texto rápido',   bg: 'rgba(247,201,72,0.12)',   color: 'var(--warning)' },
+    { key: 'templates',  title: 'Novo Template',     sub: 'Crie um texto rÃ¡pido',   bg: 'rgba(247,201,72,0.12)',   color: 'var(--warning)' },
     { key: 'crm',        title: 'Gerenciar Leads',   sub: 'Funil de vendas',        bg: 'rgba(255,98,0,0.12)',     color: 'var(--accent)' },
   ];
 
@@ -121,9 +121,9 @@ function renderDashboard(c) {
 
   // Recent items (last 4 audios + templates combined)
   const recents = [
-    ...painelData.audios.slice(0,2).map(a => ({ icon:'🎧', title: a.nome, sub: 'Biblioteca de Áudios', date: fmtDate(a.created_at), badge: 'Novo', badgeColor: 'orange', section: 'audios' })),
-    ...painelData.templates.slice(0,2).map(t => ({ icon:'💬', title: t.titulo||t.nome||'Template', sub: 'Templates de Texto', date: fmtDate(t.created_at), badge: 'Ativo', badgeColor: 'green', section: 'templates' })),
-    ...painelData.leads.slice(0,2).map(l => ({ icon:'📊', title: l.nome, sub: 'CRM / Funil', date: fmtDate(l.created_at), badge: l.estagio === 'fechado' ? 'Fechado' : l.estagio === 'negociacao' ? 'Em negociação' : 'Prospecção', badgeColor: l.estagio === 'fechado' ? 'green' : l.estagio === 'negociacao' ? 'orange' : 'yellow', section: 'crm' })),
+    ...painelData.audios.slice(0,2).map(a => ({ icon:'ðŸŽ§', title: a.nome, sub: 'Biblioteca de Ãudios', date: fmtDate(a.created_at), badge: 'Novo', badgeColor: 'orange', section: 'audios' })),
+    ...painelData.templates.slice(0,2).map(t => ({ icon:'ðŸ’¬', title: t.titulo||t.nome||'Template', sub: 'Templates de Texto', date: fmtDate(t.created_at), badge: 'Ativo', badgeColor: 'green', section: 'templates' })),
+    ...painelData.leads.slice(0,2).map(l => ({ icon:'ðŸ“Š', title: l.nome, sub: 'CRM / Funil', date: fmtDate(l.created_at), badge: l.estagio === 'fechado' ? 'Fechado' : l.estagio === 'negociacao' ? 'Em negociaÃ§Ã£o' : 'ProspecÃ§Ã£o', badgeColor: l.estagio === 'fechado' ? 'green' : l.estagio === 'negociacao' ? 'orange' : 'yellow', section: 'crm' })),
   ].slice(0, 6);
 
   const recentCards = recents.length > 0 ? recents.map(r => `
@@ -144,42 +144,42 @@ function renderDashboard(c) {
 
   c.innerHTML = `
     <div class="dash-welcome animate-in">
-      <h2>${saudacao}, ${nome}! 👋</h2>
-      <p>Gerencie seus áudios, documentos, templates e leads em um só lugar.</p>
+      <h2>${saudacao}, ${nome}! ðŸ‘‹</h2>
+      <p>Gerencie seus Ã¡udios, documentos, templates e leads em um sÃ³ lugar.</p>
     </div>
 
     <div class="dash-banner animate-in">
-      <div class="banner-icon">⚡</div>
-      <div class="banner-text"><strong>Upsiden está ativo.</strong> Acesse rapidamente seus recursos e automatize suas conversas no WhatsApp.</div>
-      <button class="banner-link" data-click="navigate('automacoes')">Ver Automações</button>
+      <div class="banner-icon">âš¡</div>
+      <div class="banner-text"><strong>Upsiden estÃ¡ ativo.</strong> Acesse rapidamente seus recursos e automatize suas conversas no WhatsApp.</div>
+      <button class="banner-link" data-click="navigate('automacoes')">Ver AutomaÃ§Ãµes</button>
     </div>
 
     <div class="stat-grid">${statCards}</div>
 
     <div class="section-header">
-      <h2>Ações Rápidas</h2>
+      <h2>AÃ§Ãµes RÃ¡pidas</h2>
     </div>
     <div class="quick-actions" style="margin-bottom:28px;">${actionCards}</div>
 
     <div class="section-header">
       <h2>Atividade Recente</h2>
-      <button class="see-all" data-click="navigate('audios')">Ver tudo →</button>
+      <button class="see-all" data-click="navigate('audios')">Ver tudo â†’</button>
     </div>
     <div class="recent-grid">${recentCards}</div>
   `;
 }
 
-// ═══ ÁUDIOS ══════════════════════════════════════════════════
+// â•â•â• ÃUDIOS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function renderAudios(c) {
   document.getElementById('header-actions').innerHTML = `<label class="btn btn-primary" for="audio-upload-input" style="cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Importar</label><input type="file" id="audio-upload-input" accept=".mp3,.wav,.ogg,.m4a,.opus,audio/*" multiple hidden>`;
   document.getElementById('audio-upload-input')?.addEventListener('change', handleAudioUpload);
 
-  let html = `<div class="section-header"><div class="search-bar"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="audio-search" placeholder="Buscar áudio..."></div></div>`;
+  let html = `<div class="section-header"><div class="search-bar"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="audio-search" placeholder="Buscar Ã¡udio..."></div></div>`;
 
   if (painelData.audios.length === 0) {
-    html += `<div class="empty-state"><div class="empty-icon">🎵</div><h3>Nenhum áudio na biblioteca</h3><p>Clique em <strong>Importar</strong> para adicionar seus áudios.</p></div>`;
+    html += `<div class="empty-state"><div class="empty-icon">ðŸŽµ</div><h3>Nenhum Ã¡udio na biblioteca</h3><p>Clique em <strong>Importar</strong> para adicionar seus Ã¡udios.</p></div>`;
   } else {
-    html += `<table class="data-table"><thead><tr><th></th><th>Nome</th><th>Duração</th><th>Tamanho</th><th>Compartilhado</th><th>Data</th><th></th></tr></thead><tbody>`;
+    html += `<table class="data-table"><thead><tr><th></th><th>Nome</th><th>DuraÃ§Ã£o</th><th>Tamanho</th><th>Compartilhado</th><th>Data</th><th></th></tr></thead><tbody>`;
     painelData.audios.forEach(a => {
       html += `<tr class="animate-in">
         <td><button class="audio-play-btn" data-audio-id="${a.id}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></td>
@@ -197,7 +197,7 @@ function renderAudios(c) {
   document.getElementById('audio-search')?.addEventListener('input', e => filterTable(e.target.value));
 }
 
-// ═══ DOCUMENTOS ══════════════════════════════════════════════
+// â•â•â• DOCUMENTOS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function renderDocumentos(c) {
   document.getElementById('header-actions').innerHTML = `<label class="btn btn-primary" for="doc-upload-input" style="cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Upload</label><input type="file" id="doc-upload-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" multiple hidden>`;
   document.getElementById('doc-upload-input')?.addEventListener('change', handleDocUpload);
@@ -205,7 +205,7 @@ function renderDocumentos(c) {
   let html = `<div class="section-header"><div class="search-bar"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="doc-search" placeholder="Buscar documento..."></div></div>`;
 
   if (painelData.documentos.length === 0) {
-    html += `<div class="empty-state"><div class="empty-icon">📄</div><h3>Nenhum documento</h3><p>Clique em <strong>Upload</strong> para adicionar documentos.</p></div>`;
+    html += `<div class="empty-state"><div class="empty-icon">ðŸ“„</div><h3>Nenhum documento</h3><p>Clique em <strong>Upload</strong> para adicionar documentos.</p></div>`;
   } else {
     html += `<table class="data-table"><thead><tr><th></th><th>Nome</th><th>Tamanho</th><th>Compartilhado</th><th>Data</th><th></th></tr></thead><tbody>`;
     painelData.documentos.forEach(d => {
@@ -224,13 +224,13 @@ function renderDocumentos(c) {
   document.getElementById('doc-search')?.addEventListener('input', e => filterTable(e.target.value));
 }
 
-// ═══ MÍDIAS ══════════════════════════════════════════════════
+// â•â•â• MÃDIAS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function renderMidias(c) {
   document.getElementById('header-actions').innerHTML = `<label class="btn btn-primary" for="media-upload-input" style="cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Upload</label><input type="file" id="media-upload-input" accept="image/*,video/*" multiple hidden>`;
   document.getElementById('media-upload-input')?.addEventListener('change', handleMediaUpload);
 
   if (painelData.midias.length === 0) {
-    c.innerHTML = `<div class="empty-state"><div class="empty-icon">🖼️</div><h3>Nenhuma mídia</h3><p>Adicione imagens e vídeos para compartilhar com sua equipe.</p></div>`;
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">ðŸ–¼ï¸</div><h3>Nenhuma mÃ­dia</h3><p>Adicione imagens e vÃ­deos para compartilhar com sua equipe.</p></div>`;
   } else {
     let html = '<div class="media-grid">';
     painelData.midias.forEach(m => {
@@ -246,17 +246,17 @@ function renderMidias(c) {
   }
 }
 
-// ═══ TEMPLATES ═══════════════════════════════════════════════
+// â•â•â• TEMPLATES â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function renderTemplates(c) {
   document.getElementById('header-actions').innerHTML = `<button class="btn btn-primary" data-click="showNewTemplateModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Template</button>`;
 
   if (painelData.templates.length === 0) {
-    c.innerHTML = `<div class="empty-state"><div class="empty-icon">💬</div><h3>Nenhum template</h3><p>Crie templates de texto para agilizar suas conversas.</p></div>`;
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">ðŸ’¬</div><h3>Nenhum template</h3><p>Crie templates de texto para agilizar suas conversas.</p></div>`;
   } else {
     let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
     painelData.templates.forEach(t => {
       html += `<div class="auto-section animate-in" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
-        <div style="flex:1;"><h3 style="margin-bottom:8px;">${t.titulo || t.nome || 'Sem título'}</h3><p style="font-size:13px;color:var(--text-secondary);white-space:pre-wrap;line-height:1.5;">${t.conteudo || t.texto || ''}</p></div>
+        <div style="flex:1;"><h3 style="margin-bottom:8px;">${t.titulo || t.nome || 'Sem tÃ­tulo'}</h3><p style="font-size:13px;color:var(--text-secondary);white-space:pre-wrap;line-height:1.5;">${t.conteudo || t.texto || ''}</p></div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
           <button class="btn-icon" title="Editar" data-click="editTemplate('${t.id}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
           <button class="btn-icon" title="Excluir" data-click="deleteItem('templates','${t.id}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
@@ -268,13 +268,13 @@ function renderTemplates(c) {
   }
 }
 
-// ═══ CRM ═════════════════════════════════════════════════════
+// â•â•â• CRM â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function renderCRM(c) {
   document.getElementById('header-actions').innerHTML = `<button class="btn btn-primary" data-click="showNewLeadModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Lead</button>`;
 
   const stages = [
-    { id: 'prospeccao', label: 'Prospecção', color: 'var(--warning)' },
-    { id: 'negociacao', label: 'Negociação', color: 'var(--accent)' },
+    { id: 'prospeccao', label: 'ProspecÃ§Ã£o', color: 'var(--warning)' },
+    { id: 'negociacao', label: 'NegociaÃ§Ã£o', color: 'var(--accent)' },
     { id: 'fechado', label: 'Fechado', color: 'var(--success)' }
   ];
 
@@ -295,29 +295,29 @@ function renderCRM(c) {
 }
 
 
-// ═══ STATE & TAB ═════════════════════════════════════════════
+// â•â•â• STATE & TAB â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 if (typeof window.autoSubTab === 'undefined') window.autoSubTab = 'saudacao';
 if (typeof window.campSubTab === 'undefined') window.campSubTab = 'nova';
 let currentLista = null;
 let campanhaHistorico = [];
 
-// ═══ CAMPANHAS EM MASSA ══════════════════════════════════════
+// â•â•â• CAMPANHAS EM MASSA â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 window.renderCampanhas = function(c) {
   const tabs = [
     { id: 'nova', label: 'Megafone Nova Campanha' },
-    { id: 'historico', label: 'Relógio Histórico' },
+    { id: 'historico', label: 'RelÃ³gio HistÃ³rico' },
     { id: 'listas', label: 'Listas de Contatos' },
-    { id: 'config', label: 'Engrenagem Configurações' }
+    { id: 'config', label: 'Engrenagem ConfiguraÃ§Ãµes' }
   ];
   let html = `<div class="sub-tabs" style="display:flex;gap:12px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;">`;
   tabs.forEach(t => {
-    html += `<button class="btn-ghost ${window.campSubTab === t.id ? 'active' : ''}" data-click="switchCampTab('${t.id}')" style="padding:8px 16px;border-radius:20px;color:var(--text);background:${window.campSubTab === t.id ? 'var(--input-bg)' : 'transparent'}">${t.label.replace('Megafone','📣').replace('Relógio','⏳').replace('Engrenagem','⚙️')}</button>`;
+    html += `<button class="btn-ghost ${window.campSubTab === t.id ? 'active' : ''}" data-click="switchCampTab('${t.id}')" style="padding:8px 16px;border-radius:20px;color:var(--text);background:${window.campSubTab === t.id ? 'var(--input-bg)' : 'transparent'}">${t.label.replace('Megafone','ðŸ“£').replace('RelÃ³gio','â³').replace('Engrenagem','âš™ï¸')}</button>`;
   });
   html += `</div>`;
   
   if (window.campSubTab === 'nova') {
     html += `<div class="auto-section animate-in">
-      <h3>🚀 Disparar Nova Campanha</h3>
+      <h3>ðŸš€ Disparar Nova Campanha</h3>
       <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure os detalhes e dispare para centenas de contatos. Use placeholders como {nome}.</p>
       
       <div class="form-group">
@@ -326,7 +326,7 @@ window.renderCampanhas = function(c) {
       </div>
       
       <div class="form-group">
-        <label class="form-label">Selecione a Lista de Transmissão</label>
+        <label class="form-label">Selecione a Lista de TransmissÃ£o</label>
         <select class="form-input" id="camp-lista">
           <option value="">-- Carregando listas... --</option>
         </select>
@@ -334,32 +334,32 @@ window.renderCampanhas = function(c) {
 
       <div class="form-group">
         <label class="form-label">Mensagem (Texto)</label>
-        <textarea class="form-textarea" id="camp-texto" rows="4" placeholder="Olá {nome}. Tudo bem?"></textarea>
+        <textarea class="form-textarea" id="camp-texto" rows="4" placeholder="OlÃ¡ {nome}. Tudo bem?"></textarea>
       </div>
 
       <button class="btn btn-primary" data-click="iniciarCampanha()">Iniciar Envio</button>
     </div>`;
   } else if (window.campSubTab === 'historico') {
     html += `<div class="auto-section animate-in" id="camp-historico-container">
-      <p style="text-align:center;color:var(--text-muted);padding:20px;">Carregando histórico...</p>
+      <p style="text-align:center;color:var(--text-muted);padding:20px;">Carregando histÃ³rico...</p>
     </div>`;
   } else if (window.campSubTab === 'listas') {
     html += `<div class="auto-section animate-in">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h3>👥 Listas de Transmissão</h3>
+        <h3>ðŸ‘¥ Listas de TransmissÃ£o</h3>
         <button class="btn btn-primary" data-click="showNovaListaModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Nova Lista</button>
       </div>
       <div id="listas-container"><p style="text-align:center;color:var(--text-muted);padding:20px;">Carregando listas...</p></div>
     </div>`;
   } else if (window.campSubTab === 'config') {
     html += `<div class="auto-section animate-in">
-      <h3>⚙️ Configurações de Anti-Ban e Delay</h3>
+      <h3>âš™ï¸ ConfiguraÃ§Ãµes de Anti-Ban e Delay</h3>
       <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">Defina o intervalo em segundos entre cada disparo para simular comportamento humano e evitar banimentos do WhatsApp.</p>
       <div style="display:flex;gap:12px;margin-bottom:12px;">
-        <div class="form-group" style="flex:1;"><label class="form-label">Delay Mínimo (segundos)</label><input class="form-input" type="number" id="anti-min" value="4"></div>
-        <div class="form-group" style="flex:1;"><label class="form-label">Delay Máximo (segundos)</label><input class="form-input" type="number" id="anti-max" value="10"></div>
+        <div class="form-group" style="flex:1;"><label class="form-label">Delay MÃ­nimo (segundos)</label><input class="form-input" type="number" id="anti-min" value="4"></div>
+        <div class="form-group" style="flex:1;"><label class="form-label">Delay MÃ¡ximo (segundos)</label><input class="form-input" type="number" id="anti-max" value="10"></div>
       </div>
-      <button class="btn btn-primary" data-click="salvarConfigAntiBan()">Salvar Configurações</button>
+      <button class="btn btn-primary" data-click="salvarConfigAntiBan()">Salvar ConfiguraÃ§Ãµes</button>
     </div>`;
   }
   c.innerHTML = html;
@@ -377,12 +377,12 @@ window.iniciarCampanha = async function() {
   if(!nome || !id_lista || !texto) { toast('Preencha nome, lista e texto', 'error'); return; }
   
   if(!confirm('Iniciar disparos em massa? O navegador deve permanecer com o WhatsApp aberto.')) return;
-  // Registra no banco as intenções de envio e chama injetor_pagina
+  // Registra no banco as intenÃ§Ãµes de envio e chama injetor_pagina
   try {
     const min = parseInt(localStorage.getItem('ups_antiban_min') || 4);
     const max = parseInt(localStorage.getItem('ups_antiban_max') || 10);
     const lista = (await UpsidenDB.from('listas_contatos').select('contatos').eq('id', id_lista).execute())[0];
-    if(!lista || !lista.contatos || !lista.contatos.length) { toast('A lista está vazia!', 'error'); return; }
+    if(!lista || !lista.contatos || !lista.contatos.length) { toast('A lista estÃ¡ vazia!', 'error'); return; }
 
     const campData = { nome, tipo: 'texto', total_contatos: lista.contatos.length, criado_por: userData.userId, config_delay_min: min, config_delay_max: max };
     const res = await UpsidenDB.from('campanhas').insert(campData).execute();
@@ -397,7 +397,7 @@ window.iniciarCampanha = async function() {
 window.salvarConfigAntiBan = function() {
   localStorage.setItem('ups_antiban_min', document.getElementById('anti-min').value);
   localStorage.setItem('ups_antiban_max', document.getElementById('anti-max').value);
-  toast('Configuração salva!', 'success');
+  toast('ConfiguraÃ§Ã£o salva!', 'success');
 };
 window.loadAntiBan = function() {
   const min = document.getElementById('anti-min'); const max = document.getElementById('anti-max');
@@ -405,7 +405,7 @@ window.loadAntiBan = function() {
   if(max) max.value = localStorage.getItem('ups_antiban_max') || 10;
 };
 
-// Histórico
+// HistÃ³rico
 window.loadCampanhaHistorico = async function() {
   const c = document.getElementById('camp-historico-container');
   if(!c) return;
@@ -425,13 +425,13 @@ window.loadCampanhaHistorico = async function() {
           <div style="width:${p}%;height:100%;background:linear-gradient(90deg,var(--accent),var(--success));transition:width .3s;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);">
-          <span>📨 ${h.tipo} • ${h.total_contatos} contatos</span>
-          <span>✅ ${h.enviados || 0} • ❌ ${h.falhas || 0}</span>
+          <span>ðŸ“¨ ${h.tipo} â€¢ ${h.total_contatos} contatos</span>
+          <span>âœ… ${h.enviados || 0} â€¢ âŒ ${h.falhas || 0}</span>
         </div>
       </div>`;
     });
     c.innerHTML = html;
-  } catch(e) { c.innerHTML = '<p style="color:var(--danger)">Erro no histórico</p>'; }
+  } catch(e) { c.innerHTML = '<p style="color:var(--danger)">Erro no histÃ³rico</p>'; }
 };
 
 // Listas de Contatos
@@ -463,7 +463,7 @@ window.loadListasSelect = async function() {
 };
 window.deleteLista = async function(id) {
   if(!confirm('Deletar lista?')) return;
-  try { await UpsidenDB.from('listas_contatos').eq('id', id).delete().execute(); window.loadListasTransmissao(); toast('Lista excluída!', 'success'); } catch(e){}
+  try { await UpsidenDB.from('listas_contatos').eq('id', id).delete().execute(); window.loadListasTransmissao(); toast('Lista excluÃ­da!', 'success'); } catch(e){}
 };
 
 window.showNovaListaModal = function() {
@@ -475,7 +475,7 @@ window.showNovaListaModal = function() {
       <div class="form-group"><label class="form-label">Cole os telefones e nomes</label><textarea class="form-textarea" id="lista-csv" rows="6" placeholder="Nome, Telefone
 Joao, 5511999999999
 Maria, 5521999999998"></textarea></div>
-      <p style="font-size:11px;color:var(--text-muted);">Formato aceito: colar conteúdo tipo CSV (.txt, Excel 2 colunas separadas por vírgula ou tab).</p>
+      <p style="font-size:11px;color:var(--text-muted);">Formato aceito: colar conteÃºdo tipo CSV (.txt, Excel 2 colunas separadas por vÃ­rgula ou tab).</p>
     </div>
     <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Cancelar</button><button class="btn btn-primary" data-click="salvarNovaLista()">Salvar Lista</button></div>
   </div>`;
@@ -500,7 +500,7 @@ window.salvarNovaLista = async function() {
     }
   });
 
-  if(!contatos.length) { toast('Nenhum telefone válido encontrado. Verifique a formatação.', 'error'); return; }
+  if(!contatos.length) { toast('Nenhum telefone vÃ¡lido encontrado. Verifique a formataÃ§Ã£o.', 'error'); return; }
   
   try {
     await UpsidenDB.from('listas_contatos').insert({ nome, contatos, criado_por: userData.userId }).execute();
@@ -509,13 +509,13 @@ window.salvarNovaLista = async function() {
   } catch(e) { toast('Erro ao salvar no banco', 'error'); }
 };
 
-// ═══ AUTOMAÇÕES ══════════════════════════════════════════════
+// â•â•â• AUTOMAÃ‡Ã•ES â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 window.renderAutomacoes = function(c) {
   const tabs = [
-    { id: 'saudacao', label: '💬 Saudação' },
-    { id: 'gatilhos', label: '⚡ Gatilhos' },
-    { id: 'horario', label: '🕒 Horário de F.' },
-    { id: 'regras', label: '⚙️ Regras do Robô' }
+    { id: 'saudacao', label: 'ðŸ’¬ SaudaÃ§Ã£o' },
+    { id: 'gatilhos', label: 'âš¡ Gatilhos' },
+    { id: 'horario', label: 'ðŸ•’ HorÃ¡rio de F.' },
+    { id: 'regras', label: 'âš™ï¸ Regras do RobÃ´' }
   ];
   let html = `<div class="sub-tabs" style="display:flex;gap:12px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;overflow-x:auto;">`;
   tabs.forEach(t => {
@@ -525,55 +525,55 @@ window.renderAutomacoes = function(c) {
 
   if (window.autoSubTab === 'saudacao') {
     html += `<div class="auto-section animate-in">
-      <h3>💬 Resposta Automática (Saudação)</h3>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure uma mensagem automática de boas-vindas para novos contatos.</p>
-      <div class="form-group"><label class="form-label">Mensagem de Saudação</label><textarea class="form-textarea" id="auto-saudacao" rows="3" placeholder="Ex: Olá! Obrigado por entrar em contato. Em breve retornaremos."></textarea></div>
+      <h3>ðŸ’¬ Resposta AutomÃ¡tica (SaudaÃ§Ã£o)</h3>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure uma mensagem automÃ¡tica de boas-vindas para novos contatos.</p>
+      <div class="form-group"><label class="form-label">Mensagem de SaudaÃ§Ã£o</label><textarea class="form-textarea" id="auto-saudacao" rows="3" placeholder="Ex: OlÃ¡! Obrigado por entrar em contato. Em breve retornaremos."></textarea></div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
         <label class="toggle-switch"><input type="checkbox" id="auto-saudacao-ativo"><span class="toggle-slider"></span></label>
-        <span style="font-size:13px;color:var(--text-secondary);">Ativar saudação automática</span>
+        <span style="font-size:13px;color:var(--text-secondary);">Ativar saudaÃ§Ã£o automÃ¡tica</span>
       </div>
-      <button class="btn btn-primary" data-click="salvarSaudacao()">Salvar Saudação</button>
+      <button class="btn btn-primary" data-click="salvarSaudacao()">Salvar SaudaÃ§Ã£o</button>
     </div>`;
   } else if (window.autoSubTab === 'gatilhos') {
     html += `<div class="auto-section animate-in">
-      <h3>⚡ Gatilhos Inteligentes</h3>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Defina palavras-chave que disparam respostas ou envio de áudios gravados de forma automática.</p>
+      <h3>âš¡ Gatilhos Inteligentes</h3>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Defina palavras-chave que disparam respostas ou envio de Ã¡udios gravados de forma automÃ¡tica.</p>
       <div id="triggers-list"></div>
       <button class="btn btn-secondary" data-click="addTriggerRow()" style="margin-top:12px;"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Gatilho</button>
       <button class="btn btn-primary" data-click="salvarGatilhos()" style="margin-top:12px;margin-left:8px;">Salvar Gatilhos</button>
     </div>`;
   } else if (window.autoSubTab === 'horario') {
     html += `<div class="auto-section animate-in">
-      <h3>🕒 Horário de Funcionamento</h3>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure horários de atividade. Fora desses horários, os robôs ficam inativos ou mandam a mensagem personalizada de fechado.</p>
+      <h3>ðŸ•’ HorÃ¡rio de Funcionamento</h3>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure horÃ¡rios de atividade. Fora desses horÃ¡rios, os robÃ´s ficam inativos ou mandam a mensagem personalizada de fechado.</p>
       
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div class="form-group"><label class="form-label">Horário Abertura</label><input type="time" class="form-input" id="hora-ini" value="08:00"></div>
-        <div class="form-group"><label class="form-label">Horário Fechamento</label><input type="time" class="form-input" id="hora-fim" value="18:00"></div>
+        <div class="form-group"><label class="form-label">HorÃ¡rio Abertura</label><input type="time" class="form-input" id="hora-ini" value="08:00"></div>
+        <div class="form-group"><label class="form-label">HorÃ¡rio Fechamento</label><input type="time" class="form-input" id="hora-fim" value="18:00"></div>
       </div>
       <div class="form-group">
         <label class="form-label">Mensagem FORA do Expediente</label>
-        <textarea class="form-textarea" id="msg-fechado" rows="3" placeholder="No momento nossa equipe não está..."></textarea>
+        <textarea class="form-textarea" id="msg-fechado" rows="3" placeholder="No momento nossa equipe nÃ£o estÃ¡..."></textarea>
       </div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
         <label class="toggle-switch"><input type="checkbox" id="horario-ativo"><span class="toggle-slider"></span></label>
-        <span style="font-size:13px;color:var(--text-secondary);">Habilitar filtro de horário na automação</span>
+        <span style="font-size:13px;color:var(--text-secondary);">Habilitar filtro de horÃ¡rio na automaÃ§Ã£o</span>
       </div>
-      <button class="btn btn-primary" data-click="salvarHorario()">Salvar Horário e Regras</button>
+      <button class="btn btn-primary" data-click="salvarHorario()">Salvar HorÃ¡rio e Regras</button>
     </div>`;
   } else if (window.autoSubTab === 'regras') {
     html += `<div class="auto-section animate-in">
-      <h3>⚙️ Regras Globais do Robô</h3>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure limites anti-banimento natural (Simulação de Humano).</p>
+      <h3>âš™ï¸ Regras Globais do RobÃ´</h3>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure limites anti-banimento natural (SimulaÃ§Ã£o de Humano).</p>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
          <label class="toggle-switch"><input type="checkbox" id="regra-digitando" checked><span class="toggle-slider"></span></label>
-         <span style="font-size:13px;color:var(--text-secondary);">Simular "digitando..." ou "gravando áudio..." antes do robô disparar</span>
+         <span style="font-size:13px;color:var(--text-secondary);">Simular "digitando..." ou "gravando Ã¡udio..." antes do robÃ´ disparar</span>
       </div>
       <div class="form-group" style="margin-top:12px;max-width:300px;">
         <label class="form-label">Tempo do "Digitando..." / "Gravando..."</label>
         <select class="form-input" id="regra-timer">
           <option value="dinamico">Inteligente (calcula tempo pelo tam. da msg)</option>
-          <option value="2">Constante (2 segundos rápido)</option>
+          <option value="2">Constante (2 segundos rÃ¡pido)</option>
           <option value="5">Seguro (5 segundos natural)</option>
         </select>
       </div>
@@ -585,7 +585,7 @@ window.renderAutomacoes = function(c) {
   setTimeout(loadAutomationConfig, 50);
 };
 
-// Sub-funções de Automação
+// Sub-funÃ§Ãµes de AutomaÃ§Ã£o
 window.salvarSaudacao = async function() {
   const msg = document.getElementById('auto-saudacao').value.trim();
   const ativo = document.getElementById('auto-saudacao-ativo').checked;
@@ -599,7 +599,7 @@ window.salvarSaudacao = async function() {
     }).execute();
   } catch(e) { console.error('[Painel] Erro Supabase saudacao:', e); }
   // Sync local para o engine
-  chrome.storage.local.set({ ups_config_saudacao: { mensagem: msg, ativo } }, () => toast('Saudação salva!', 'success'));
+  chrome.storage.local.set({ ups_config_saudacao: { mensagem: msg, ativo } }, () => toast('SaudaÃ§Ã£o salva!', 'success'));
 };
 
 window.salvarGatilhos = async function() {
@@ -634,7 +634,7 @@ window.addTriggerRow = function(palavra='', resposta='') {
   btnRemove.title = 'Remover';
   btnRemove.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
   btnRemove.addEventListener('click', () => row.remove());
-  row.innerHTML = `<input class="form-input trigger-palavra" placeholder="Palavras-chave (ex: preço, valor)" value="${palavra}" style="flex:1;"><input class="form-input trigger-resposta" placeholder="Resposta / ID do Áudio..." value="${resposta}" style="flex:2;">`;
+  row.innerHTML = `<input class="form-input trigger-palavra" placeholder="Palavras-chave (ex: preÃ§o, valor)" value="${palavra}" style="flex:1;"><input class="form-input trigger-resposta" placeholder="Resposta / ID do Ãudio..." value="${resposta}" style="flex:2;">`;
   row.appendChild(btnRemove);
   list.appendChild(row);
 };
@@ -712,8 +712,8 @@ window.salvarHorario = async function() {
       msg_fora_horario: msg,
       updated_at: new Date().toISOString()
     }).execute();
-  } catch(e) { console.error('[Painel] Erro Supabase horário:', e); }
-  chrome.storage.local.set({ ups_config_horario: { ini, fim, msg, ativo } }, () => toast('Horário de atendimento salvo!', 'success'));
+  } catch(e) { console.error('[Painel] Erro Supabase horÃ¡rio:', e); }
+  chrome.storage.local.set({ ups_config_horario: { ini, fim, msg, ativo } }, () => toast('HorÃ¡rio de atendimento salvo!', 'success'));
 };
 
 window.salvarRegrasGlobais = async function() {
@@ -731,13 +731,13 @@ window.salvarRegrasGlobais = async function() {
       updated_at: new Date().toISOString()
     }).execute();
   } catch(e) { console.error('[Painel] Erro Supabase regras:', e); }
-  chrome.storage.local.set({ ups_config_regras: { simular: simula, timer } }, () => toast('Regras de humanização salvas!', 'success'));
+  chrome.storage.local.set({ ups_config_regras: { simular: simula, timer } }, () => toast('Regras de humanizaÃ§Ã£o salvas!', 'success'));
 };
 
-// ═══ ADMIN ═══════════════════════════════════════════════════
+// â•â•â• ADMIN â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function renderAdmin(c) {
   if (!userData.isAdmin) {
-    c.innerHTML = `<div class="empty-state"><div class="empty-icon">🔒</div><h3>Acesso Restrito</h3><p>Apenas administradores podem acessar esta seção.</p></div>`;
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">ðŸ”’</div><h3>Acesso Restrito</h3><p>Apenas administradores podem acessar esta seÃ§Ã£o.</p></div>`;
     return;
   }
   let html = `<div class="section-header"><h2>Membros da Equipe</h2><div class="search-bar"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" placeholder="Buscar membro..."></div></div>`;
@@ -750,7 +750,7 @@ function renderAdmin(c) {
   html += `</tbody></table>`;
 
   html += `<div class="section-header" style="margin-top:32px;"><h2>Arquivos Globais da Equipe</h2></div>`;
-  const allFiles = [...painelData.audios.filter(a=>a.compartilhado).map(a=>({...a,_tipo:'🎵'})), ...painelData.documentos.filter(d=>d.compartilhado).map(d=>({...d,_tipo:docIcon(d.tipo)})), ...painelData.midias.filter(m=>m.compartilhado).map(m=>({...m,_tipo:'🖼️'}))];
+  const allFiles = [...painelData.audios.filter(a=>a.compartilhado).map(a=>({...a,_tipo:'ðŸŽµ'})), ...painelData.documentos.filter(d=>d.compartilhado).map(d=>({...d,_tipo:docIcon(d.tipo)})), ...painelData.midias.filter(m=>m.compartilhado).map(m=>({...m,_tipo:'ðŸ–¼ï¸'}))];
   if (allFiles.length === 0) {
     html += `<p style="color:var(--text-muted);font-size:14px;">Nenhum arquivo compartilhado com a equipe ainda.</p>`;
   } else {
@@ -763,7 +763,7 @@ function renderAdmin(c) {
   c.innerHTML = html;
 }
 
-// ═══ ACTIONS ═════════════════════════════════════════════════
+// â•â•â• ACTIONS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 async function toggleShare(table, id, val) {
   try {
     await UpsidenDB.from(table).eq('id', id).update({ compartilhado: val }).execute();
@@ -781,7 +781,7 @@ async function deleteItem(table, id) {
     await UpsidenDB.from(table).eq('id', id).delete().execute();
     painelData[table] = painelData[table].filter(i => i.id !== id);
     renderSection(currentSection);
-    toast('Item excluído', 'success');
+    toast('Item excluÃ­do', 'success');
   } catch(e) { toast('Erro ao excluir', 'error'); }
 }
 
@@ -793,10 +793,10 @@ function filterTable(query) {
   });
 }
 
-// ═══ UPLOAD HANDLERS ═════════════════════════════════════════
+// â•â•â• UPLOAD HANDLERS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 async function handleAudioUpload(e) {
   const files = Array.from(e.target.files); if (!files.length) return;
-  toast(`Importando ${files.length} áudio(s)...`, 'info');
+  toast(`Importando ${files.length} Ã¡udio(s)...`, 'info');
   for (const file of files) {
     try {
       const ab = await file.arrayBuffer();
@@ -808,7 +808,7 @@ async function handleAudioUpload(e) {
       if (res?.length) painelData.audios.unshift(res[0]);
     } catch(err) { console.error(P, err); toast(`Erro: ${file.name}`, 'error'); }
   }
-  renderSection('audios'); toast(`${files.length} áudio(s) importado(s)!`, 'success'); e.target.value = '';
+  renderSection('audios'); toast(`${files.length} Ã¡udio(s) importado(s)!`, 'success'); e.target.value = '';
 }
 
 async function handleDocUpload(e) {
@@ -834,10 +834,10 @@ async function handleMediaUpload(e) {
       if (res?.length) painelData.midias.unshift(res[0]);
     } catch(err) { toast(`Erro: ${file.name}`, 'error'); }
   }
-  renderSection('midias'); toast('Mídias enviadas!', 'success'); e.target.value = '';
+  renderSection('midias'); toast('MÃ­dias enviadas!', 'success'); e.target.value = '';
 }
 
-// ═══ TEMPLATE MODAL ══════════════════════════════════════════
+// â•â•â• TEMPLATE MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function showNewTemplateModal() { showTemplateModal(null); }
 function editTemplate(id) { const t = painelData.templates.find(x=>x.id===id); if (t) showTemplateModal(t); }
 
@@ -845,7 +845,7 @@ function showTemplateModal(template) {
   const existing = document.querySelector('.modal-overlay'); if (existing) existing.remove();
   const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
   overlay.innerHTML = `<div class="modal"><div class="modal-header"><h3>${template ? 'Editar' : 'Novo'} Template</h3><button class="btn-ghost" data-click="closeModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
-  <div class="modal-body"><div class="form-group"><label class="form-label">Título</label><input class="form-input" id="tpl-titulo" value="${template?.titulo||template?.nome||''}"></div><div class="form-group"><label class="form-label">Conteúdo</label><textarea class="form-textarea" id="tpl-conteudo" rows="5">${template?.conteudo||template?.texto||''}</textarea></div></div>
+  <div class="modal-body"><div class="form-group"><label class="form-label">TÃ­tulo</label><input class="form-input" id="tpl-titulo" value="${template?.titulo||template?.nome||''}"></div><div class="form-group"><label class="form-label">ConteÃºdo</label><textarea class="form-textarea" id="tpl-conteudo" rows="5">${template?.conteudo||template?.texto||''}</textarea></div></div>
   <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="salvarTemplate('${template?.id||''}')">Salvar</button></div></div>`;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
@@ -854,7 +854,7 @@ function showTemplateModal(template) {
 async function salvarTemplate(id) {
   const titulo = document.getElementById('tpl-titulo').value.trim();
   const conteudo = document.getElementById('tpl-conteudo').value.trim();
-  if (!titulo || !conteudo) { toast('Preencha título e conteúdo', 'error'); return; }
+  if (!titulo || !conteudo) { toast('Preencha tÃ­tulo e conteÃºdo', 'error'); return; }
   try {
     if (id) {
       await UpsidenDB.from('templates').eq('id', id).update({ titulo, conteudo }).execute();
@@ -869,7 +869,7 @@ async function salvarTemplate(id) {
   } catch(e) { toast('Erro ao salvar template', 'error'); }
 }
 
-// ═══ LEAD MODAL ══════════════════════════════════════════════
+// â•â•â• LEAD MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function showNewLeadModal() {
   const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
   overlay.innerHTML = `<div class="modal"><div class="modal-header"><h3>Novo Lead</h3><button class="btn-ghost" data-click="closeModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
@@ -890,7 +890,7 @@ async function salvarLead() {
   } catch(e) { toast('Erro ao criar lead', 'error'); }
 }
 
-// ═══ INIT ════════════════════════════════════════════════════
+// â•â•â• INIT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 async function initPainel() {
   console.log(P, 'Inicializando Painel Upsiden...');
   try {
@@ -900,7 +900,7 @@ async function initPainel() {
     if (!loggedIn) {
       document.getElementById('auth-guard').style.display = 'block';
       document.getElementById('btn-goto-login')?.addEventListener('click', () => {
-        chrome.tabs.create({ url: chrome.runtime.getURL('login.html') });
+        chrome.tabs.create({ url: chrome.runtime.getURL('src/ui/login/login.html') });
       });
       return;
     }
@@ -912,7 +912,7 @@ async function initPainel() {
     userData.nome = profile?.nome || profile?.email?.split('@')[0] || '';
     userData.email = profile?.email || '';
 
-    // UI — user info
+    // UI â€” user info
     document.getElementById('user-display-name').textContent = userData.nome;
     document.getElementById('user-display-role').textContent = userData.isAdmin ? 'Administrador' : 'Closer';
     document.getElementById('user-display-role').className = `user-role ${userData.isAdmin ? 'admin' : ''}`;
@@ -943,7 +943,7 @@ async function initPainel() {
       btn.addEventListener('click', () => navigate(btn.dataset.section));
     });
 
-    // ─ Sidebar toggle (collapse / expand) ─
+    // â”€ Sidebar toggle (collapse / expand) â”€
     const sidebar    = document.getElementById('painel-sidebar');
     const toggleBtn  = document.getElementById('sidebar-toggle');
     const savedState = localStorage.getItem('ups_sidebar_collapsed');
@@ -956,7 +956,7 @@ async function initPainel() {
       updateUserMenuPosition();
     });
 
-    // ─ User menu popup ─
+    // â”€ User menu popup â”€
     const btnUserMenu      = document.getElementById('btn-user-menu');
     const userMenuPopup    = document.getElementById('user-menu-popup');
     const userMenuOverlay  = document.getElementById('user-menu-overlay');
@@ -990,7 +990,7 @@ async function initPainel() {
     const umpName  = document.getElementById('ump-name');
     const umpEmail = document.getElementById('ump-email');
     const umpAvatar = document.getElementById('user-avatar-popup');
-    if (umpName)   umpName.textContent   = userData.nome  || 'Usuário';
+    if (umpName)   umpName.textContent   = userData.nome  || 'UsuÃ¡rio';
     if (umpEmail)  umpEmail.textContent  = userData.email || '';
     if (umpAvatar) umpAvatar.textContent = (userData.nome[0] || 'U').toUpperCase();
 
@@ -1001,18 +1001,18 @@ async function initPainel() {
       window.location.reload();
     });
 
-    console.log(P, '✅ Painel pronto!');
+    console.log(P, 'âœ… Painel pronto!');
     navigate('dashboard');
 
   } catch(err) {
     console.error(P, 'Erro ao inicializar:', err);
-    document.getElementById('loading-page').innerHTML = `<p style="color:var(--danger);">Erro ao carregar painel. Recarregue a página.</p>`;
+    document.getElementById('loading-page').innerHTML = `<p style="color:var(--danger);">Erro ao carregar painel. Recarregue a pÃ¡gina.</p>`;
   }
 }
 
 document.addEventListener('DOMContentLoaded', initPainel);
 
-// Expor funções para event delegation
+// Expor funÃ§Ãµes para event delegation
 window.navigate = navigate;
 window.deleteItem = deleteItem;
 window.showNewTemplateModal = showNewTemplateModal;
@@ -1020,7 +1020,7 @@ window.editTemplate = editTemplate;
 window.showNewLeadModal = showNewLeadModal;
 window.salvarLead = salvarLead;
 
-// ═══ EVENT DELEGATION (CSP COMPATIBLE) ═════════════════════════
+// â•â•â• EVENT DELEGATION (CSP COMPATIBLE) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 window.closeModal = function() {
   document.querySelector('.modal-overlay')?.remove();
 };
@@ -1043,7 +1043,8 @@ document.addEventListener('click', (e) => {
     if (typeof window[fnName] === 'function') {
       window[fnName](...args);
     } else {
-      console.warn('[Painel] Função não encontrada:', fnName);
+      console.warn('[Painel] FunÃ§Ã£o nÃ£o encontrada:', fnName);
     }
   }
 });
+

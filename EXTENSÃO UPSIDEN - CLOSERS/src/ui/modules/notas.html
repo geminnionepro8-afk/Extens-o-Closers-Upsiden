@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <link rel="stylesheet" href="modulo.css">
+  <link rel="stylesheet" href="../styles/modulo.css">
   <style>
     body { margin: 0; display: flex; flex-direction: column; height: 100vh; background: #111b21; color: #e9edef; font-family: -apple-system, system-ui, sans-serif; }
     .header { padding: 16px; border-bottom: 1px solid #222e35; background: #202c33; display: flex; flex-direction: column; gap: 8px; }
@@ -51,8 +51,8 @@
   <div class="secao">
     <h3 class="secao-titulo">Etiquetas / Tags</h3>
     <div class="etiquetas-container" id="ui-etiquetas">
-      <div class="etiqueta" style="border-left: 3px solid #ff9800;">Urgente <span class="etiqueta-excluir">✕</span></div>
-      <div class="etiqueta" style="border-left: 3px solid #00bcd4;">VIP <span class="etiqueta-excluir">✕</span></div>
+      <div class="etiqueta" style="border-left: 3px solid #ff9800;">Urgente <span class="etiqueta-excluir">S"</span></div>
+      <div class="etiqueta" style="border-left: 3px solid #00bcd4;">VIP <span class="etiqueta-excluir">S"</span></div>
       <button style="background:none; border: 1px dashed #8696a0; color: #8696a0; border-radius: 12px; padding: 4px 12px; cursor:pointer; font-size: 12px;">+ Adicionar</button>
     </div>
   </div>
@@ -69,7 +69,12 @@
 
   <button class="btn-salvar" id="btn-salvar">Salvar Alterações</button>
 
-  <script src="supabase_client.js"></script>
+  <script src="../../libs/supabase.min.js"></script>
+  <script src="../../libs/supabase-config.js"></script>
+  <script src="../../services/auth.service.js"></script><script src="../../services/db.service.js"></script><script src="../../services/storage.service.js"></script><script src="../../services/metrics.service.js"></script>
   <script src="notas.js"></script>
 </body>
 </html>
+
+
+
