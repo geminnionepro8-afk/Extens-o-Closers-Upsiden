@@ -142,6 +142,7 @@ class FlowEngine {
     
     document.getElementById('flow-btn-zoom-in')?.addEventListener('click', () => this.zoomManual(0.1));
     document.getElementById('flow-btn-zoom-out')?.addEventListener('click', () => this.zoomManual(-0.1));
+    document.getElementById('flow-btn-save')?.addEventListener('click', () => this.saveFlow());
   }
 
   zoomManual(amount) {
@@ -162,6 +163,33 @@ class FlowEngine {
     this.container.style.backgroundPosition = `${this.panX}px ${this.panY}px`;
     this.container.style.backgroundSize = `${24 * this.zoom}px ${24 * this.zoom}px`;
     if (this.zoomLabel) this.zoomLabel.textContent = `${Math.round(this.zoom * 100)}%`;
+  }
+
+  saveFlow() {
+    const payload = {
+      id: 'flow_' + Date.now(),
+      nodes: Object.values(this.nodes).map(n => ({
+        id: n.id,
+        type: n.type,
+        position: { x: Math.round(n.x), y: Math.round(n.y) },
+        data: n.data
+      })),
+      edges: this.edges.map(e => ({
+        id: e.id,
+        source: e.source,
+        target: e.target
+      }))
+    };
+    
+    console.log('[Flow Builder] Arquitetura Salva:', JSON.stringify(payload, null, 2));
+    
+    if (typeof window.toast === 'function') {
+      window.toast('Progresso do fluxo salvo no estado local!', 'success');
+    } else {
+      alert('Fluxo salvo! Verifique o console.');
+    }
+    
+    return payload;
   }
 
   /* ═══ 2. PALETTE DRAG & DROP ══════════════════════════════════ */
@@ -244,7 +272,8 @@ class FlowEngine {
       // Remove selected class from all
       Object.values(this.nodes).forEach(n => n.el.classList.remove('selected'));
       el.classList.add('selected');
-      // show properties panel logic here later
+      // show properties panel
+      this.openPropertiesPanel(id);
     });
 
     // Move node
@@ -276,7 +305,106 @@ class FlowEngine {
     });
   }
 
-  /* ═══ 4. EDGE CONNECTIONS (BEZIER MATH) ═══════════════════════ */
+  /* ═══ 4. PROPRIEDADES & DATA (SPRINT 8) ══════════════════════ */
+  openPropertiesPanel(id) {
+    const node = this.nodes[id];
+    const panelEmpty = document.querySelector('.flow-properties-panel .fp-empty');
+    const panelContent = document.querySelector('.flow-properties-panel .fp-content');
+    
+    if (panelEmpty) panelEmpty.style.display = 'none';
+    if (panelContent) panelContent.style.display = 'flex';
+    
+    let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h3 style="font-size:14px; color:var(--text-primary); margin:0;">Propriedades</h3>
+      <button class="btn-ghost" onclick="window.flowEngine?.closePropertiesPanel()" style="padding:4px;color:var(--text-muted);cursor:pointer;"><svg viewBox="0 0 24 24" width="16" stroke="currentColor" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`;
+
+    if (node.type === 'message') {
+      html += `
+        <div class="fp-form-group">
+          <label>Texto da Mensagem</label>
+          <textarea class="fp-input fp-textarea" id="fp-msg-text" placeholder="Olá {nome}! Tudo bem?">${node.data.text || ''}</textarea>
+        </div>
+      `;
+    } else if (node.type === 'audio') {
+      const audios = window.painelData?.audios || [];
+      let options = '<option value="">-- Selecione o Áudio --</option>';
+      audios.forEach(a => {
+        options += `<option value="${a.id}" ${node.data.audioId === a.id ? 'selected' : ''}>${a.nome}</option>`;
+      });
+      html += `
+        <div class="fp-form-group">
+          <label>Áudio Gravado na Biblioteca</label>
+          <select class="fp-input" id="fp-audio-select" style="background:var(--bg-input);">
+            ${options}
+          </select>
+        </div>
+      `;
+    } else if (node.type === 'trigger' || node.type === 'keyword') {
+      html += `
+        <div class="fp-form-group">
+          <label>Palavra-chave Disparadora</label>
+          <input type="text" class="fp-input" id="fp-trigger-kw" value="${node.data.keyword || ''}" placeholder="Ex: valor, quero, preco">
+        </div>
+      `;
+    } else if (node.type === 'delay') {
+      html += `
+        <div class="fp-form-group">
+          <label>Tempo de Espera (Segundos)</label>
+          <input type="number" class="fp-input" id="fp-delay-sec" value="${node.data.seconds || 5}" min="1">
+        </div>
+      `;
+    } else if (node.type === 'condition') {
+      html += `
+        <div class="fp-form-group">
+          <label>Filtrar por Tag no CRM</label>
+          <input type="text" class="fp-input" id="fp-cond-tag" value="${node.data.tag || ''}" placeholder="Ex: VIP">
+        </div>
+      `;
+    }
+
+    panelContent.innerHTML = html;
+
+    // Bind live updates
+    if (node.type === 'message') {
+      document.getElementById('fp-msg-text').addEventListener('input', (e) => this.updateNodeData(id, 'text', e.target.value));
+    } else if (node.type === 'audio') {
+      document.getElementById('fp-audio-select').addEventListener('change', (e) => {
+        const title = e.target.options[e.target.selectedIndex].text;
+        this.updateNodeData(id, 'audioId', e.target.value, title);
+      });
+    } else if (node.type === 'trigger' || node.type === 'keyword') {
+      document.getElementById('fp-trigger-kw').addEventListener('input', (e) => this.updateNodeData(id, 'keyword', e.target.value));
+    } else if (node.type === 'delay') {
+      document.getElementById('fp-delay-sec').addEventListener('input', (e) => this.updateNodeData(id, 'seconds', e.target.value + ' Segundos'));
+    } else if (node.type === 'condition') {
+      document.getElementById('fp-cond-tag').addEventListener('input', (e) => this.updateNodeData(id, 'tag', e.target.value));
+    }
+  }
+
+  closePropertiesPanel() {
+    Object.values(this.nodes).forEach(n => n.el.classList.remove('selected'));
+    const empty = document.querySelector('.flow-properties-panel .fp-empty');
+    const content = document.querySelector('.flow-properties-panel .fp-content');
+    if (empty) empty.style.display = 'flex';
+    if (content) content.style.display = 'none';
+  }
+
+  updateNodeData(id, key, value, displayOverride = null) {
+    const node = this.nodes[id];
+    node.data[key] = value;
+    
+    const preview = node.el.querySelector('.node-content-preview');
+    if (preview) {
+      if (displayOverride) {
+        preview.textContent = displayOverride;
+      } else {
+        preview.textContent = value || 'Configure as propriedades...';
+      }
+    }
+  }
+
+  /* ═══ 5. EDGE CONNECTIONS (BEZIER MATH) ═══════════════════════ */
   createEdge(sourceId, targetId) {
     if (this.edges.some(e => e.source === sourceId && e.target === targetId)) return; // Prevent duplicate
     
