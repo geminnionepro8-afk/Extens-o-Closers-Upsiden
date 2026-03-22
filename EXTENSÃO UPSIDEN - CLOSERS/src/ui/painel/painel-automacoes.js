@@ -37,7 +37,16 @@ window.renderAutomacoes = function(c) {
          <label style="font-size:13px;color:var(--text-secondary);"><input type="checkbox" id="auto-privado" checked> Aceitar Privado</label>
          <label style="font-size:13px;color:var(--text-secondary);"><input type="checkbox" id="auto-grupo"> Aceitar Grupos</label>
       </div>
-      <button class="btn btn-primary" data-click="salvarSaudacao()">Salvar Saudação</button>
+      
+      <h4 style="margin-top:24px; padding-top:16px; border-top:1px dashed var(--border);">🚀 Programar Mensagens Sequenciais (Follow-ups)</h4>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Adicione mensagens ou áudios para serem enviados automaticamente um tempo depois da saudação explodir.</p>
+      
+      <div id="followups-list"></div>
+      <button class="btn btn-secondary" data-click="addFollowupRow()" style="margin-top:12px; margin-bottom:20px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Passo
+      </button>
+
+      <button class="btn btn-primary" data-click="salvarSaudacao()" style="display:block; width:100%;">Salvar Fluxo de Saudação</button>
     </div>`;
   } else if (window.autoSubTab === 'gatilhos') {
     html += `<div class="auto-section animate-in">
@@ -95,11 +104,68 @@ window.renderAutomacoes = function(c) {
 };
 
 // ═══ Sub-funções de Automação ════════════════════════════════
+window.addFollowupRow = function(tipo = 'texto', conteudo = '', delay = 15) {
+  const list = document.getElementById('followups-list');
+  if(!list) return;
+  const row = document.createElement('div');
+  row.className = 'followup-row';
+  row.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;background:var(--input-bg);padding:8px;border-radius:8px;';
+  
+  const selTipo = document.createElement('select');
+  selTipo.className = 'form-input fup-tipo';
+  selTipo.style.width = '100px';
+  selTipo.innerHTML = `<option value="texto">Texto</option><option value="audio">Áudio (ID Base64)</option><option value="documento">Documento</option>`;
+  selTipo.value = tipo;
+
+  const inpConteudo = document.createElement('input');
+  inpConteudo.className = 'form-input fup-conteudo';
+  inpConteudo.placeholder = tipo === 'texto' ? 'Mensagem...' : 'Cole aqui o conteúdo codificado...';
+  inpConteudo.value = conteudo;
+  inpConteudo.style.flex = '1';
+
+  const inpDelay = document.createElement('input');
+  inpDelay.type = 'number';
+  inpDelay.className = 'form-input fup-delay';
+  inpDelay.placeholder = 'Segundos';
+  inpDelay.value = delay;
+  inpDelay.style.width = '80px';
+  inpDelay.min = '1';
+
+  const btnRemove = document.createElement('button');
+  btnRemove.className = 'btn-icon';
+  btnRemove.title = 'Remover Passo';
+  btnRemove.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+  btnRemove.addEventListener('click', () => row.remove());
+
+  // Interatividade: mudar placeholder dinamicamente
+  selTipo.addEventListener('change', (e) => {
+    inpConteudo.placeholder = e.target.value === 'texto' ? 'Mensagem...' : 'ID Supabase ou Base64...';
+  });
+
+  row.appendChild(selTipo);
+  row.appendChild(inpConteudo);
+  row.appendChild(inpDelay);
+  row.appendChild(btnRemove);
+  list.appendChild(row);
+};
+
 window.salvarSaudacao = async function() {
   const msg = document.getElementById('auto-saudacao').value.trim();
   const ativo = document.getElementById('auto-saudacao-ativo').checked;
   const p = document.getElementById('auto-privado')?.checked || false;
   const g = document.getElementById('auto-grupo')?.checked || false;
+  
+  // Coletar followups
+  const fupRows = document.querySelectorAll('#followups-list .followup-row');
+  const followups = [];
+  fupRows.forEach(row => {
+    const tp = row.querySelector('.fup-tipo').value;
+    const ct = row.querySelector('.fup-conteudo').value.trim();
+    const dl = parseInt(row.querySelector('.fup-delay').value) || 15;
+    if (ct) {
+      followups.push({ tipo: tp, conteudo: tp === 'texto' ? ct : undefined, base64: tp !== 'texto' ? ct : undefined, delay_segundos: dl });
+    }
+  });
   
   try {
     await UpsidenDB.from('config_automacao').upsert({
@@ -108,11 +174,14 @@ window.salvarSaudacao = async function() {
       saudacao_mensagem: msg,
       apenas_privado: p,
       apenas_grupo: g,
+      followup_steps: JSON.stringify(followups),
       updated_at: new Date().toISOString()
     }).execute();
   } catch(e) { /* silent */ }
   
-  chrome.storage.local.set({ ups_config_saudacao: { mensagem: msg, ativo, apenasPrivado: p, apenasGrupo: g } }, () => toast('Saudação salva!', 'success'));
+  chrome.storage.local.set({ ups_config_saudacao: { mensagem: msg, ativo, apenasPrivado: p, apenasGrupo: g, followupSteps: followups } }, () => {
+    toast('Saudação salva com ' + followups.length + ' passo(s) programado(s)!', 'success');
+  });
 };
 
 window.salvarGatilhos = async function() {
@@ -163,6 +232,18 @@ window.loadAutomationConfig = async function() {
         if(eAtivo) eAtivo.checked = data.saudacao_ativa || false;
         if(document.getElementById('auto-privado')) document.getElementById('auto-privado').checked = data.apenas_privado !== false;
         if(document.getElementById('auto-grupo')) document.getElementById('auto-grupo').checked = data.apenas_grupo || false;
+        
+        // Restore followups
+        const list = document.getElementById('followups-list');
+        if (list) list.innerHTML = '';
+        if (data.followup_steps) {
+           try {
+             const passos = JSON.parse(data.followup_steps);
+             if (Array.isArray(passos)) {
+                passos.forEach(p => window.addFollowupRow(p.tipo, p.tipo === 'texto' ? p.conteudo : p.base64, p.delay_segundos));
+             }
+           } catch(e) {}
+        }
       }
     }
     if (window.autoSubTab === 'gatilhos') {
@@ -200,6 +281,14 @@ window.loadAutomationConfig = async function() {
         const eMsg = document.getElementById('auto-saudacao'); const eAtivo = document.getElementById('auto-saudacao-ativo');
         if(eMsg) eMsg.value = res.ups_config_saudacao.mensagem || '';
         if(eAtivo) eAtivo.checked = res.ups_config_saudacao.ativo || false;
+        if(document.getElementById('auto-privado')) document.getElementById('auto-privado').checked = res.ups_config_saudacao.apenasPrivado !== false;
+        if(document.getElementById('auto-grupo')) document.getElementById('auto-grupo').checked = res.ups_config_saudacao.apenasGrupo || false;
+        // Restore followups
+        const list = document.getElementById('followups-list');
+        if (list) list.innerHTML = '';
+        if (res.ups_config_saudacao.followupSteps && Array.isArray(res.ups_config_saudacao.followupSteps)) {
+           res.ups_config_saudacao.followupSteps.forEach(p => window.addFollowupRow(p.tipo, p.tipo === 'texto' ? p.conteudo : p.base64, p.delay_segundos));
+        }
       }
       if(window.autoSubTab === 'gatilhos') {
         const triggers = res.ups_config_triggers || [];
