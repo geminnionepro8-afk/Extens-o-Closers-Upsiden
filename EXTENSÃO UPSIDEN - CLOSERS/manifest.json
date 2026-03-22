@@ -35,11 +35,17 @@
         "src/ui/styles/injetado.css"
       ],
       "js": [
+        "src/libs/supabase.min.js",
+        "src/libs/supabase-config.js",
+        "src/services/auth.service.js",
+        "src/services/db.service.js",
+        "src/services/storage.service.js",
         "src/core/content-scripts/nav-injector.js",
         "src/core/content-scripts/panel-drawer.js",
         "src/core/content-scripts/quick-actions.js",
         "src/core/content-scripts/chat-filters.js",
         "src/core/content-scripts/ipc-bridge.js",
+        "src/ui/modules/audios.js",
         "src/core/content-scripts/content-script.js"
       ],
       "run_at": "document_idle"

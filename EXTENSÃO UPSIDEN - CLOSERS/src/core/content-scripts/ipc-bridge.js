@@ -16,19 +16,21 @@
 const IPC_CTX = '[IPC-Bridge]';
 
 // ── Enviar dados para o Injetor de Página (WPP Engine) ───
-/**
- * Envia dados para o script injetado na página (wpp-engine.js) via window.postMessage
- * e aguarda a resposta correspondente. Usa um ID único para correlacionar req/res.
- * @param {Object} dados - Os dados a enviar (ex: { tipoMensagem: 'texto', texto: '...' }).
- * @returns {Promise<Object>} A resposta do injetor de página.
- */
 function enviarParaPagina(dados) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const id = Date.now() + Math.random().toString();
     const payload = { ...dados, msgId: id, origem: 'CONTENT_SCRIPT' };
+    
+    // Timeout de segurança (10s)
+    const timeout = setTimeout(() => {
+      window.removeEventListener('message', fn);
+      reject(new Error(`Timeout IPC: O motor do WhatsApp (WPP) não respondeu ao comando: ${dados.tipoMensagem || dados.tipo}`));
+    }, 10000);
+
     const fn = ev => {
       if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.msgId === id) {
         window.removeEventListener('message', fn);
+        clearTimeout(timeout);
         resolve(ev.data.resposta);
       }
     };
@@ -36,6 +38,9 @@ function enviarParaPagina(dados) {
     window.postMessage(payload, '*');
   });
 }
+
+// Expõe métodos para os Módulos UI nativos (Shadow DOM) rodando no mesmo Content Script
+window.UpsidenIPC = { enviarParaPagina, sincronizarConfigAutomacao };
 
 // ── Receber comandos do Service Worker (chrome.runtime) ──
 /**
@@ -47,7 +52,16 @@ function enviarParaPagina(dados) {
  */
 chrome.runtime.onMessage.addListener((msg, _, responder) => {
   if (msg.tipo === 'enviar_audio_biblioteca') {
-    enviarParaPagina(msg.dados).then(r => responder(r));
+    enviarParaPagina(msg.dados)
+      .then(r => responder(r))
+      .catch(e => responder({ sucesso: false, erro: e.message }));
+    return true;
+  }
+  // ── AGENDAMENTO DE MENSAGENS: Roteador de Despertador ──
+  if (msg.tipo === 'enviar_agendamento') {
+    enviarParaPagina({ tipoMensagem: 'agendamento', dados: msg.dados })
+      .then(r => responder(r))
+      .catch(e => responder({ sucesso: false, erro: e.message }));
     return true;
   }
   // ── BULK SEND: Receber comando do Painel (via background) ──
