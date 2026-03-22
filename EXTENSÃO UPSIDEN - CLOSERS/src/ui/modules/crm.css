@@ -1,132 +1,174 @@
 /* =====================================
-   Upsiden — CRM Kanban Matte Black
+   Upsiden — CRM Kanban Elite (Apple Design)
    ===================================== */
 body {
-  margin: 0;
-  padding: 0;
+  margin: 0; padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #111b21;
-  color: #e9edef;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+  background-color: #111b21; color: #e9edef;
+  height: 100vh; display: flex; flex-direction: column;
 }
+.crm-app { display: flex; flex-direction: column; height: 100%; }
 
-.crm-app {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
+/* Header */
 .crm-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #222e35;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 14px 20px; border-bottom: 1px solid #222e35;
+  display: flex; justify-content: space-between; align-items: center;
 }
+.crm-header h2 { margin: 0; font-size: 17px; font-weight: 600; }
 
-.crm-header h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 500;
-}
-
+/* Buttons */
 .btn-primary {
-  background: transparent;
-  color: #00a884;
-  border: 1px solid #00a884;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  background: transparent; color: #00a884; border: 1px solid #00a884;
+  padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 12px;
+  cursor: pointer; transition: all 0.3s ease;
+}
+.btn-primary:hover { background: #00a884; color: #111b21; }
+.btn-secondary {
+  background: transparent; color: #8696a0; border: 1px solid #374045;
+  padding: 7px 14px; border-radius: 8px; font-weight: 500; font-size: 12px;
+  cursor: pointer; transition: all 0.3s ease;
+}
+.btn-secondary:hover { background: #202c33; }
+.btn-close {
+  background: transparent; border: none; color: #8696a0;
+  font-size: 22px; cursor: pointer; line-height: 1;
+}
+.filtro-select {
+  background: #202c33; border: 1px solid #374045; color: #e9edef;
+  padding: 6px 10px; border-radius: 6px; font-size: 11px; outline: none;
 }
 
-.btn-primary:hover {
-  background: #00a884;
-  color: #111b21;
-}
-
+/* Kanban Board */
 .kanban-board {
-  display: flex;
-  flex: 1;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 16px;
-  gap: 16px;
+  display: flex; flex: 1; overflow-x: auto; overflow-y: hidden;
+  padding: 16px; gap: 14px;
 }
-
-/* Scroll minimalista */
-::-webkit-scrollbar { height: 6px; width: 6px; }
+::-webkit-scrollbar { height: 5px; width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #222e35; border-radius: 10px; }
 
+/* Columns */
 .kanban-column {
-  min-width: 260px;
-  width: 260px;
-  background: #0b141a;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  border: 1px solid #222e35;
-  transition: border-color 0.2s;
+  min-width: 250px; width: 250px;
+  background: rgba(11, 20, 26, 0.7);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-radius: 12px; display: flex; flex-direction: column;
+  height: 100%; border: 1px solid #222e35;
+  transition: border-color 0.3s ease;
 }
+.kanban-column.drag-over { border-color: #00a884; background: rgba(0, 168, 132, 0.05); }
 
-.kanban-column h3 {
-  padding: 12px 16px;
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #8696a0;
-  border-bottom: 1px solid #222e35;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.kanban-col-header {
+  padding: 14px 16px; border-bottom: 1px solid #222e35;
+  display: flex; justify-content: space-between; align-items: center;
 }
-
+.col-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: #aebac1;
+}
+.col-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.col-valor { font-size: 12px; font-weight: 700; color: #00a884; }
 .badge {
-  background: #202c33;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-  color: #aebac1;
+  background: #202c33; padding: 1px 7px; border-radius: 10px;
+  font-size: 11px; color: #8696a0; font-weight: 500;
 }
 
+/* Cards Container */
 .kanban-cards {
-  flex: 1;
-  padding: 12px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex: 1; padding: 10px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 60px;
 }
 
+/* Lead Cards */
 .crm-card {
-  background: #202c33;
-  border: 1px solid #222e35;
-  border-radius: 6px;
-  padding: 12px;
-  cursor: grab;
-  transition: transform 0.1s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  background: rgba(32, 44, 51, 0.85);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid #2a3942; border-radius: 10px;
+  padding: 12px; cursor: grab;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
+.crm-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.3); border-color: #374045; }
+.crm-card:active { cursor: grabbing; transform: scale(0.97); }
+.crm-card.dragging { opacity: 0.4; }
 
-.crm-card:active {
-  cursor: grabbing;
-}
-
-.crm-card-title {
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 6px;
-  color: #e9edef;
-}
-
+.crm-card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #e9edef; }
 .crm-card-meta {
-  font-size: 12px;
-  color: #8696a0;
-  display: flex;
-  justify-content: space-between;
+  font-size: 11px; color: #8696a0;
+  display: flex; justify-content: space-between; align-items: center;
 }
+.crm-card-valor { color: #00a884; font-weight: 700; font-size: 12px; }
+.crm-card-notas {
+  font-size: 10px; color: #667781; margin-top: 6px;
+  border-top: 1px solid #222e35; padding-top: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Tags Pastel iOS */
+.tag-pill {
+  display: inline-block; padding: 2px 8px; border-radius: 12px;
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.tag-quente   { background: #FFB4B4; color: #8B1A1A; }
+.tag-morno    { background: #FFE5B4; color: #8B6914; }
+.tag-frio     { background: #B4D7FF; color: #1A4B8B; }
+.tag-vip      { background: #E5B4FF; color: #5A1A8B; }
+.tag-urgente  { background: #FFB4D7; color: #8B1A4B; }
+
+/* Lembrete indicator */
+.lembrete-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: #FF6B6B;
+  display: inline-block; margin-left: 4px; animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* Modal Glassmorphism */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+  display: flex; justify-content: center; align-items: center; z-index: 9999;
+}
+.modal-glass {
+  background: rgba(17, 27, 33, 0.95);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid #2a3942; border-radius: 16px;
+  width: 90%; max-width: 480px; max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  animation: modalIn 0.3s ease;
+}
+@keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+.modal-header {
+  padding: 16px 20px; border-bottom: 1px solid #222e35;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.modal-footer {
+  padding: 12px 20px; border-top: 1px solid #222e35;
+  display: flex; justify-content: flex-end; gap: 8px;
+}
+
+/* Form */
+.form-row { display: flex; gap: 10px; }
+.form-row .form-group { flex: 1; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 11px; color: #8696a0; font-weight: 600; }
+.form-input {
+  background: #202c33; border: 1px solid #374045; color: #e9edef;
+  padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none;
+  transition: border-color 0.3s;
+}
+.form-input:focus { border-color: #00a884; }
+.form-textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+
+/* Histórico */
+.historico-section { margin-top: 8px; }
+.historico-lista { max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.historico-item {
+  font-size: 11px; color: #667781; padding: 6px 8px;
+  background: #0b141a; border-radius: 6px;
+  display: flex; justify-content: space-between;
+}
+.historico-item .hist-data { color: #4a5568; font-size: 10px; }

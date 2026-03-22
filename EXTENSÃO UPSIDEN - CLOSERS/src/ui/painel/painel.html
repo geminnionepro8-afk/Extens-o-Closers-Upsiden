@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upsiden  Painel</title>
+  <title>Upsiden - Painel</title>
   <link rel="icon" href="../../../public/icons/icone48.png" type="image/png">
   <link rel="stylesheet" href="../styles/painel.css">
 </head>
@@ -19,8 +19,8 @@
     <div class="loading-page">
       <div style="text-align:center;">
         <img src="../../../public/icons/icone128.png" style="width:64px;height:64px;opacity:0.3;margin-bottom:16px;" alt="Upsiden">
-        <h2 style="font-size:20px;margin-bottom:8px;">Faça login para acessar o Painel</h2>
-        <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Você precisa estar autenticado para usar o Painel Upsiden.</p>
+        <h2 style="font-size:20px;margin-bottom:8px;">Faca login para acessar o Painel</h2>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Voce precisa estar autenticado para usar o Painel Upsiden.</p>
         <button class="btn btn-primary" id="btn-goto-login">Fazer Login</button>
       </div>
     </div>
@@ -29,14 +29,13 @@
   <!-- Main Layout -->
   <div id="painel-app" class="painel-layout" style="display:none;">
 
-    <!-- "" SIDEBAR "" -->
+    <!-- SIDEBAR -->
     <aside class="painel-sidebar" id="painel-sidebar">
-
 
       <div class="sidebar-brand">
         <div class="brand-icon">
-          <img src="../../../public/icons/upsiden_logo.png" alt="Upsiden" onerror="this.src='../../../public/icons/icone48.png'" class="brand-logo-full">
-          <img src="../../../public/icons/icone48.png" alt="U" class="brand-logo-mini">
+          <img src="../../../public/icons/up_logo_branca.png" alt="Upsiden" onerror="this.src='../../../public/icons/icone48.png'" class="brand-logo-full">
+          <img src="../../../public/icons/up_logo_branca.png" alt="U" class="brand-logo-mini">
         </div>
         <span class="brand-name">Upsiden</span>
         <!-- Toggle Button -->
@@ -53,87 +52,114 @@
         <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input type="text" placeholder="Pesquisa rápida..." id="sidebar-search-input" class="search-text">
+        <input type="text" placeholder="Pesquisa rapida..." id="sidebar-search-input" class="search-text">
         <kbd class="search-kbd">/</kbd>
       </div>
 
       <!-- Navigation -->
       <nav class="sidebar-nav" id="sidebar-nav">
 
-        <div class="nav-section-label"><span>Visão Geral</span></div>
+        <div class="nav-section-label"><span>Visao Geral</span></div>
         <button class="nav-item active" data-section="dashboard" title="Dashboard">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
-            <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
-          </svg>
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            </svg>
+          </div>
           <span class="nav-label">Dashboard</span>
         </button>
 
         <div class="nav-section-label"><span>Biblioteca</span></div>
-        <button class="nav-item" data-section="audios" title="Áudios">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-          </svg>
-          <span class="nav-label">Áudios</span>
+        <button class="nav-item" data-section="audios" title="Audios">
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+            </svg>
+          </div>
+          <span class="nav-label">Audios</span>
         </button>
         <button class="nav-item" data-section="documentos" title="Documentos">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
           <span class="nav-label">Documentos</span>
         </button>
-        <button class="nav-item" data-section="midias" title="Mídias">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          <span class="nav-label">Mídias</span>
+        <button class="nav-item" data-section="midias" title="Midias">
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </div>
+          <span class="nav-label">Midias</span>
         </button>
         <button class="nav-item" data-section="templates" title="Templates">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
           <span class="nav-label">Templates</span>
         </button>
 
         <div class="nav-section-label"><span>Ferramentas</span></div>
         <button class="nav-item" data-section="crm" title="CRM / Funil">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-          </svg>
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </div>
           <span class="nav-label">CRM / Funil</span>
         </button>
-        <button class="nav-item" data-section="automacoes" title="Automações">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-          <span class="nav-label">Automações</span>
+        <button class="nav-item" data-section="automacoes" title="Automacoes Classicas">
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <span class="nav-label">Automacoes Classicas</span>
+        </button>
+        <button class="nav-item" data-section="flow" title="Automacao Visual (Flow Builder)">
+          <div class="nav-icon-wrap" style="background: var(--accent-dim); border-color: var(--accent-glow);">
+            <svg class="nav-icon" viewBox="0 0 24 24" style="stroke: var(--accent);">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <span class="nav-label" style="color: var(--text-primary); font-weight: 500;">Automacao Visual</span>
         </button>
         <button class="nav-item" data-section="campanhas" title="Campanhas">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </div>
           <span class="nav-label">Campanhas</span>
         </button>
 
-        <div class="nav-section-label" id="admin-section-label" style="display:none;"><span>Administração</span></div>
-        <button class="nav-item" data-section="admin" id="nav-admin" title="Gestão de Equipe" style="display:none;">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span class="nav-label">Gestão de Equipe</span>
+        <div class="nav-section-label" id="admin-section-label" style="display:none;"><span>Administracao</span></div>
+        <button class="nav-item" data-section="admin" id="nav-admin" title="Gestao de Equipe" style="display:none;">
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <span class="nav-label">Gestao de Equipe</span>
         </button>
 
       </nav>
 
       <!-- Sidebar Footer / User -->
       <div class="sidebar-footer" id="sidebar-footer">
-        <button class="user-card" id="btn-user-menu" title="Menu do usuário">
+        <button class="user-card" id="btn-user-menu" title="Menu do usuario">
           <div class="user-avatar" id="user-avatar">U</div>
           <div class="user-info">
-            <div class="user-name" id="user-display-name">Usuário</div>
+            <div class="user-name" id="user-display-name">Usuario</div>
             <div class="user-role" id="user-display-role">Closer</div>
           </div>
           <svg class="user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -144,12 +170,12 @@
 
     </aside>
 
-    <!-- "" USER MENU POPUP "" -->
+    <!-- USER MENU POPUP -->
     <div class="user-menu-popup" id="user-menu-popup">
       <div class="user-menu-header">
         <div class="user-avatar-lg" id="user-avatar-popup">U</div>
         <div>
-          <div class="ump-name" id="ump-name">Usuário</div>
+          <div class="ump-name" id="ump-name">Usuario</div>
           <div class="ump-email" id="ump-email">usuario@upsiden.com</div>
         </div>
       </div>
@@ -160,15 +186,11 @@
         </button>
         <button class="ump-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
-          Preferências
+          Preferencias
         </button>
         <button class="ump-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          Notificações
-        </button>
-        <button class="ump-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M19.07 4.93A10 10 0 0 1 19.07 19.07M4.93 4.93A10 10 0 0 1 19.07 19.07M4.93 4.93A10 10 0 0 0 19.07 4.93"/></svg>
-          Configurações da Conta
+          Notificacoes
         </button>
         <div class="ump-divider"></div>
         <button class="ump-item ump-danger" id="btn-logout">
@@ -180,7 +202,7 @@
     <!-- Popup overlay -->
     <div class="user-menu-overlay" id="user-menu-overlay"></div>
 
-    <!-- "" MAIN "" -->
+    <!-- MAIN -->
     <main class="painel-main">
       <header class="main-header">
         <div class="main-header-left">
@@ -212,12 +234,9 @@
   <script src="painel-biblioteca.js"></script>
   <script src="painel-templates-crm.js"></script>
   <script src="painel-automacoes.js"></script>
+  <script src="painel-flow.js"></script>
   <script src="painel-campanhas.js"></script>
   <script src="painel-admin.js"></script>
   <script src="painel-init.js"></script>
 </body>
 </html>
-
-
-
-

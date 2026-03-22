@@ -3,36 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRM Upsiden</title>
+  <title>CRM Upsiden — Funil de Vendas</title>
   <link rel="stylesheet" href="crm.css">
 </head>
 <body>
   <div class="crm-app">
     <header class="crm-header">
       <h2>Funil de Vendas</h2>
-      <button id="btn-add-lead" class="btn-primary">+ Novo Lead</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="filtro-tag" class="filtro-select">
+          <option value="">Todas as Tags</option>
+        </select>
+        <button id="btn-add-lead" class="btn-primary">+ Novo Lead</button>
+      </div>
     </header>
+
     <div class="kanban-board" id="kanban">
       <div class="kanban-column" data-etapa="prospeccao">
-        <h3>x} Prospecção <span class="badge">0</span></h3>
+        <div class="kanban-col-header">
+          <div class="col-title"><span class="col-dot" style="background:#FFD666;"></span> Prospecção <span class="badge" id="badge-prospeccao">0</span></div>
+          <div class="col-valor" id="valor-prospeccao">R$ 0</div>
+        </div>
         <div class="kanban-cards" id="coluna-prospeccao"></div>
       </div>
       <div class="kanban-column" data-etapa="negociacao">
-        <h3>x Negociação <span class="badge">0</span></h3>
+        <div class="kanban-col-header">
+          <div class="col-title"><span class="col-dot" style="background:#66B2FF;"></span> Negociação <span class="badge" id="badge-negociacao">0</span></div>
+          <div class="col-valor" id="valor-negociacao">R$ 0</div>
+        </div>
         <div class="kanban-cards" id="coluna-negociacao"></div>
       </div>
       <div class="kanban-column" data-etapa="fechado">
-        <h3>S& Fechado <span class="badge">0</span></h3>
+        <div class="kanban-col-header">
+          <div class="col-title"><span class="col-dot" style="background:#66FFB2;"></span> Fechado <span class="badge" id="badge-fechado">0</span></div>
+          <div class="col-valor" id="valor-fechado">R$ 0</div>
+        </div>
         <div class="kanban-cards" id="coluna-fechado"></div>
       </div>
     </div>
   </div>
+
+  <!-- MODAL: Detalhes do Lead -->
+  <div class="modal-overlay" id="modal-lead" style="display:none;">
+    <div class="modal-glass">
+      <div class="modal-header">
+        <h3 id="modal-titulo">Novo Lead</h3>
+        <button class="btn-close" id="modal-fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group"><label>Nome</label><input type="text" id="lead-nome" class="form-input" placeholder="Nome do lead"></div>
+          <div class="form-group"><label>Telefone</label><input type="text" id="lead-tel" class="form-input" placeholder="5531999999999"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Valor do Negócio (R$)</label>
+            <input type="number" id="lead-valor" class="form-input" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Tag</label>
+            <select id="lead-tag" class="form-input tag-select">
+              <option value="">Sem tag</option>
+              <option value="quente">🔥 Quente</option>
+              <option value="morno">☀️ Morno</option>
+              <option value="frio">❄️ Frio</option>
+              <option value="vip">⭐ VIP</option>
+              <option value="urgente">🚨 Urgente</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notas Rápidas</label>
+          <textarea id="lead-notas" class="form-input form-textarea" placeholder="Anotações sobre este lead..." rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Lembrete</label>
+            <input type="datetime-local" id="lead-lembrete" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Texto do Lembrete</label>
+            <input type="text" id="lead-lembrete-texto" class="form-input" placeholder="Ex: Ligar para fechar">
+          </div>
+        </div>
+        <!-- Histórico -->
+        <div class="historico-section" id="historico-container" style="display:none;">
+          <label style="font-size:12px;color:#8696a0;font-weight:600;">Histórico de Interações</label>
+          <div id="historico-lista" class="historico-lista"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancelar">Cancelar</button>
+        <button class="btn-primary" id="modal-salvar">Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../../libs/supabase.min.js"></script>
   <script src="../../libs/supabase-config.js"></script>
   <script src="../../services/auth.service.js"></script><script src="../../services/db.service.js"></script><script src="../../services/storage.service.js"></script><script src="../../services/metrics.service.js"></script>
   <script src="crm.js"></script>
 </body>
 </html>
-
-
-

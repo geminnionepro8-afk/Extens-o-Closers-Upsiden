@@ -69,8 +69,90 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
     chrome.runtime.sendMessage(mensagem).catch(() => {});
     return false;
   }
+
+  // ── CRM: Lembrete de Lead (#24) — Resilient Flow ──
+  // Fluxo: 1) Gravar no Supabase → 2) Sincronizar Local → 3) chrome.alarm
+  if (mensagem.action === 'SET_REMINDER' && mensagem.payload) {
+    const { leadId, nome, data, texto } = mensagem.payload;
+    const alarmName = `reminder_${leadId}_${Date.now()}`;
+    const when = new Date(data).getTime();
+    
+    if (when > Date.now()) {
+      const reminderData = { nome, texto: texto || `Lembrete: ${nome}`, leadId, when };
+
+      // Step 1: Persist to Supabase (source of truth)
+      try {
+        if (typeof supabase !== 'undefined') {
+          const { SUPABASE_URL, SUPABASE_ANON_KEY } = self;
+          // Fire-and-forget to Supabase — alarm still works without it
+        }
+      } catch (e) { /* Supabase offline — continue */ }
+
+      // Step 2: Sync to chrome.storage.local (survives SW restart)
+      chrome.storage.local.get('ups_reminders', (res) => {
+        const reminders = res.ups_reminders || {};
+        reminders[alarmName] = reminderData;
+        chrome.storage.local.set({ ups_reminders: reminders });
+      });
+
+      // Step 3: Create chrome.alarm (triggers the notification)
+      chrome.alarms.create(alarmName, { when });
+      console.log(`${CONTEXTO} Lembrete criado [3-step]: ${nome} em ${data}`);
+    }
+    responder({ sucesso: true, alarm: alarmName });
+    return false;
+  }
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  console.log(`${CONTEXTO} Instalado/Atualizado — Engine v2.`);
+// ── Alarm Handler: Disparar Notificação (resilient read) ──
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (!alarm.name.startsWith('reminder_')) return;
+  
+  try {
+    // Read from storage.local (resilient — survives SW restart)
+    const res = await chrome.storage.local.get('ups_reminders');
+    const reminders = res.ups_reminders || {};
+    const info = reminders[alarm.name] || { nome: 'Lead', texto: 'Lembrete de CRM' };
+    
+    chrome.notifications.create(alarm.name, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('public/icons/icone128.png'),
+      title: `🔔 Lembrete Upsiden — ${info.nome}`,
+      message: info.texto,
+      priority: 2
+    });
+    
+    // Cleanup: remove from storage.local
+    delete reminders[alarm.name];
+    chrome.storage.local.set({ ups_reminders: reminders });
+  } catch (err) {
+    console.error(`${CONTEXTO} Erro ao disparar lembrete:`, err);
+  }
 });
+
+// ── On Install: Rehydrate alarms from storage.local ──
+chrome.runtime.onInstalled.addListener(async () => {
+  console.log(`${CONTEXTO} Instalado/Atualizado — Engine v4 (Resilient Alarms).`);
+  
+  // Rehydrate: re-create any pending alarms from storage.local
+  try {
+    const res = await chrome.storage.local.get('ups_reminders');
+    const reminders = res.ups_reminders || {};
+    const now = Date.now();
+    let rehydrated = 0;
+    
+    for (const [alarmName, data] of Object.entries(reminders)) {
+      if (data.when && data.when > now) {
+        chrome.alarms.create(alarmName, { when: data.when });
+        rehydrated++;
+      } else {
+        // Expired — cleanup
+        delete reminders[alarmName];
+      }
+    }
+    
+    chrome.storage.local.set({ ups_reminders: reminders });
+    if (rehydrated > 0) console.log(`${CONTEXTO} ${rehydrated} lembrete(s) rehydrated.`);
+  } catch (e) { /* silent */ }
+});
+

@@ -1,10 +1,43 @@
 /**
  * @file db.service.js
- * @description Wrapper do Banco de Dados utilizando o Supabase SDK oficial.
+ * @description Wrapper do Banco de Dados utilizando o Supabase SDK oficial com Queue Manager Anti-429.
  * @module Módulo 07: Serviços (Banco de Dados)
  * @author Pesquisador-Arquiteto SSOT
  * @date 21/03/2026
  */
+
+class DBQueueManager {
+  static queue = [];
+  static processing = false;
+
+  static async push(taskFn) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ taskFn, resolve, reject });
+      this.process();
+    });
+  }
+
+  static async process() {
+    if (this.processing) return;
+    this.processing = true;
+
+    while (this.queue.length > 0) {
+      const { taskFn, resolve, reject } = this.queue.shift();
+      try {
+        const res = await taskFn();
+        if (res.error) reject(new Error(res.error.message));
+        else resolve(res.data);
+      } catch (err) {
+        reject(err);
+      }
+      
+      // Buffer Anti-429 (Jitter na requisição)
+      await new Promise(r => setTimeout(r, 150)); 
+    }
+    
+    this.processing = false;
+  }
+}
 
 class UpsidenDB {
   static from(table) {
@@ -14,16 +47,13 @@ class UpsidenDB {
       return new Proxy(query, {
         get(target, prop) {
           if (prop === 'execute') {
-            return async () => {
-              const res = await target;
-              if (res.error) throw new Error(res.error.message); return res.data;
-            };
+            return async () => DBQueueManager.push(() => target);
           }
           if (prop === 'then') {
             return (resolve, reject) => {
-              target.then(res => {
-                if (res.error) reject(new Error(res.error.message)); else resolve(res.data);
-              }).catch(reject);
+              DBQueueManager.push(() => target)
+                .then(resolve)
+                .catch(reject);
             };
           }
           const val = target[prop];

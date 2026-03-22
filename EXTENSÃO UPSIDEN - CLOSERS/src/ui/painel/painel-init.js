@@ -1,13 +1,13 @@
-﻿/**
+/**
  * @file painel-init.js
- * @description Ponto de entrada do Painel Upsiden. ResponsÃ¡vel por:
- *              - Verificar autenticaÃ§Ã£o do usuÃ¡rio via Supabase.
- *              - Carregar todos os dados iniciais (Ã¡udios, docs, mÃ­dias, templates, leads).
- *              - Configurar a sidebar (toggle collapse) e o menu do usuÃ¡rio.
- *              - Registrar os event listeners de navegaÃ§Ã£o.
- *              Este arquivo deve ser carregado POR ÃšLTIMO no painel.html,
- *              pois depende de todas as funÃ§Ãµes de renderizaÃ§Ã£o dos outros mÃ³dulos.
- * @module MÃ³dulo 06: UI â€” Painel (InicializaÃ§Ã£o)
+ * @description Ponto de entrada do Painel Upsiden. Responsavel por:
+ *              - Verificar autenticacao do usuario via Supabase.
+ *              - Carregar todos os dados iniciais (audios, docs, midias, templates, leads).
+ *              - Configurar a sidebar (toggle collapse) e o menu do usuario.
+ *              - Registrar os event listeners de navegacao.
+ *              Este arquivo deve ser carregado POR ULTIMO no painel.html,
+ *              pois depende de todas as funcoes de renderizacao dos outros modulos.
+ * @module Modulo 06: UI - Painel (Inicializacao)
  * @author Pesquisador-Arquiteto SSOT
  * @date 21/03/2026
  */
@@ -17,9 +17,10 @@ let currentSection = 'dashboard';
 let userData = { userId: null, nome: '', email: '', isAdmin: false };
 let painelData = { audios: [], documentos: [], midias: [], templates: [], leads: [], membros: [] };
 
-// â•â•â• TOAST â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// === TOAST ===
 function toast(msg, tipo = 'info') {
   const container = document.getElementById('toast-container');
+  if (!container) return;
   const el = document.createElement('div');
   el.className = `toast ${tipo}`;
   el.textContent = msg;
@@ -27,7 +28,7 @@ function toast(msg, tipo = 'info') {
   setTimeout(() => el.remove(), 3500);
 }
 
-// â•â•â• INIT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// === INIT ===
 async function initPainel() {
   console.log(P, 'Inicializando Painel Upsiden...');
   try {
@@ -49,7 +50,7 @@ async function initPainel() {
     userData.nome = profile?.nome || profile?.email?.split('@')[0] || '';
     userData.email = profile?.email || '';
 
-    // UI â€” user info
+    // UI - user info
     document.getElementById('user-display-name').textContent = userData.nome;
     document.getElementById('user-display-role').textContent = userData.isAdmin ? 'Administrador' : 'Closer';
     document.getElementById('user-display-role').className = `user-role ${userData.isAdmin ? 'admin' : ''}`;
@@ -80,22 +81,33 @@ async function initPainel() {
       btn.addEventListener('click', () => navigate(btn.dataset.section));
     });
 
-    // â”€ Sidebar toggle (collapse / expand) â”€
-    const sidebar    = document.getElementById('painel-sidebar');
-    const toggleBtn  = document.getElementById('sidebar-toggle');
-    const savedState = localStorage.getItem('ups_sidebar_collapsed');
-    if (savedState === 'true') sidebar.classList.add('collapsed');
+    // -- Sidebar toggle (collapse / expand) --
+    const sidebar = document.getElementById('painel-sidebar');
+    const toggleBtn = document.getElementById('sidebar-toggle');
+
+    // Emergency sidebar injection: force visible if storage fails
+    try {
+      chrome.storage.local.get('ups_sidebar_collapsed', (res) => {
+        if (chrome.runtime.lastError) {
+          console.warn(P, 'Storage falhou, sidebar forcada visivel');
+          return;
+        }
+        if (res.ups_sidebar_collapsed === 'true') sidebar.classList.add('collapsed');
+      });
+    } catch(e) {
+      console.warn(P, 'Fallback: sidebar sem storage');
+    }
 
     toggleBtn?.addEventListener('click', () => {
       const isCollapsed = sidebar.classList.toggle('collapsed');
-      localStorage.setItem('ups_sidebar_collapsed', isCollapsed);
+      try { chrome.storage.local.set({ ups_sidebar_collapsed: String(isCollapsed) }); } catch(e) {}
       updateUserMenuPosition();
     });
 
-    // â”€ User menu popup â”€
-    const btnUserMenu      = document.getElementById('btn-user-menu');
-    const userMenuPopup    = document.getElementById('user-menu-popup');
-    const userMenuOverlay  = document.getElementById('user-menu-overlay');
+    // -- User menu popup --
+    const btnUserMenu = document.getElementById('btn-user-menu');
+    const userMenuPopup = document.getElementById('user-menu-popup');
+    const userMenuOverlay = document.getElementById('user-menu-overlay');
 
     function updateUserMenuPosition() {
       if (!userMenuPopup || !sidebar) return;
@@ -123,11 +135,11 @@ async function initPainel() {
     userMenuOverlay?.addEventListener('click', closeUserMenu);
 
     // Populate user menu popup
-    const umpName  = document.getElementById('ump-name');
+    const umpName = document.getElementById('ump-name');
     const umpEmail = document.getElementById('ump-email');
     const umpAvatar = document.getElementById('user-avatar-popup');
-    if (umpName)   umpName.textContent   = userData.nome  || 'UsuÃ¡rio';
-    if (umpEmail)  umpEmail.textContent  = userData.email || '';
+    if (umpName) umpName.textContent = userData.nome || 'Usuario';
+    if (umpEmail) umpEmail.textContent = userData.email || '';
     if (umpAvatar) umpAvatar.textContent = (userData.nome[0] || 'U').toUpperCase();
 
     // Logout (inside popup)
@@ -137,26 +149,39 @@ async function initPainel() {
       window.location.reload();
     });
 
-    console.log(P, 'âœ… Painel pronto!');
+    console.log(P, 'Painel pronto!');
     navigate('dashboard');
 
   } catch(err) {
     console.error(P, 'Erro ao inicializar:', err);
-    document.getElementById('loading-page').innerHTML = `<p style="color:var(--danger);">Erro ao carregar painel. Recarregue a pÃ¡gina.</p>`;
+    document.getElementById('loading-page').innerHTML = `<p style="color:var(--danger);">Erro ao carregar painel. Recarregue a pagina.</p>`;
   }
 }
 
 document.addEventListener('DOMContentLoaded', initPainel);
 
-// Expor funÃ§Ãµes para event delegation
-window.navigate = navigate;
-window.deleteItem = deleteItem;
-window.showNewTemplateModal = showNewTemplateModal;
-window.editTemplate = editTemplate;
-window.showNewLeadModal = showNewLeadModal;
-window.salvarLead = salvarLead;
+// === GUARD SYSTEM: Exportar funcoes com verificacao de seguranca ===
+// Cada export verifica se a funcao existe antes de atribuir ao window.
+// Se nao existir, atribui um stub que loga erro em vez de crashar.
 
-// â•â•â• EVENT DELEGATION (CSP COMPATIBLE) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function _guard(name) {
+  return (typeof window[name] === 'function')
+    ? window[name]
+    : function() { console.warn('[Painel] Modulo nao carregado:', name); };
+}
+
+window.navigate = (typeof navigate !== 'undefined') ? navigate : function(s) { console.warn('[Painel] navigate nao definido'); };
+window.deleteItem = (typeof deleteItem !== 'undefined') ? deleteItem : function() { console.warn('[Painel] deleteItem nao carregado'); };
+window.showNewTemplateModal = (typeof showNewTemplateModal !== 'undefined') ? showNewTemplateModal : function() { console.warn('[Painel] showNewTemplateModal nao carregado'); };
+window.editTemplate = (typeof editTemplate !== 'undefined') ? editTemplate : function() { console.warn('[Painel] editTemplate nao carregado'); };
+window.showNewLeadModal = (typeof showNewLeadModal !== 'undefined') ? showNewLeadModal : function() { console.warn('[Painel] showNewLeadModal nao carregado'); };
+window.salvarLead = (typeof salvarLeadCompleto !== 'undefined') ? salvarLeadCompleto : function() { console.warn('[Painel] salvarLead/salvarLeadCompleto nao carregado'); };
+window.salvarLeadCompleto = (typeof salvarLeadCompleto !== 'undefined') ? salvarLeadCompleto : function() { console.warn('[Painel] salvarLeadCompleto nao carregado'); };
+window.editLeadModal = (typeof editLeadModal !== 'undefined') ? editLeadModal : function() {};
+window.showLeadEditModal = (typeof showLeadEditModal !== 'undefined') ? showLeadEditModal : (typeof showNewLeadModal !== 'undefined' ? showNewLeadModal : function() {});
+window.salvarTemplate = (typeof salvarTemplate !== 'undefined') ? salvarTemplate : function() { console.warn('[Painel] salvarTemplate nao carregado'); };
+
+// === EVENT DELEGATION (CSP COMPATIBLE) ===
 window.closeModal = function() {
   document.querySelector('.modal-overlay')?.remove();
 };
@@ -179,8 +204,7 @@ document.addEventListener('click', (e) => {
     if (typeof window[fnName] === 'function') {
       window[fnName](...args);
     } else {
-      console.warn('[Painel] FunÃ§Ã£o nÃ£o encontrada:', fnName);
+      console.warn('[Painel] Funcao nao encontrada:', fnName);
     }
   }
 });
-

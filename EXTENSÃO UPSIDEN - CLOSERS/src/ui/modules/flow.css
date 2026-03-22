@@ -1,0 +1,351 @@
+/* ═══════════════════════════════════════════
+   FLOW BUILDER CANVAS — REDSUN DNA
+   ═══════════════════════════════════════════ */
+
+.module-flow {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary); /* #050505 RedSun background */
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.flow-header {
+  height: 64px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+  z-index: 10;
+}
+.flow-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.flow-title h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.flow-status {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--success-dim);
+  color: var(--success);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.flow-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#flow-zoom-level {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 48px;
+  text-align: center;
+}
+
+/* ── Layout ── */
+.flow-layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Sidebar Tools (Palette) ── */
+.flow-sidebar-tools {
+  width: 240px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-light);
+  padding: 20px 16px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 10;
+  overflow-y: auto;
+}
+.palette-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+.palette-node {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.palette-node:active { cursor: grabbing; }
+.palette-node:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 77, 0, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.pn-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--accent-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+.pn-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* ── Workspace (Infinite Canvas) ── */
+.flow-workspace-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-primary); /* #050505 */
+  /* RedSun Dot Grid Pattern */
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0;
+  cursor: grab;
+}
+.flow-workspace-container.panning {
+  cursor: grabbing;
+}
+
+.flow-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* ── SVG Layer ── */
+.flow-svg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Let drag events pass through to canvas/nodes */
+  overflow: visible;
+  z-index: 1;
+}
+.flow-edge {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 3px;
+  stroke-linecap: round;
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+.flow-edge:hover, .flow-edge.active {
+  stroke: var(--accent);
+  stroke-width: 4px;
+  filter: url(#glow);
+  cursor: pointer;
+  pointer-events: stroke; /* Make line clickable */
+}
+.drag-edge {
+  stroke: var(--accent);
+  stroke-width: 3px;
+  stroke-dasharray: 6 6;
+  animation: svgDash 1s linear infinite;
+}
+@keyframes svgDash {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Nodes Container ── */
+.flow-nodes-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none; /* Only nodes inside are interactive */
+}
+
+/* ── Node Card (Glass Dark RedSun) ── */
+.flow-node {
+  position: absolute;
+  width: 280px;
+  background: rgba(10, 10, 14, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  pointer-events: all;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+.flow-node.selected {
+  border-color: rgba(255, 77, 0, 0.6);
+  box-shadow: 0 0 24px rgba(255, 77, 0, 0.25), 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.node-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: grab;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.node-header:active { cursor: grabbing; }
+.node-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.node-title {
+  flex: 1;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.node-body {
+  padding: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: linear-gradient(160deg, rgba(15,15,15,0.6), rgba(8,8,8,0.8));
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  min-height: 48px;
+}
+.node-content-preview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Handles (Endpoints) */
+.node-handle {
+  width: 14px;
+  height: 14px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--text-muted);
+  border-radius: 50%;
+  position: absolute;
+  cursor: crosshair;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+.node-handle:hover, .node-handle.connecting {
+  background: var(--accent);
+  border-color: #fff;
+  transform: scale(1.3);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.handle-in { top: 50%; left: -7px; transform: translateY(-50%); }
+.handle-in:hover { transform: translateY(-50%) scale(1.3); }
+.handle-out { top: 50%; right: -7px; transform: translateY(-50%); }
+.handle-out:hover { transform: translateY(-50%) scale(1.3); }
+
+/* Remove incoming handle for Trigger */
+.flow-node[data-type="trigger"] .handle-in { display: none; }
+
+/* ── Properties Panel ── */
+.flow-properties-panel {
+  width: 280px;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 10;
+  transition: transform 0.3s ease;
+}
+.flow-properties-panel.closed {
+  transform: translateX(100%);
+  display: none;
+}
+.fp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  padding: 24px;
+  color: var(--text-muted);
+  gap: 16px;
+}
+.fp-empty p { font-size: 13px; line-height: 1.5; }
+.fp-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.fp-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fp-form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.fp-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  transition: border-color 0.2s ease;
+}
+.fp-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.fp-textarea {
+  min-height: 120px;
+  resize: vertical;
+}

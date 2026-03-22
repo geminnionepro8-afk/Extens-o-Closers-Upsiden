@@ -13,6 +13,7 @@
  */
 
 const CTX = '[Upsiden]';
+console.log(CTX, '=== CONTENT SCRIPT BOOT ===', new Date().toISOString());
 
 // Estado gerenciado pelos módulos
 
@@ -24,9 +25,21 @@ const CTX = '[Upsiden]';
  * O WPP Connect carrega primeiro, e quando terminar, o Engine é carregado.
  */
 function injetarScripts() {
-  const s = document.createElement('script');
-  s.src = chrome.runtime.getURL('src/core/page-scripts/wpp-engine.js');
-  document.documentElement.appendChild(s);
+  const scriptsToInject = [
+    'src/core/utils/helper.js',
+    'src/core/automation/automation-controller.js',
+    'src/core/page-scripts/wpp-engine.js'
+  ];
+  
+  const injectSequential = (index) => {
+    if (index >= scriptsToInject.length) return;
+    const s = document.createElement('script');
+    s.src = chrome.runtime.getURL(scriptsToInject[index]);
+    s.onload = () => injectSequential(index + 1);
+    document.documentElement.appendChild(s);
+  };
+  
+  injectSequential(0);
 }
 
 /**

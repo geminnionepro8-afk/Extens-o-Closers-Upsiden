@@ -1,0 +1,92 @@
+<div class="module-wrapper module-flow" id="module-flow" style="display: none; width: 100%; height: 100%;">
+  
+  <!-- Flow Header -->
+  <div class="flow-header">
+    <div class="flow-title">
+      <h2>Automacao Visual</h2>
+      <span class="flow-status badge-active">Ativo</span>
+    </div>
+    <div class="flow-actions">
+      <button class="btn btn-outline" id="flow-btn-zoom-out">-</button>
+      <span id="flow-zoom-level">100%</span>
+      <button class="btn btn-outline" id="flow-btn-zoom-in">+</button>
+      <button class="btn btn-primary" id="flow-btn-save">Salvar Fluxo</button>
+    </div>
+  </div>
+
+  <div class="flow-layout">
+    <!-- Tools Sidebar (Palette) -->
+    <aside class="flow-sidebar-tools">
+      <div class="palette-section-title">Gatilhos</div>
+      <div class="palette-node" draggable="true" data-type="trigger">
+        <div class="pn-icon">⚡</div>
+        <div class="pn-text">Disparo Manual</div>
+      </div>
+      <div class="palette-node" draggable="true" data-type="keyword">
+        <div class="pn-icon">🔑</div>
+        <div class="pn-text">Palavra-chave</div>
+      </div>
+
+      <div class="palette-section-title">Ações</div>
+      <div class="palette-node" draggable="true" data-type="message">
+        <div class="pn-icon">💬</div>
+        <div class="pn-text">Enviar Mensagem</div>
+      </div>
+      <div class="palette-node" draggable="true" data-type="audio">
+        <div class="pn-icon">🎵</div>
+        <div class="pn-text">Enviar Áudio</div>
+      </div>
+      
+      <div class="palette-section-title">Lógica</div>
+      <div class="palette-node" draggable="true" data-type="delay">
+        <div class="pn-icon">⏳</div>
+        <div class="pn-text">Atraso Inteligente</div>
+      </div>
+      <div class="palette-node" draggable="true" data-type="condition">
+        <div class="pn-icon">🔀</div>
+        <div class="pn-text">Condição (Se)</div>
+      </div>
+    </aside>
+
+    <!-- Infinite Canvas Workspace -->
+    <div class="flow-workspace-container" id="flow-workspace">
+      <!-- Movel layer: zoom and pan applied here -->
+      <div class="flow-canvas" id="flow-canvas" style="transform: translate(0px, 0px) scale(1);">
+        
+        <!-- SVG Connections Layer -->
+        <svg class="flow-svg-layer" id="flow-svg-layer">
+          <defs>
+            <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#FF4D00" />
+              <stop offset="100%" stop-color="#FF8C00" />
+            </linearGradient>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+          <g id="flow-edges-group"></g>
+          <!-- The floating drag line -->
+          <path id="flow-drag-line" class="flow-edge drag-edge" d="" style="display: none;"></path>
+        </svg>
+
+        <!-- Nodes Container -->
+        <div class="flow-nodes-container" id="flow-nodes-container">
+          <!-- Dynamically injected nodes go here -->
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Properties Panel (Right Sidebar) -->
+    <aside class="flow-properties-panel" id="flow-properties-panel">
+      <div class="fp-empty">
+        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <p>Selecione um no para editar suas propriedades.</p>
+      </div>
+      <div class="fp-content" style="display: none;">
+        <!-- Config forms injected here -->
+      </div>
+    </aside>
+  </div>
+</div>

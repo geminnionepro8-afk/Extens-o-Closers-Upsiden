@@ -7,7 +7,9 @@
     "storage",
     "unlimitedStorage",
     "scripting",
-    "activeTab"
+    "activeTab",
+    "alarms",
+    "notifications"
   ],
   "host_permissions": [
     "https://web.whatsapp.com/*",
@@ -47,6 +49,9 @@
   "web_accessible_resources": [
     {
       "resources": [
+        "src/core/utils/helper.js",
+        "src/core/utils/template-engine.js",
+        "src/core/automation/automation-controller.js",
         "src/libs/wppconnect-wa.js",
         "src/core/page-scripts/wpp-engine.js",
         "src/ui/styles/injetado.css",

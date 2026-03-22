@@ -13,6 +13,8 @@
  * @date 21/03/2026
  */
 
+const IPC_CTX = '[IPC-Bridge]';
+
 // ── Enviar dados para o Injetor de Página (WPP Engine) ───
 /**
  * Envia dados para o script injetado na página (wpp-engine.js) via window.postMessage
@@ -78,7 +80,7 @@ chrome.runtime.onMessage.addListener((msg, _, responder) => {
  * de automação saiba como responder mensagens recebidas.
  */
 function sincronizarConfigAutomacao() {
-  chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers'], (res) => {
+  chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers', 'ups_config_horario', 'ups_config_regras'], (res) => {
     window.postMessage({
       origem: 'CONTENT_SCRIPT',
       msgId: Date.now().toString(),
@@ -90,6 +92,18 @@ function sincronizarConfigAutomacao() {
       msgId: Date.now().toString() + 'T',
       tipoMensagem: 'set_config_triggers',
       dados: res.ups_config_triggers || []
+    }, '*');
+    window.postMessage({
+      origem: 'CONTENT_SCRIPT',
+      msgId: Date.now().toString() + 'H',
+      tipoMensagem: 'set_config_horario',
+      dados: res.ups_config_horario || null
+    }, '*');
+    window.postMessage({
+      origem: 'CONTENT_SCRIPT',
+      msgId: Date.now().toString() + 'R',
+      tipoMensagem: 'set_config_regras',
+      dados: res.ups_config_regras || null
     }, '*');
   });
 }
@@ -125,12 +139,12 @@ window.addEventListener('message', async (ev) => {
   }
 
   if (ev.data.type === 'upsiden_send_text') {
-    console.log(CTX, 'Enviando texto a partir do iframe', ev.data.data);
+    console.log(IPC_CTX, 'Enviando texto a partir do iframe', ev.data.data);
     await enviarParaPagina({ ...ev.data.data, tipoMensagem: 'texto' });
   }
 
   if (ev.data.type === 'upsiden_send_file') {
-    console.log(CTX, 'Enviando arquivo a partir do iframe', ev.data.data);
+    console.log(IPC_CTX, 'Enviando arquivo a partir do iframe', ev.data.data);
     await enviarParaPagina({ ...ev.data.data, tipoMensagem: 'arquivo' });
   }
 
@@ -149,7 +163,7 @@ window.addEventListener('message', async (ev) => {
   }
 
   if (ev.data.type === 'upsiden_crm_updated') {
-    console.log(CTX, 'CRM Atualizado, sincronizando UI...', ev.data.data);
+    console.log(IPC_CTX, 'CRM Atualizado, sincronizando UI...', ev.data.data);
     const contatoAtivo = document.querySelector('div[aria-selected="true"]');
     if (contatoAtivo) {
       const containerTitulo = contatoAtivo.querySelector('div[data-testid="cell-frame-title"]');
@@ -167,7 +181,7 @@ window.addEventListener('message', async (ev) => {
   }
 
   if (ev.data.type === 'upsiden_reload_automation') {
-    console.log(CTX, 'Recarregando regras de automação...');
+    console.log(IPC_CTX, 'Recarregando regras de automação...');
     sincronizarConfigAutomacao();
   }
 });

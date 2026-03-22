@@ -30,7 +30,7 @@ function navigate(section) {
   const titles = {
     dashboard: 'Dashboard', audios: 'Biblioteca de Áudios', documentos: 'Documentos',
     midias: 'Mídias', templates: 'Templates de Texto', crm: 'CRM / Funil',
-    automacoes: 'Automações', campanhas: 'Campanhas de Envio', admin: 'Gestão da Equipe', config: 'Configurações'
+    automacoes: 'Automações Clássicas', flow: 'Automação Visual (Flow)', campanhas: 'Campanhas de Envio', admin: 'Gestão da Equipe', config: 'Configurações'
   };
   const title = titles[section] || section;
   document.getElementById('page-title').textContent = title;
@@ -51,6 +51,7 @@ function renderSection(section) {
     case 'templates': return renderTemplates(c);
     case 'crm': return renderCRM(c);
     case 'automacoes': return renderAutomacoes(c);
+    case 'flow': return renderFlow(c);
     case 'campanhas': return renderCampanhas(c);
     case 'admin': return renderAdmin(c);
     default: c.innerHTML = `<div class="empty-state"><div class="empty-icon">🚧</div><h3>Em desenvolvimento</h3><p>Esta seção estará disponível em breve.</p></div>`;

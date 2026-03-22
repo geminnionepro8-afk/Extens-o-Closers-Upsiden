@@ -1,34 +1,33 @@
 /**
  * @file painel-campanhas.js
- * @description Renderiza a seo Campanhas (envio em massa) do Painel Upsiden.
- *              Sub-abas: Nova Campanha, Histrico, Listas de Contatos, Configuraes Anti-Ban.
+ * @description Renderiza a seção Campanhas (envio em massa) do Painel Upsiden.
+ *              Sub-abas: Nova Campanha, Histórico, Listas de Contatos, Configurações Anti-Ban.
  *              Permite importar CSVs de contatos e disparar campanhas de texto.
- * @module Mdulo 06: UI  Painel (Campanhas)
+ * @module Módulo 06: UI — Painel (Campanhas)
  * @date 21/03/2026
  */
 // """ STATE & TAB """""""""""""""""""""""""""""""""""""""""""""
 if (typeof window.autoSubTab === 'undefined') window.autoSubTab = 'saudacao';
 if (typeof window.campSubTab === 'undefined') window.campSubTab = 'nova';
-let currentLista = null;
-let campanhaHistorico = [];
+// currentLista and campanhaHistorico are declared in painel.js — DO NOT re-declare with let
 
 // """ CAMPANHAS EM MASSA """"""""""""""""""""""""""""""""""""""
 window.renderCampanhas = function(c) {
   const tabs = [
-    { id: 'nova', label: 'Megafone Nova Campanha' },
-    { id: 'historico', label: 'Relógio Histórico' },
-    { id: 'listas', label: 'Listas de Contatos' },
-    { id: 'config', label: 'Engrenagem Configurações' }
+    { id: 'nova', label: '📢 Nova Campanha' },
+    { id: 'historico', label: '⏳ Histórico' },
+    { id: 'listas', label: '📋 Listas de Contatos' },
+    { id: 'config', label: '⚙️ Configurações' }
   ];
   let html = `<div class="sub-tabs" style="display:flex;gap:12px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;">`;
   tabs.forEach(t => {
-    html += `<button class="btn-ghost ${window.campSubTab === t.id ? 'active' : ''}" data-click="switchCampTab('${t.id}')" style="padding:8px 16px;border-radius:20px;color:var(--text);background:${window.campSubTab === t.id ? 'var(--input-bg)' : 'transparent'}">${t.label.replace('Megafone','x').replace('Relógio','⏳').replace('Engrenagem','a"️')}</button>`;
+    html += `<button class="btn-ghost ${window.campSubTab === t.id ? 'active' : ''}" data-click="switchCampTab('${t.id}')" style="padding:8px 16px;border-radius:20px;color:var(--text);background:${window.campSubTab === t.id ? 'var(--input-bg)' : 'transparent'}">${t.label}</button>`;
   });
   html += `</div>`;
   
   if (window.campSubTab === 'nova') {
     html += `<div class="auto-section animate-in">
-      <h3>xa Disparar Nova Campanha</h3>
+      <h3>📢 Disparar Nova Campanha</h3>
       <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure os detalhes e dispare para centenas de contatos. Use placeholders como {nome}.</p>
       
       <div class="form-group">
@@ -57,14 +56,14 @@ window.renderCampanhas = function(c) {
   } else if (window.campSubTab === 'listas') {
     html += `<div class="auto-section animate-in">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h3>x Listas de Transmissão</h3>
+        <h3>📋 Listas de Transmissão</h3>
         <button class="btn btn-primary" data-click="showNovaListaModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Nova Lista</button>
       </div>
       <div id="listas-container"><p style="text-align:center;color:var(--text-muted);padding:20px;">Carregando listas...</p></div>
     </div>`;
   } else if (window.campSubTab === 'config') {
     html += `<div class="auto-section animate-in">
-      <h3>a"️ Configurações de Anti-Ban e Delay</h3>
+      <h3>⚙️ Configurações de Anti-Ban e Delay</h3>
       <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">Defina o intervalo em segundos entre cada disparo para simular comportamento humano e evitar banimentos do WhatsApp.</p>
       <div style="display:flex;gap:12px;margin-bottom:12px;">
         <div class="form-group" style="flex:1;"><label class="form-label">Delay Mínimo (segundos)</label><input class="form-input" type="number" id="anti-min" value="4"></div>
@@ -90,8 +89,9 @@ window.iniciarCampanha = async function() {
   if(!confirm('Iniciar disparos em massa? O navegador deve permanecer com o WhatsApp aberto.')) return;
   // Registra no banco as intenções de envio e chama injetor_pagina
   try {
-    const min = parseInt(localStorage.getItem('ups_antiban_min') || 4);
-    const max = parseInt(localStorage.getItem('ups_antiban_max') || 10);
+    const antiban = await new Promise(r => chrome.storage.local.get(['ups_antiban_min', 'ups_antiban_max'], r));
+    const min = parseInt(antiban.ups_antiban_min || 4);
+    const max = parseInt(antiban.ups_antiban_max || 10);
     const lista = (await UpsidenDB.from('listas_contatos').select('contatos').eq('id', id_lista).execute())[0];
     if(!lista || !lista.contatos || !lista.contatos.length) { toast('A lista está vazia!', 'error'); return; }
 
@@ -99,22 +99,15 @@ window.iniciarCampanha = async function() {
     const res = await UpsidenDB.from('campanhas').insert(campData).execute();
     if(res && res.length) {
       toast('Campanha inicializada!', 'success');
-      chrome.runtime.sendMessage({ tipo: 'bulk_start', contatos: lista.contatos, texto, campanha_id: res[0].id, max, min });
+      chrome.runtime.sendMessage({ tipo: 'bulk_send_start', contatos: lista.contatos, texto, campanha_id: res[0].id, max, min });
       window.switchCampTab('historico');
     }
-  } catch(e) { toast('Erro ao criar campanha', 'error'); console.error(e); }
+  } catch(e) { toast('Erro ao criar campanha', 'error'); }
 };
 
-window.salvarConfigAntiBan = function() {
-  localStorage.setItem('ups_antiban_min', document.getElementById('anti-min').value);
-  localStorage.setItem('ups_antiban_max', document.getElementById('anti-max').value);
-  toast('Configuração salva!', 'success');
-};
-window.loadAntiBan = function() {
-  const min = document.getElementById('anti-min'); const max = document.getElementById('anti-max');
-  if(min) min.value = localStorage.getItem('ups_antiban_min') || 4;
-  if(max) max.value = localStorage.getItem('ups_antiban_max') || 10;
-};
+// Anti-Ban functions are defined in painel-automacoes.js (SSOT: single source)
+// salvarConfigAntiBan and loadAntiBan use chrome.storage.local
+// No redefinition needed here — they are globals via window.*
 
 // Histórico
 window.loadCampanhaHistorico = async function() {
@@ -136,8 +129,8 @@ window.loadCampanhaHistorico = async function() {
           <div style="width:${p}%;height:100%;background:linear-gradient(90deg,var(--accent),var(--success));transition:width .3s;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);">
-          <span>x ${h.tipo} ⬢ ${h.total_contatos} contatos</span>
-          <span>S& ${h.enviados || 0} ⬢ R ${h.falhas || 0}</span>
+          <span>📢 ${h.tipo} ⬢ ${h.total_contatos} contatos</span>
+          <span>✅ ${h.enviados || 0} ⬢ ❌ ${h.falhas || 0}</span>
         </div>
       </div>`;
     });
