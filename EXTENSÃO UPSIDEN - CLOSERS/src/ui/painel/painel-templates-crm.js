@@ -133,14 +133,14 @@ async function renderCRM(c) {
         tagHtml += `</div>`;
       }
       
-      html += `<div class="kanban-card" draggable="true" data-lead-id="${lead.id}" data-click="editLeadModal('${lead.id}')" style="backdrop-filter:blur(10px);background:rgba(32,44,51,0.85);border-radius:10px;transition:all 0.3s;cursor:pointer;border-left: 3px solid ${stage.color};">
+      html += `<div class="kanban-card" draggable="true" data-lead-id="${lead.id}" onclick="editLeadModal('${lead.id}')" style="border-left: 3px solid ${stage.color};">
         <div style="display:flex;flex-direction:column;align-items:flex-start;">
           <div class="card-name" style="font-size:14px;font-weight:bold;">${lead.nome}</div>
           ${tagHtml}
         </div>
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:4px;">
           <span>${lead.telefone || ''}</span>
-          <span style="color:#00a884;font-weight:700;">${fmtMoeda(lead.valor)}</span>
+          <span style="color:var(--success);font-weight:bold;">${fmtMoeda(lead.valor)}</span>
         </div>
         ${lead.notas ? `<div style="font-size:10px;color:#667781;margin-top:4px;border-top:1px solid #222e35;padding-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📝 ${lead.notas}</div>` : ''}
       </div>`;
@@ -223,27 +223,38 @@ async function salvarLeadCompleto(id) {
   const lembreteInput = document.getElementById('lead-lembrete').value;
   const lembreteData = lembreteInput ? new Date(lembreteInput).toISOString() : null;
   const lembreteTexto = document.getElementById('lead-lembrete-txt').value.trim();
+
   if (!nome) { typeof toast === 'function' && toast('Informe o nome primário do lead', 'error'); return; }
   try {
     if (id) {
       const upd = { nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, updated_at: new Date().toISOString() };
       await UpsidenDB.from('leads').eq('id', id).update(upd).execute();
       const idx = painelData.leads.findIndex(l=>l.id===id);
-      if (idx>=0) painelData.leads[idx] = {...painelData.leads[idx], ...upd};
-      try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: id, tipo: 'edicao', descricao: 'Anotações de CRM Atualizadas Diretamente no Painel', criado_por: userData.userId, metadados: { campos_alterados: ['nome','telefone','valor','tag','notas','lembrete'], valor_novo: valor, tag_nova: tagsElegidas } }).execute(); } catch(e){}
+      if (idx>=0) {
+         painelData.leads[idx] = {...painelData.leads[idx], ...upd};
+         painelData.leads[idx].tag = tagsElegidas;
+      }
+      try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: id, tipo: 'edicao', descricao: 'Anotações de CRM Atualizadas Diretamente no Painel', criado_por: userData?.userId||undefined, metadados: { campos_alterados: ['nome','telefone','valor','tag','notas','lembrete'], valor_novo: valor, tag_nova: tagsElegidas } }).execute(); } catch(e){}
     } else {
       // Default to first stage available if dynamic
       const estagioDefault = dynamicStages.length > 0 ? dynamicStages[0].id : 'prospeccao';
-      const res = await UpsidenDB.from('leads').insert({ nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, estagio: estagioDefault, criado_por: userData.userId }).execute();
-      if (res?.length) { painelData.leads.unshift(res[0]); try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: res[0].id, tipo: 'criacao', descricao: `Novo Lead Inserido Manualmente 🤝`, criado_por: userData.userId, metadados: { valor_inicial: valor, tags_iniciais: tagsElegidas, telefone } }).execute(); } catch(e){} }
+      const res = await UpsidenDB.from('leads').insert({ nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, estagio: estagioDefault, criado_por: userData?.userId||undefined }).execute();
+      if (res?.length) { 
+         res[0].tag = tagsElegidas;
+         painelData.leads.unshift(res[0]); 
+         try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: res[0].id, tipo: 'criacao', descricao: `Novo Lead Inserido Manualmente 🤝`, criado_por: userData?.userId||undefined, metadados: { valor_inicial: valor, tags_iniciais: tagsElegidas, telefone } }).execute(); } catch(e){} 
+      }
     }
     if (lembreteData) { 
         typeof toast === 'function' && toast('Sino de Alarme ativado com precisão Background', 'info');
         try { chrome.runtime.sendMessage({ action: 'SET_REMINDER', payload: { leadId: id||'new', nome, data: lembreteData, texto: lembreteTexto } }); } catch(e){} 
     }
     document.querySelector('.modal-overlay')?.remove();
-    renderSection('crm'); toast('Lead salvo!', 'success');
-  } catch(e) { toast('Erro ao salvar lead', 'error'); }
+    renderSection('crm'); typeof toast === 'function' && toast('Lead salvo!', 'success');
+  } catch(e) { 
+    console.error('Falha monstruosa no salvar lead:', e); 
+    typeof toast === 'function' && toast('Erro ao salvar lead', 'error'); 
+  }
 }
 
 // === CRM CONFIGURATION MANAGER ===
