@@ -141,6 +141,22 @@ function sincronizarConfigAutomacao() {
   });
 }
 
+function sincronizarConfigPrivacidade() {
+  const keys = [
+     'privacy_hide_online', 'privacy_hide_typing', 'privacy_hide_read', 
+     'privacy_hide_status', 'privacy_recover_deleted', 'privacy_blur_contacts', 
+     'privacy_blur_avatars', 'privacy_blur_msgs', 'privacy_pin_enabled', 'privacy_pin_code'
+  ];
+  chrome.storage.local.get(keys, (res) => {
+    window.postMessage({
+      origem: 'CONTENT_SCRIPT',
+      msgId: Date.now().toString() + 'P',
+      tipoMensagem: 'set_config_privacidade',
+      dados: res
+    }, '*');
+  });
+}
+
 // ── Receber mensagens dos iframes (Módulos UI) ───────────
 /**
  * Escuta mensagens enviadas pelos iframes dos módulos (Áudios, CRM, Templates, etc.)
@@ -157,9 +173,11 @@ window.addEventListener('message', async (ev) => {
     // Verificar mensagens do injetor (sem .type, com .origem)
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'engine_pronto_para_automacao') {
       sincronizarConfigAutomacao();
+      sincronizarConfigPrivacidade();
     }
     if (ev.data?.origem === 'INJETOR_PAGINA_INIT' && ev.data.ev === 'puxar_config_auto_reply') {
       sincronizarConfigAutomacao();
+      sincronizarConfigPrivacidade();
     }
     // ── BULK: Progresso e conclusão — relay pro Painel via chrome.runtime ──
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'bulk_progresso') {
