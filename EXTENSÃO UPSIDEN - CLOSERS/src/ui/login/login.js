@@ -1,4 +1,4 @@
-﻿/* Upsiden â€” Login Logic */
+/* Upsiden - Login Logic */
 
 const formLogin = document.getElementById('form-login');
 const formRegistro = document.getElementById('form-registro');
@@ -20,7 +20,7 @@ btnToggle.addEventListener('click', () => {
   modoRegistro = !modoRegistro;
   formLogin.style.display = modoRegistro ? 'none' : 'block';
   formRegistro.style.display = modoRegistro ? 'block' : 'none';
-  btnToggle.textContent = modoRegistro ? 'JÃ¡ tem conta? Entrar' : 'NÃ£o tem conta? Criar uma';
+  btnToggle.textContent = modoRegistro ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma';
   limparStatus();
 });
 

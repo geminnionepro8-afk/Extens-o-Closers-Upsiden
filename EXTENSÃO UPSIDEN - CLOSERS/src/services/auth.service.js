@@ -21,7 +21,24 @@ class UpsidenAuth {
   }
   static async signOut() { await supabaseClient.auth.signOut(); }
   static async getSession() {
-    const { data } = await supabaseClient.auth.getSession();
+    let { data, error } = await supabaseClient.auth.getSession();
+    if (!data.session) {
+      const storageKey = 'sb-imxwpacwtphekrbgwbph-auth-token';
+      const fallback = await new Promise(r => chrome.storage.local.get([storageKey], res => r(res[storageKey])));
+      if (fallback) {
+        console.warn('[UpsidenAuth] Corrida assíncrona. Restaurando sessão manualmente...', fallback);
+        try {
+          const parsed = typeof fallback === 'string' ? JSON.parse(fallback) : fallback;
+          if (parsed && parsed.access_token) {
+            const { data: retry } = await supabaseClient.auth.setSession({ 
+              access_token: parsed.access_token, 
+              refresh_token: parsed.refresh_token 
+            });
+            return retry.session;
+          }
+        } catch(e) { console.error('[UpsidenAuth] Erro no fallback', e); }
+      }
+    }
     return data.session;
   }
   static async getValidToken() {

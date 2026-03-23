@@ -44,9 +44,15 @@ function injetarScripts() {
 
 /**
  * Injeta a biblioteca WPP Connect (wa-js) na página.
- * Ao terminar, chama injetarScripts() para carregar o Engine.
+ * Apenas injetará APÓS o WhatsApp Web carregar completamente os chats (#pane-side),
+ * garantindo que o módulo 'ChatStore' já exista na memória e evitando crashes no Webpack.
  */
 function injetarWppConnect() {
+  if (!document.querySelector('#pane-side')) {
+    setTimeout(injetarWppConnect, 1000); // Polling a cada 1 segundo
+    return;
+  }
+  console.log(CTX, 'Painel lateral do WA detectado. Injetando WPPConnect...');
   const s = document.createElement('script');
   s.src = chrome.runtime.getURL('src/libs/wppconnect-wa.js');
   s.onload = () => injetarScripts();

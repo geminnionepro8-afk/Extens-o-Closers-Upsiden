@@ -1,13 +1,13 @@
-﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Upsiden Painel â€” Full-Page Dashboard (Vanilla JS SPA)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+�/* �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
+   Upsiden Painel � Full-Page Dashboard (Vanilla JS SPA)
+   �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"� */
 
 const P = '[Painel]';
 let currentSection = 'dashboard';
 let userData = { userId: null, nome: '', email: '', isAdmin: false };
 let painelData = { audios: [], documentos: [], midias: [], templates: [], leads: [], membros: [] };
 
-// â•â•â• TOAST â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� TOAST �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function toast(msg, tipo = 'info') {
   const container = document.getElementById('toast-container');
   const el = document.createElement('div');
@@ -17,17 +17,17 @@ function toast(msg, tipo = 'info') {
   setTimeout(() => el.remove(), 3500);
 }
 
-// â•â•â• HELPERS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� HELPERS �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function fmtSize(b) { return b < 1024 ? b+' B' : b < 1048576 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(1)+' MB'; }
 function fmtDur(s) { return `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; }
-function fmtDate(d) { if (!d) return 'â€”'; const dt = new Date(d); return dt.toLocaleDateString('pt-BR'); }
+function fmtDate(d) { if (!d) return '�'; const dt = new Date(d); return dt.toLocaleDateString('pt-BR'); }
 function docIcon(t) {
-  if (!t) return 'ðŸ“„';
-  if (t.includes('pdf')) return 'ðŸ“•'; if (t.includes('word')||t.includes('doc')) return 'ðŸ“˜';
-  if (t.includes('sheet')||t.includes('excel')||t.includes('csv')) return 'ðŸ“—'; return 'ðŸ“„';
+  if (!t) return '�x';
+  if (t.includes('pdf')) return '�x"'; if (t.includes('word')||t.includes('doc')) return '�x�';
+  if (t.includes('sheet')||t.includes('excel')||t.includes('csv')) return '�x'; return '�x';
 }
 
-// â•â•â• NAVIGATION â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� NAVIGATION �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function navigate(section) {
   currentSection = section;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -35,9 +35,9 @@ function navigate(section) {
   if (active) active.classList.add('active');
 
   const titles = {
-    dashboard: 'Dashboard', audios: 'Biblioteca de Ãudios', documentos: 'Documentos',
-    midias: 'MÃ­dias', templates: 'Templates de Texto', crm: 'CRM / Funil',
-    automacoes: 'AutomaÃ§Ãµes', campanhas: 'Campanhas de Envio', admin: 'GestÃ£o da Equipe', config: 'ConfiguraÃ§Ãµes'
+    dashboard: 'Dashboard', audios: 'Biblioteca de Áudios', documentos: 'Documentos',
+    midias: 'Mídias', templates: 'Templates de Texto', crm: 'CRM / Funil',
+    automacoes: 'Automações', campanhas: 'Campanhas de Envio', admin: 'Gestão da Equipe', config: 'Configurações'
   };
   const title = titles[section] || section;
   document.getElementById('page-title').textContent = title;
@@ -47,7 +47,7 @@ function navigate(section) {
   renderSection(section);
 }
 
-// â•â•â• RENDER SECTIONS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� RENDER SECTIONS �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function renderSection(section) {
   const c = document.getElementById('main-content');
   c.scrollTop = 0;
@@ -61,11 +61,11 @@ function renderSection(section) {
     case 'automacoes': return renderAutomacoes(c);
     case 'campanhas': return renderCampanhas(c);
     case 'admin': return renderAdmin(c);
-    default: c.innerHTML = `<div class="empty-state"><div class="empty-icon">ðŸš§</div><h3>Em desenvolvimento</h3><p>Esta seÃ§Ã£o estarÃ¡ disponÃ­vel em breve.</p></div>`;
+    default: c.innerHTML = `<div class="empty-state"><div class="empty-icon">�xa�</div><h3>Em desenvolvimento</h3><p>Esta seção estará disponível em breve.</p></div>`;
   }
 }
 
-// â•â•â• DASHBOARD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� DASHBOARD �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function renderDashboard(c) {
   const nome = userData.nome || 'Closer';
   const hora = new Date().getHours();
@@ -80,9 +80,9 @@ function renderDashboard(c) {
 
   // Stat cards data
   const stats = [
-    { icon: iconAudio, value: painelData.audios.length,     label: 'Ãudios na Biblioteca',  section: 'audios' },
+    { icon: iconAudio, value: painelData.audios.length,     label: 'Áudios na Biblioteca',  section: 'audios' },
     { icon: iconDoc,   value: painelData.documentos.length, label: 'Documentos',             section: 'documentos' },
-    { icon: iconImg,   value: painelData.midias.length,     label: 'MÃ­dias',                 section: 'midias' },
+    { icon: iconImg,   value: painelData.midias.length,     label: 'Mídias',                 section: 'midias' },
     { icon: iconMsg,   value: painelData.templates.length,  label: 'Templates de Texto',    section: 'templates' },
   ];
 
@@ -98,7 +98,7 @@ function renderDashboard(c) {
       <div class="stat-label">${s.label}</div>
     </div>`).join('');
 
-  // Quick actions â€” SVG icons
+  // Quick actions � SVG icons
   const qIcons = {
     audios: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
     documentos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
@@ -106,9 +106,9 @@ function renderDashboard(c) {
     crm: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
   };
   const actions = [
-    { key: 'audios',     title: 'Importar Ãudios',    sub: 'Adicione novos Ã¡udios',   bg: 'rgba(255,98,0,0.12)',     color: 'var(--accent)' },
+    { key: 'audios',     title: 'Importar Áudios',    sub: 'Adicione novos áudios',   bg: 'rgba(255,98,0,0.12)',     color: 'var(--accent)' },
     { key: 'documentos', title: 'Upload Documentos', sub: 'PDFs, Word, planilhas',  bg: 'rgba(0,168,132,0.12)',    color: 'var(--success)' },
-    { key: 'templates',  title: 'Novo Template',     sub: 'Crie um texto rÃ¡pido',   bg: 'rgba(247,201,72,0.12)',   color: 'var(--warning)' },
+    { key: 'templates',  title: 'Novo Template',     sub: 'Crie um texto rápido',   bg: 'rgba(247,201,72,0.12)',   color: 'var(--warning)' },
     { key: 'crm',        title: 'Gerenciar Leads',   sub: 'Funil de vendas',        bg: 'rgba(255,98,0,0.12)',     color: 'var(--accent)' },
   ];
 
@@ -121,9 +121,9 @@ function renderDashboard(c) {
 
   // Recent items (last 4 audios + templates combined)
   const recents = [
-    ...painelData.audios.slice(0,2).map(a => ({ icon:'ðŸŽ§', title: a.nome, sub: 'Biblioteca de Ãudios', date: fmtDate(a.created_at), badge: 'Novo', badgeColor: 'orange', section: 'audios' })),
-    ...painelData.templates.slice(0,2).map(t => ({ icon:'ðŸ’¬', title: t.titulo||t.nome||'Template', sub: 'Templates de Texto', date: fmtDate(t.created_at), badge: 'Ativo', badgeColor: 'green', section: 'templates' })),
-    ...painelData.leads.slice(0,2).map(l => ({ icon:'ðŸ“Š', title: l.nome, sub: 'CRM / Funil', date: fmtDate(l.created_at), badge: l.estagio === 'fechado' ? 'Fechado' : l.estagio === 'negociacao' ? 'Em negociaÃ§Ã£o' : 'ProspecÃ§Ã£o', badgeColor: l.estagio === 'fechado' ? 'green' : l.estagio === 'negociacao' ? 'orange' : 'yellow', section: 'crm' })),
+    ...painelData.audios.slice(0,2).map(a => ({ icon:'�x}�', title: a.nome, sub: 'Biblioteca de Áudios', date: fmtDate(a.created_at), badge: 'Novo', badgeColor: 'orange', section: 'audios' })),
+    ...painelData.templates.slice(0,2).map(t => ({ icon:'�x�', title: t.titulo||t.nome||'Template', sub: 'Templates de Texto', date: fmtDate(t.created_at), badge: 'Ativo', badgeColor: 'green', section: 'templates' })),
+    ...painelData.leads.slice(0,2).map(l => ({ icon:'�x`', title: l.nome, sub: 'CRM / Funil', date: fmtDate(l.created_at), badge: l.estagio === 'fechado' ? 'Fechado' : l.estagio === 'negociacao' ? 'Em negociação' : 'Prospecção', badgeColor: l.estagio === 'fechado' ? 'green' : l.estagio === 'negociacao' ? 'orange' : 'yellow', section: 'crm' })),
   ].slice(0, 6);
 
   const recentCards = recents.length > 0 ? recents.map(r => `
@@ -144,42 +144,42 @@ function renderDashboard(c) {
 
   c.innerHTML = `
     <div class="dash-welcome animate-in">
-      <h2>${saudacao}, ${nome}! ðŸ‘‹</h2>
-      <p>Gerencie seus Ã¡udios, documentos, templates e leads em um sÃ³ lugar.</p>
+      <h2>${saudacao}, ${nome}! �x9</h2>
+      <p>Gerencie seus áudios, documentos, templates e leads em um só lugar.</p>
     </div>
 
     <div class="dash-banner animate-in">
-      <div class="banner-icon">âš¡</div>
-      <div class="banner-text"><strong>Upsiden estÃ¡ ativo.</strong> Acesse rapidamente seus recursos e automatize suas conversas no WhatsApp.</div>
-      <button class="banner-link" data-click="navigate('automacoes')">Ver AutomaÃ§Ãµes</button>
+      <div class="banner-icon">�a�</div>
+      <div class="banner-text"><strong>Upsiden está ativo.</strong> Acesse rapidamente seus recursos e automatize suas conversas no WhatsApp.</div>
+      <button class="banner-link" data-click="navigate('automacoes')">Ver Automações</button>
     </div>
 
     <div class="stat-grid">${statCards}</div>
 
     <div class="section-header">
-      <h2>AÃ§Ãµes RÃ¡pidas</h2>
+      <h2>Ações Rápidas</h2>
     </div>
     <div class="quick-actions" style="margin-bottom:28px;">${actionCards}</div>
 
     <div class="section-header">
       <h2>Atividade Recente</h2>
-      <button class="see-all" data-click="navigate('audios')">Ver tudo â†’</button>
+      <button class="see-all" data-click="navigate('audios')">Ver tudo � </button>
     </div>
     <div class="recent-grid">${recentCards}</div>
   `;
 }
 
-// â•â•â• ÃUDIOS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� ÁUDIOS �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function renderAudios(c) {
   document.getElementById('header-actions').innerHTML = `<label class="btn btn-primary" for="audio-upload-input" style="cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Importar</label><input type="file" id="audio-upload-input" accept=".mp3,.wav,.ogg,.m4a,.opus,audio/*" multiple hidden>`;
   document.getElementById('audio-upload-input')?.addEventListener('change', handleAudioUpload);
 
-  let html = `<div class="section-header"><div class="search-bar"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="audio-search" placeholder="Buscar Ã¡udio..."></div></div>`;
+  let html = `<div class="section-header"><div class="search-bar"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="audio-search" placeholder="Buscar áudio..."></div></div>`;
 
   if (painelData.audios.length === 0) {
-    html += `<div class="empty-state"><div class="empty-icon">ðŸŽµ</div><h3>Nenhum Ã¡udio na biblioteca</h3><p>Clique em <strong>Importar</strong> para adicionar seus Ã¡udios.</p></div>`;
+    html += `<div class="empty-state"><div class="empty-icon">�x}�</div><h3>Nenhum áudio na biblioteca</h3><p>Clique em <strong>Importar</strong> para adicionar seus áudios.</p></div>`;
   } else {
-    html += `<table class="data-table"><thead><tr><th></th><th>Nome</th><th>DuraÃ§Ã£o</th><th>Tamanho</th><th>Compartilhado</th><th>Data</th><th></th></tr></thead><tbody>`;
+    html += `<table class="data-table"><thead><tr><th></th><th>Nome</th><th>Duração</th><th>Tamanho</th><th>Compartilhado</th><th>Data</th><th></th></tr></thead><tbody>`;
     painelData.audios.forEach(a => {
       html += `<tr class="animate-in">
         <td><button class="audio-play-btn" data-audio-id="${a.id}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></td>
@@ -197,7 +197,7 @@ function renderAudios(c) {
   document.getElementById('audio-search')?.addEventListener('input', e => filterTable(e.target.value));
 }
 
-// â•â•â• DOCUMENTOS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� DOCUMENTOS �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function renderDocumentos(c) {
   document.getElementById('header-actions').innerHTML = `<label class="btn btn-primary" for="doc-upload-input" style="cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Upload</label><input type="file" id="doc-upload-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" multiple hidden>`;
   document.getElementById('doc-upload-input')?.addEventListener('change', handleDocUpload);
@@ -205,7 +205,7 @@ function renderDocumentos(c) {
   let html = `<div class="section-header"><div class="search-bar"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="doc-search" placeholder="Buscar documento..."></div></div>`;
 
   if (painelData.documentos.length === 0) {
-    html += `<div class="empty-state"><div class="empty-icon">ðŸ“„</div><h3>Nenhum documento</h3><p>Clique em <strong>Upload</strong> para adicionar documentos.</p></div>`;
+    html += `<div class="empty-state"><div class="empty-icon">�x</div><h3>Nenhum documento</h3><p>Clique em <strong>Upload</strong> para adicionar documentos.</p></div>`;
   } else {
     html += `<table class="data-table"><thead><tr><th></th><th>Nome</th><th>Tamanho</th><th>Compartilhado</th><th>Data</th><th></th></tr></thead><tbody>`;
     painelData.documentos.forEach(d => {
@@ -224,13 +224,13 @@ function renderDocumentos(c) {
   document.getElementById('doc-search')?.addEventListener('input', e => filterTable(e.target.value));
 }
 
-// â•â•â• MÃDIAS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� MÍDIAS �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function renderMidias(c) {
   document.getElementById('header-actions').innerHTML = `<label class="btn btn-primary" for="media-upload-input" style="cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Upload</label><input type="file" id="media-upload-input" accept="image/*,video/*" multiple hidden>`;
   document.getElementById('media-upload-input')?.addEventListener('change', handleMediaUpload);
 
   if (painelData.midias.length === 0) {
-    c.innerHTML = `<div class="empty-state"><div class="empty-icon">ðŸ–¼ï¸</div><h3>Nenhuma mÃ­dia</h3><p>Adicione imagens e vÃ­deos para compartilhar com sua equipe.</p></div>`;
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">�x�️</div><h3>Nenhuma mídia</h3><p>Adicione imagens e vídeos para compartilhar com sua equipe.</p></div>`;
   } else {
     let html = '<div class="media-grid">';
     painelData.midias.forEach(m => {
@@ -246,17 +246,17 @@ function renderMidias(c) {
   }
 }
 
-// â•â•â• TEMPLATES â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� TEMPLATES �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function renderTemplates(c) {
   document.getElementById('header-actions').innerHTML = `<button class="btn btn-primary" data-click="showNewTemplateModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Template</button>`;
 
   if (painelData.templates.length === 0) {
-    c.innerHTML = `<div class="empty-state"><div class="empty-icon">ðŸ’¬</div><h3>Nenhum template</h3><p>Crie templates de texto para agilizar suas conversas.</p></div>`;
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">�x�</div><h3>Nenhum template</h3><p>Crie templates de texto para agilizar suas conversas.</p></div>`;
   } else {
     let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
     painelData.templates.forEach(t => {
       html += `<div class="auto-section animate-in" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
-        <div style="flex:1;"><h3 style="margin-bottom:8px;">${t.titulo || t.nome || 'Sem tÃ­tulo'}</h3><p style="font-size:13px;color:var(--text-secondary);white-space:pre-wrap;line-height:1.5;">${t.conteudo || t.texto || ''}</p></div>
+        <div style="flex:1;"><h3 style="margin-bottom:8px;">${t.titulo || t.nome || 'Sem título'}</h3><p style="font-size:13px;color:var(--text-secondary);white-space:pre-wrap;line-height:1.5;">${t.conteudo || t.texto || ''}</p></div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
           <button class="btn-icon" title="Editar" data-click="editTemplate('${t.id}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
           <button class="btn-icon" title="Excluir" data-click="deleteItem('templates','${t.id}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
@@ -268,13 +268,13 @@ function renderTemplates(c) {
   }
 }
 
-// â•â•â• CRM â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� CRM �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function renderCRM(c) {
   document.getElementById('header-actions').innerHTML = `<button class="btn btn-primary" data-click="showNewLeadModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Lead</button>`;
 
   const stages = [
-    { id: 'prospeccao', label: 'ProspecÃ§Ã£o', color: 'var(--warning)' },
-    { id: 'negociacao', label: 'NegociaÃ§Ã£o', color: 'var(--accent)' },
+    { id: 'prospeccao', label: 'Prospecção', color: 'var(--warning)' },
+    { id: 'negociacao', label: 'Negociação', color: 'var(--accent)' },
     { id: 'fechado', label: 'Fechado', color: 'var(--success)' }
   ];
 
@@ -299,7 +299,7 @@ function renderCRM(c) {
 // DO NOT DUPLICATE HERE  SSOT compliance
 function renderAdmin(c) {
   if (!userData.isAdmin) {
-    c.innerHTML = `<div class="empty-state"><div class="empty-icon">ðŸ”’</div><h3>Acesso Restrito</h3><p>Apenas administradores podem acessar esta seÃ§Ã£o.</p></div>`;
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">�x</div><h3>Acesso Restrito</h3><p>Apenas administradores podem acessar esta seção.</p></div>`;
     return;
   }
   let html = `<div class="section-header"><h2>Membros da Equipe</h2><div class="search-bar"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" placeholder="Buscar membro..."></div></div>`;
@@ -312,7 +312,7 @@ function renderAdmin(c) {
   html += `</tbody></table>`;
 
   html += `<div class="section-header" style="margin-top:32px;"><h2>Arquivos Globais da Equipe</h2></div>`;
-  const allFiles = [...painelData.audios.filter(a=>a.compartilhado).map(a=>({...a,_tipo:'ðŸŽµ'})), ...painelData.documentos.filter(d=>d.compartilhado).map(d=>({...d,_tipo:docIcon(d.tipo)})), ...painelData.midias.filter(m=>m.compartilhado).map(m=>({...m,_tipo:'ðŸ–¼ï¸'}))];
+  const allFiles = [...painelData.audios.filter(a=>a.compartilhado).map(a=>({...a,_tipo:'�x}�'})), ...painelData.documentos.filter(d=>d.compartilhado).map(d=>({...d,_tipo:docIcon(d.tipo)})), ...painelData.midias.filter(m=>m.compartilhado).map(m=>({...m,_tipo:'�x�️'}))];
   if (allFiles.length === 0) {
     html += `<p style="color:var(--text-muted);font-size:14px;">Nenhum arquivo compartilhado com a equipe ainda.</p>`;
   } else {
@@ -325,7 +325,7 @@ function renderAdmin(c) {
   c.innerHTML = html;
 }
 
-// â•â•â• ACTIONS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� ACTIONS �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 async function toggleShare(table, id, val) {
   try {
     await UpsidenDB.from(table).eq('id', id).update({ compartilhado: val }).execute();
@@ -343,7 +343,7 @@ async function deleteItem(table, id) {
     await UpsidenDB.from(table).eq('id', id).delete().execute();
     painelData[table] = painelData[table].filter(i => i.id !== id);
     renderSection(currentSection);
-    toast('Item excluÃ­do', 'success');
+    toast('Item excluído', 'success');
   } catch(e) { toast('Erro ao excluir', 'error'); }
 }
 
@@ -355,10 +355,10 @@ function filterTable(query) {
   });
 }
 
-// â•â•â• UPLOAD HANDLERS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� UPLOAD HANDLERS �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 async function handleAudioUpload(e) {
   const files = Array.from(e.target.files); if (!files.length) return;
-  toast(`Importando ${files.length} Ã¡udio(s)...`, 'info');
+  toast(`Importando ${files.length} áudio(s)...`, 'info');
   for (const file of files) {
     try {
       const ab = await file.arrayBuffer();
@@ -370,7 +370,7 @@ async function handleAudioUpload(e) {
       if (res?.length) painelData.audios.unshift(res[0]);
     } catch(err) { console.error(P, err); toast(`Erro: ${file.name}`, 'error'); }
   }
-  renderSection('audios'); toast(`${files.length} Ã¡udio(s) importado(s)!`, 'success'); e.target.value = '';
+  renderSection('audios'); toast(`${files.length} áudio(s) importado(s)!`, 'success'); e.target.value = '';
 }
 
 async function handleDocUpload(e) {
@@ -396,10 +396,10 @@ async function handleMediaUpload(e) {
       if (res?.length) painelData.midias.unshift(res[0]);
     } catch(err) { toast(`Erro: ${file.name}`, 'error'); }
   }
-  renderSection('midias'); toast('MÃ­dias enviadas!', 'success'); e.target.value = '';
+  renderSection('midias'); toast('Mídias enviadas!', 'success'); e.target.value = '';
 }
 
-// â•â•â• TEMPLATE MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� TEMPLATE MODAL �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function showNewTemplateModal() { showTemplateModal(null); }
 function editTemplate(id) { const t = painelData.templates.find(x=>x.id===id); if (t) showTemplateModal(t); }
 
@@ -407,7 +407,7 @@ function showTemplateModal(template) {
   const existing = document.querySelector('.modal-overlay'); if (existing) existing.remove();
   const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
   overlay.innerHTML = `<div class="modal"><div class="modal-header"><h3>${template ? 'Editar' : 'Novo'} Template</h3><button class="btn-ghost" data-click="closeModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
-  <div class="modal-body"><div class="form-group"><label class="form-label">TÃ­tulo</label><input class="form-input" id="tpl-titulo" value="${template?.titulo||template?.nome||''}"></div><div class="form-group"><label class="form-label">ConteÃºdo</label><textarea class="form-textarea" id="tpl-conteudo" rows="5">${template?.conteudo||template?.texto||''}</textarea></div></div>
+  <div class="modal-body"><div class="form-group"><label class="form-label">Título</label><input class="form-input" id="tpl-titulo" value="${template?.titulo||template?.nome||''}"></div><div class="form-group"><label class="form-label">Conteúdo</label><textarea class="form-textarea" id="tpl-conteudo" rows="5">${template?.conteudo||template?.texto||''}</textarea></div></div>
   <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="salvarTemplate('${template?.id||''}')">Salvar</button></div></div>`;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
@@ -416,7 +416,7 @@ function showTemplateModal(template) {
 async function salvarTemplate(id) {
   const titulo = document.getElementById('tpl-titulo').value.trim();
   const conteudo = document.getElementById('tpl-conteudo').value.trim();
-  if (!titulo || !conteudo) { toast('Preencha tÃ­tulo e conteÃºdo', 'error'); return; }
+  if (!titulo || !conteudo) { toast('Preencha título e conteúdo', 'error'); return; }
   try {
     if (id) {
       await UpsidenDB.from('templates').eq('id', id).update({ titulo, conteudo }).execute();
@@ -431,7 +431,7 @@ async function salvarTemplate(id) {
   } catch(e) { toast('Erro ao salvar template', 'error'); }
 }
 
-// â•â•â• LEAD MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� LEAD MODAL �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 function showNewLeadModal() {
   const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
   overlay.innerHTML = `<div class="modal"><div class="modal-header"><h3>Novo Lead</h3><button class="btn-ghost" data-click="closeModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
@@ -452,7 +452,7 @@ async function salvarLead() {
   } catch(e) { toast('Erro ao criar lead', 'error'); }
 }
 
-// â•â•â• INIT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� INIT �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 async function initPainel() {
   console.log(P, 'Inicializando Painel Upsiden...');
   try {
@@ -474,7 +474,7 @@ async function initPainel() {
     userData.nome = profile?.nome || profile?.email?.split('@')[0] || '';
     userData.email = profile?.email || '';
 
-    // UI â€” user info
+    // UI � user info
     document.getElementById('user-display-name').textContent = userData.nome;
     document.getElementById('user-display-role').textContent = userData.isAdmin ? 'Administrador' : 'Closer';
     document.getElementById('user-display-role').className = `user-role ${userData.isAdmin ? 'admin' : ''}`;
@@ -505,7 +505,7 @@ async function initPainel() {
       btn.addEventListener('click', () => navigate(btn.dataset.section));
     });
 
-    // â”€ Sidebar toggle (collapse / expand) â”€
+    // �� Sidebar toggle (collapse / expand) ��
     const sidebar    = document.getElementById('painel-sidebar');
     const toggleBtn  = document.getElementById('sidebar-toggle');
     chrome.storage.local.get('ups_sidebar_collapsed', (res) => { const savedState = res.ups_sidebar_collapsed;
@@ -518,7 +518,7 @@ async function initPainel() {
       updateUserMenuPosition();
     });
 
-    // â”€ User menu popup â”€
+    // �� User menu popup ��
     const btnUserMenu      = document.getElementById('btn-user-menu');
     const userMenuPopup    = document.getElementById('user-menu-popup');
     const userMenuOverlay  = document.getElementById('user-menu-overlay');
@@ -552,7 +552,7 @@ async function initPainel() {
     const umpName  = document.getElementById('ump-name');
     const umpEmail = document.getElementById('ump-email');
     const umpAvatar = document.getElementById('user-avatar-popup');
-    if (umpName)   umpName.textContent   = userData.nome  || 'UsuÃ¡rio';
+    if (umpName)   umpName.textContent   = userData.nome  || 'Usuário';
     if (umpEmail)  umpEmail.textContent  = userData.email || '';
     if (umpAvatar) umpAvatar.textContent = (userData.nome[0] || 'U').toUpperCase();
 
@@ -563,18 +563,18 @@ async function initPainel() {
       window.location.reload();
     });
 
-    console.log(P, 'âœ… Painel pronto!');
+    console.log(P, '�S& Painel pronto!');
     navigate('dashboard');
 
   } catch(err) {
     console.error(P, 'Erro ao inicializar:', err);
-    document.getElementById('loading-page').innerHTML = `<p style="color:var(--danger);">Erro ao carregar painel. Recarregue a pÃ¡gina.</p>`;
+    document.getElementById('loading-page').innerHTML = `<p style="color:var(--danger);">Erro ao carregar painel. Recarregue a página.</p>`;
   }
 }
 
 document.addEventListener('DOMContentLoaded', initPainel);
 
-// Expor funÃ§Ãµes para event delegation
+// Expor funções para event delegation
 window.navigate = navigate;
 window.deleteItem = deleteItem;
 window.showNewTemplateModal = showNewTemplateModal;
@@ -582,7 +582,7 @@ window.editTemplate = editTemplate;
 window.showNewLeadModal = showNewLeadModal;
 window.salvarLead = salvarLead;
 
-// â•â•â• EVENT DELEGATION (CSP COMPATIBLE) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// �"��"��"� EVENT DELEGATION (CSP COMPATIBLE) �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
 window.closeModal = function() {
   document.querySelector('.modal-overlay')?.remove();
 };
@@ -605,7 +605,7 @@ document.addEventListener('click', (e) => {
     if (typeof window[fnName] === 'function') {
       window[fnName](...args);
     } else {
-      console.warn('[Painel] FunÃ§Ã£o nÃ£o encontrada:', fnName);
+      console.warn('[Painel] Função não encontrada:', fnName);
     }
   }
 });

@@ -48,8 +48,72 @@ function abrirPainel(tela, titulo, iframeSrc) {
   criarPainel();
   const body = document.getElementById('ups-panel-body');
   document.getElementById('ups-panel-titulo').textContent = titulo;
+  
   if (iframeSrc) {
-    body.innerHTML = `<iframe src="${chrome.runtime.getURL(iframeSrc)}"></iframe>`;
+    // 1. Prepara o Shadow Host
+    body.innerHTML = '';
+    const shadowHost = document.createElement('div');
+    shadowHost.id = `ups-module-host-${tela}`;
+    shadowHost.style.cssText = 'width:100%; height:100%; border:none; display:flex; flex-direction:column;';
+    body.appendChild(shadowHost);
+    
+    // Anexa o Shadow DOM (fechado ou aberto, aberto é mais facil pra debug)
+    const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
+    
+    // Globais para os módulos (O módulo buscará os elementos por window.$upsRoot)
+    window.$upsRoot = shadowRoot;
+    window.$upsCtx = tela;
+
+    // Reset base do Shadow DOM
+    const resetStyle = document.createElement('style');
+    resetStyle.textContent = `
+      :host { all: initial; display: block; width: 100%; height: 100%; background: #111b21; }
+      * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    `;
+    shadowRoot.appendChild(resetStyle);
+
+    // 2. Fetch do HTML do módulo
+    fetch(chrome.runtime.getURL(iframeSrc))
+      .then(res => res.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        // 3. Injeta Links de CSS com URLs absolutas
+        doc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+          const newLink = document.createElement('link');
+          newLink.rel = 'stylesheet';
+          const oldHref = link.getAttribute('href');
+          const basePath = iframeSrc.split('/').slice(0, -1).join('/');
+          newLink.href = chrome.runtime.getURL(`${basePath}/${oldHref}`);
+          shadowRoot.appendChild(newLink);
+        });
+
+        // 3.5. Corrige caminhos relativos de imagens
+        doc.querySelectorAll('img').forEach(img => {
+          if (img.hasAttribute('src')) {
+            const oldSrc = img.getAttribute('src');
+            img.src = new URL(oldSrc, chrome.runtime.getURL(iframeSrc)).href;
+          }
+        });
+
+        // 4. Injeta o HTML Body
+        const wrapper = document.createElement('div');
+        wrapper.id = 'ups-shadow-wrapper';
+        wrapper.style.cssText = 'width:100%; height:100%; overflow:auto;';
+        wrapper.innerHTML = doc.body.innerHTML;
+        shadowRoot.appendChild(wrapper);
+
+        // 5. Aciona o inicializador nativo do módulo carregado previamente no manifest.json
+        if (typeof window['upsInit_' + tela] === 'function') {
+           setTimeout(() => window['upsInit_' + tela](), 50);
+        }
+      })
+      .catch(err => {
+        console.error('[Upsiden] Erro Shadow DOM', err);
+        shadowRoot.innerHTML = `<div style="padding:24px;color:#f15c6d;">Erro ao carregar módulo: ${err.message}</div>`;
+      });
+
   } else {
     body.innerHTML = `<div style="padding:24px;color:#aebac1;font-size:14px;font-family:sans-serif;line-height:1.6;">
       <p style="color:#e9edef;font-size:16px;font-weight:500;margin:0 0 8px">${titulo}</p>
