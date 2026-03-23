@@ -108,10 +108,11 @@ class AutomationController {
         if (!this.checkAllowedTarget(isGroup, trig.apenas_privado, trig.apenas_grupo)) continue;
 
         const palavra = trig.palavra.trim().toLowerCase();
+        const condicao = trig.condicao || 'exata';
         let match = false;
 
-        if (trig.condicao === 'exata' && textoRecebido === palavra) match = true;
-        else if (trig.condicao === 'contem' && textoRecebido.includes(palavra)) match = true;
+        if (condicao === 'exata' && textoRecebido === palavra) match = true;
+        else if (condicao === 'contem' && textoRecebido.includes(palavra)) match = true;
 
         if (match) {
           if (this.DEBUG_MODE) console.log(`[Automation] Trigger: ${palavra}`);
