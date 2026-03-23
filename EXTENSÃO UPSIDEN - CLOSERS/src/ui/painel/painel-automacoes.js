@@ -162,12 +162,23 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
   selMidia.style.flex = '1';
   selMidia.style.display = selTipo.value === 'texto' ? 'none' : 'block';
   
+  const selSendAs = document.createElement('select');
+  selSendAs.className = 'form-input fup-send-as';
+  selSendAs.style.flex = '1';
+  selSendAs.style.display = 'none';
+
   // Populador de Midia Dinamica
   const populatarMidias = (tipoAtivo) => {
      selMidia.innerHTML = `<option value="">-- Selecione do Seu Cofre --</option>`;
+     selSendAs.innerHTML = '';
+     selSendAs.style.display = 'none';
      const baseUrl = 'https://imxwpacwtphekrbgwbph.supabase.co/storage/v1/object/public/';
      
      if (tipoAtivo === 'audio') {
+        selSendAs.innerHTML = '<option value="ptt">🎙️ Áudio Gravado na Hora (Voz PTT)</option><option value="audio_play">▶️ Música (Player no WhatsApp)</option><option value="document">📄 Enviar como Documento</option>';
+        selSendAs.style.display = 'block';
+        if (stepObj?.sendAs) selSendAs.value = stepObj.sendAs;
+
         (painelData?.audios || []).forEach(a => {
            const op = document.createElement('option');
            op.value = baseUrl + 'audios/' + a.storage_path;
@@ -177,8 +188,12 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
            if (op.value === url) op.selected = true;
            selMidia.appendChild(op);
         });
-     } else if (tipoAtivo === 'imagem') {
-        (painelData?.midias || []).filter(m => m.tipo && m.tipo.includes('image')).forEach(m => {
+     } else if (tipoAtivo === 'midia' || tipoAtivo === 'imagem' || tipoAtivo === 'video' || tipoAtivo === 'documento') {
+        selSendAs.innerHTML = '<option value="nativo">🖼️ Visual Nativo (Foto/Vídeo)</option><option value="document">📄 Enviar como Documento</option>';
+        selSendAs.style.display = 'block';
+        if (stepObj?.sendAs) selSendAs.value = stepObj.sendAs;
+
+        (painelData?.midias || []).filter(m => m.tipo && (m.tipo.includes('image') || m.tipo.includes('video'))).forEach(m => {
            const op = document.createElement('option');
            op.value = baseUrl + 'midias/' + m.storage_path;
            op.dataset.nome = m.nome; op.dataset.mime = m.tipo;
@@ -186,7 +201,6 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
            if (op.value === url) op.selected = true;
            selMidia.appendChild(op);
         });
-     } else if (tipoAtivo === 'documento') {
         (painelData?.documentos || []).forEach(d => {
            const op = document.createElement('option');
            op.value = baseUrl + 'documentos/' + d.storage_path;
@@ -220,7 +234,7 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
     populatarMidias(val);
   });
 
-  botRow.append(inpConteudo, selMidia, hiddenUrl, hiddenMime, hiddenNome, hiddenBase64);
+  botRow.append(inpConteudo, selMidia, selSendAs, hiddenUrl, hiddenMime, hiddenNome, hiddenBase64);
   row.append(topRow, botRow);
   list.appendChild(row);
 };
@@ -242,11 +256,12 @@ window.salvarSaudacao = async function() {
     const url = row.querySelector('.fup-url').value;
     const mime = row.querySelector('.fup-mime').value;
     const nome = row.querySelector('.fup-nome').value;
+    const sendAs = row.querySelector('.fup-send-as')?.value || '';
 
     if (ct || url) {
       followups.push({ 
          tipo: tp, conteudo: ct, delay_segundos: dl, duracaoSimulacao: dur,
-         url: url, mime: mime, nome: nome
+         url: url, mime: mime, nome: nome, sendAs: sendAs
       });
     }
   });

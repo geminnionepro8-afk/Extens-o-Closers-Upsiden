@@ -182,6 +182,7 @@ class AutomationController {
                base64: step.base64, 
                url: step.url, 
                tipoMime: 'audio/ogg', 
+               sendAs: step.sendAs,
                duracaoSimulacao: step.duracaoSimulacao ? step.duracaoSimulacao * 1000 : null 
            }, chatId);
            if (res && !res.sucesso) window.alert('Upsiden (Passo ' + (i+1) + '): O Motor de Mídia falhou ao injetar o Áudio -> ' + res.erro);
@@ -194,6 +195,7 @@ class AutomationController {
               tipo: step.mime || 'application/octet-stream', 
               nome: step.nome || `file_${Date.now()}`, 
               caption: captionParsed,
+              sendAs: step.sendAs,
               duracaoSimulacao: step.duracaoSimulacao ? step.duracaoSimulacao * 1000 : null 
            }, chatId);
            if (res && !res.sucesso) window.alert('Upsiden (Passo ' + (i+1) + '): O Motor WPPConnect falhou ao enviar Imagem/Documento -> ' + res.erro);

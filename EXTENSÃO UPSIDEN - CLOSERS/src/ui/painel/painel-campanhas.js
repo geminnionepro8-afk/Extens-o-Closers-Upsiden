@@ -112,9 +112,10 @@ window.iniciarCampanha = async function() {
     const url = row.querySelector('.fup-url').value;
     const mime = row.querySelector('.fup-mime').value;
     const fNome = row.querySelector('.fup-nome').value;
+    const sendAs = row.querySelector('.fup-send-as')?.value || '';
 
     if (ct || url) {
-      followups.push({ tipo: tp, conteudo: ct, delay_segundos: dl, duracaoSimulacao: dur, url: url, mime: mime, nome: fNome });
+      followups.push({ tipo: tp, conteudo: ct, delay_segundos: dl, duracaoSimulacao: dur, url: url, mime: mime, nome: fNome, sendAs: sendAs });
     }
   });
 
