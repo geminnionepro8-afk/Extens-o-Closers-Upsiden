@@ -9,7 +9,20 @@
 // """ STATE & TAB """""""""""""""""""""""""""""""""""""""""""""
 if (typeof window.autoSubTab === 'undefined') window.autoSubTab = 'saudacao';
 if (typeof window.campSubTab === 'undefined') window.campSubTab = 'nova';
-// currentLista and campanhaHistorico are declared in painel.js — DO NOT re-declare with let
+
+// Listener Global de Progresso da Campanha para o Painel
+chrome.runtime.onMessage.addListener(async (msg) => {
+  if (msg.tipo === 'bulk_progresso' || msg.tipo === 'bulk_concluido') {
+     const { id, enviados, falhas, status } = msg.dados;
+     if (!id) return;
+     try {
+       await UpsidenDB.from('campanhas').update({
+         enviados, falhas, status, updated_at: new Date().toISOString()
+       }).eq('id', id).execute();
+       if (window.campSubTab === 'historico') window.loadCampanhaHistorico();
+     } catch(e) {}
+  }
+});
 
 // """ CAMPANHAS EM MASSA """"""""""""""""""""""""""""""""""""""
 window.renderCampanhas = function(c) {
@@ -42,12 +55,14 @@ window.renderCampanhas = function(c) {
         </select>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Mensagem (Texto)</label>
-        <textarea class="form-textarea" id="camp-texto" rows="4" placeholder="Olá {nome}. Tudo bem?"></textarea>
-      </div>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Adicione mensagens, imagens ou áudios para compor a mensagem da Campanha. Use os delays para separar envios longos.</p>
+      
+      <div id="camp-steps-list"></div>
+      <button class="btn btn-secondary" data-click="addFollowupRow('camp-steps-list')" style="margin-top:12px; margin-bottom:20px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Adicionar Passo na Campanha
+      </button>
 
-      <button class="btn btn-primary" data-click="iniciarCampanha()">Iniciar Envio</button>
+      <button class="btn btn-primary" data-click="iniciarCampanha()">Iniciar Disparos em Massa</button>
     </div>`;
   } else if (window.campSubTab === 'historico') {
     html += `<div class="auto-section animate-in" id="camp-historico-container">
@@ -76,17 +91,37 @@ window.renderCampanhas = function(c) {
 
   if (window.campSubTab === 'listas') setTimeout(loadListasTransmissao, 50);
   if (window.campSubTab === 'historico') setTimeout(loadCampanhaHistorico, 50);
-  if (window.campSubTab === 'nova') setTimeout(loadListasSelect, 50);
   if (window.campSubTab === 'config') setTimeout(loadAntiBan, 50);
+  if (window.campSubTab === 'nova') {
+     setTimeout(loadListasSelect, 50);
+     setTimeout(() => window.addFollowupRow('camp-steps-list'), 150);
+  }
 };
 
 window.iniciarCampanha = async function() {
   const nome = document.getElementById('camp-nome').value.trim();
   const id_lista = document.getElementById('camp-lista').value;
-  const texto = document.getElementById('camp-texto').value.trim();
-  if(!nome || !id_lista || !texto) { toast('Preencha nome, lista e texto', 'error'); return; }
   
-  if(!confirm('Iniciar disparos em massa? O navegador deve permanecer com o WhatsApp aberto.')) return;
+  const fupRows = document.querySelectorAll('#camp-steps-list .followup-row');
+  const followups = [];
+  fupRows.forEach(row => {
+    const tp = row.querySelector('.fup-tipo').value;
+    const ct = row.querySelector('.fup-conteudo').value.trim();
+    const dl = Number(row.querySelector('.fup-delay').value) || 0;
+    const dur = Number(row.querySelector('.fup-duracao').value) || 2;
+    const url = row.querySelector('.fup-url').value;
+    const mime = row.querySelector('.fup-mime').value;
+    const fNome = row.querySelector('.fup-nome').value;
+
+    if (ct || url) {
+      followups.push({ tipo: tp, conteudo: ct, delay_segundos: dl, duracaoSimulacao: dur, url: url, mime: mime, nome: fNome });
+    }
+  });
+
+  if(!nome || !id_lista) { toast('Preencha o nome e selecione a lista', 'error'); return; }
+  if(followups.length === 0) { toast('Adicione pelo menos uma mídia ou texto!', 'error'); return; }
+  
+  if(!confirm('Iniciar disparos em massa? O navegador deve permanecer CUIDADOSAMENTE com a aba do WhatsApp aberta.')) return;
   // Registra no banco as intenções de envio e chama injetor_pagina
   try {
     const antiban = await new Promise(r => chrome.storage.local.get(['ups_antiban_min', 'ups_antiban_max'], r));
@@ -96,14 +131,14 @@ window.iniciarCampanha = async function() {
     const lista = resLista.data && resLista.data.length ? resLista.data[0] : {contatos:[]};
     if(!lista || !lista.contatos || !lista.contatos.length) { toast('A lista está vazia!', 'error'); return; }
 
-    const campData = { nome, tipo: 'texto', total_contatos: lista.contatos.length, criado_por: userData.userId, config_delay_min: min, config_delay_max: max };
-    const res = await UpsidenDB.from('campanhas').insert(campData).execute();
-    if(res && res.length) {
-      toast('Campanha inicializada!', 'success');
-      chrome.runtime.sendMessage({ tipo: 'bulk_send_start', contatos: lista.contatos, texto, campanha_id: res[0].id, max, min });
+    const campData = { nome, tipo: 'multimidia_sequence', total_contatos: lista.contatos.length, criado_por: userData.userId, config_delay_min: min, config_delay_max: max };
+    const res = await UpsidenDB.from('campanhas').insert(campData).select();
+    if(res && res.data && res.data.length) {
+      toast('Campanha Em Massa Engatilhada!', 'success');
+      chrome.runtime.sendMessage({ tipo: 'bulk_send_start', contatos: lista.contatos, stepsParams: followups, campanha_id: res.data[0].id, max, min });
       window.switchCampTab('historico');
     }
-  } catch(e) { toast('Erro ao criar campanha', 'error'); }
+  } catch(e) { toast('Erro ao criar campanha: ' + e.message, 'error'); }
 };
 
 // Anti-Ban functions are defined in painel-automacoes.js (SSOT: single source)
@@ -122,6 +157,16 @@ window.loadCampanhaHistorico = async function() {
     let html = '';
     historico.forEach(h => {
       const p = h.total_contatos ? Math.round(((h.enviados || 0) / h.total_contatos) * 100) : 0;
+      
+      let controls = '';
+      if (h.status === 'andamento') {
+         controls = `<button class="btn-ghost" style="color:var(--accent);font-size:11px;padding:4px 8px;" onclick="chrome.runtime.sendMessage({tipo:'bulk_pausar'}); UpsidenDB.from('campanhas').update({status:'pausado'}).eq('id', '${h.id}').execute(); setTimeout(loadCampanhaHistorico, 300)">⏸️ Pausar</button>
+                     <button class="btn-ghost" style="color:var(--danger);font-size:11px;padding:4px 8px;" onclick="chrome.runtime.sendMessage({tipo:'bulk_cancelar'})">⏹️ Cancelar</button>`;
+      } else if (h.status === 'pausado') {
+         controls = `<button class="btn-ghost" style="color:var(--success);font-size:11px;padding:4px 8px;" onclick="chrome.runtime.sendMessage({tipo:'bulk_continuar'}); UpsidenDB.from('campanhas').update({status:'andamento'}).eq('id', '${h.id}').execute(); setTimeout(loadCampanhaHistorico, 300)">▶️ Continuar</button>
+                     <button class="btn-ghost" style="color:var(--danger);font-size:11px;padding:4px 8px;" onclick="chrome.runtime.sendMessage({tipo:'bulk_cancelar'})">⏹️ Cancelar</button>`;
+      }
+
       html += `<div class="auto-section animate-in" style="margin-bottom:12px;padding:16px;">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
           <h4 style="margin:0;">${h.nome}</h4>
@@ -134,6 +179,7 @@ window.loadCampanhaHistorico = async function() {
           <span>📢 ${h.tipo} ⬢ ${h.total_contatos} contatos</span>
           <span>✅ ${h.enviados || 0} ⬢ ❌ ${h.falhas || 0}</span>
         </div>
+        ${controls ? `<div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px; padding-top:8px; border-top:1px solid var(--border);">${controls}</div>` : ''}
       </div>`;
     });
     c.innerHTML = html;
