@@ -174,19 +174,21 @@ class AutomationController {
       try {
         if (step.tipo === 'texto') {
            const texto = this.parseTemplate(step.conteudo || '', chatName);
-           await window.InjetorWPP.enviarTexto({ texto, duracaoSimulacao: step.duracaoSimulacao ? step.duracaoSimulacao * 1000 : null }, chatId);
+           const res = await window.InjetorWPP.enviarTexto({ texto, duracaoSimulacao: step.duracaoSimulacao ? step.duracaoSimulacao * 1000 : null }, chatId);
+           if (res && !res.sucesso) window.alert('Upsiden (Passo ' + (i+1) + '): Falha ao Enviar Texto -> ' + res.erro);
         }
         else if (step.tipo === 'audio') {
-           await window.InjetorWPP.enviarAudio({ 
+           const res = await window.InjetorWPP.enviarAudio({ 
                base64: step.base64, 
                url: step.url, 
                tipoMime: 'audio/ogg', 
                duracaoSimulacao: step.duracaoSimulacao ? step.duracaoSimulacao * 1000 : null 
            }, chatId);
+           if (res && !res.sucesso) window.alert('Upsiden (Passo ' + (i+1) + '): O Motor de Mídia falhou ao injetar o Áudio -> ' + res.erro);
         }
         else if ((step.tipo === 'documento' || step.tipo === 'midia' || step.tipo === 'imagem' || step.tipo === 'video')) {
            const captionParsed = this.parseTemplate(step.conteudo || '', chatName);
-           await window.InjetorWPP.enviarArquivo({ 
+           const res = await window.InjetorWPP.enviarArquivo({ 
               base64: step.base64, 
               url: step.url, 
               tipo: step.mime || 'application/octet-stream', 
@@ -194,8 +196,12 @@ class AutomationController {
               caption: captionParsed,
               duracaoSimulacao: step.duracaoSimulacao ? step.duracaoSimulacao * 1000 : null 
            }, chatId);
+           if (res && !res.sucesso) window.alert('Upsiden (Passo ' + (i+1) + '): O Motor WPPConnect falhou ao enviar Imagem/Documento -> ' + res.erro);
         }
-      } catch (e) { if (this.DEBUG_MODE) console.error('[Automation] Pipeline err', e); }
+      } catch (e) { 
+         window.alert('Upsiden: Exceção Fatal no Processamento de Automação -> ' + e.message); 
+         if (this.DEBUG_MODE) console.error('[Automation] Pipeline err', e); 
+      }
     }
   }
 }
