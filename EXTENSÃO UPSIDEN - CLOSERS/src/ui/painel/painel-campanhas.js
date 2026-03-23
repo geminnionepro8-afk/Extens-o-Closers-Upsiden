@@ -92,7 +92,8 @@ window.iniciarCampanha = async function() {
     const antiban = await new Promise(r => chrome.storage.local.get(['ups_antiban_min', 'ups_antiban_max'], r));
     const min = parseInt(antiban.ups_antiban_min || 4);
     const max = parseInt(antiban.ups_antiban_max || 10);
-    const lista = (await UpsidenDB.from('listas_contatos').select('contatos').eq('id', id_lista).execute())[0];
+    const resLista = await UpsidenDB.from('listas_contatos').select('contatos').eq('id', id_lista);
+    const lista = resLista.data && resLista.data.length ? resLista.data[0] : {contatos:[]};
     if(!lista || !lista.contatos || !lista.contatos.length) { toast('A lista está vazia!', 'error'); return; }
 
     const campData = { nome, tipo: 'texto', total_contatos: lista.contatos.length, criado_por: userData.userId, config_delay_min: min, config_delay_max: max };
@@ -114,7 +115,8 @@ window.loadCampanhaHistorico = async function() {
   const c = document.getElementById('camp-historico-container');
   if(!c) return;
   try {
-    const historico = await UpsidenDB.from('campanhas').select('*').eq('criado_por', userData.userId).order('created_at', false).execute() || [];
+    const resConfig = await UpsidenDB.from('campanhas').select('*').eq('criado_por', userData.userId).order('created_at', {ascending: false});
+    const historico = resConfig.data || [];
     if(!historico.length) { c.innerHTML = '<p style="color:var(--text-muted);font-size:13px;text-align:center;">Nenhuma campanha enviada ainda.</p>'; return; }
     
     let html = '';
@@ -143,7 +145,8 @@ window.loadListasTransmissao = async function() {
   const c = document.getElementById('listas-container');
   if(!c) return;
   try {
-    const listas = await UpsidenDB.from('listas_contatos').select('*').eq('criado_por', userData.userId).order('created_at', false).execute() || [];
+    const res = await UpsidenDB.from('listas_contatos').select('*').eq('criado_por', userData.userId).order('created_at', {ascending: false});
+    const listas = res.data || [];
     if(!listas.length) { c.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Sem listas salvas.</p>'; return; }
     let html = '';
     listas.forEach(l => {
@@ -161,13 +164,14 @@ window.loadListasSelect = async function() {
   const s = document.getElementById('camp-lista');
   if(!s) return;
   try {
-    const listas = await UpsidenDB.from('listas_contatos').select('*').eq('criado_por', userData.userId).execute() || [];
+    const res = await UpsidenDB.from('listas_contatos').select('*').eq('criado_por', userData.userId);
+    const listas = res.data || [];
     s.innerHTML = '<option value="">-- Selecione a Lista --</option>' + listas.map(l => `<option value="${l.id}">${l.nome} (${l.contatos ? l.contatos.length : 0} contatos)</option>`).join('');
   } catch(e) { s.innerHTML = '<option value="">Erro</option>'; }
 };
 window.deleteLista = async function(id) {
   if(!confirm('Deletar lista?')) return;
-  try { await UpsidenDB.from('listas_contatos').eq('id', id).delete().execute(); window.loadListasTransmissao(); toast('Lista excluída!', 'success'); } catch(e){}
+  try { await UpsidenDB.from('listas_contatos').delete().eq('id', id); window.loadListasTransmissao(); typeof toast === 'function' && toast('Lista excluída!', 'success'); } catch(e){}
 };
 
 window.showNovaListaModal = function() {

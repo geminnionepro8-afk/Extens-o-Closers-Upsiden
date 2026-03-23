@@ -62,7 +62,7 @@ function renderSection(section) {
 // ═══ ACTIONS ═════════════════════════════════════════════════
 async function toggleShare(table, id, val) {
   try {
-    await UpsidenDB.from(table).eq('id', id).update({ compartilhado: val }).execute();
+    await UpsidenDB.from(table).update({ compartilhado: val }).eq('id', id);
     const arr = painelData[table]; const item = arr.find(i => i.id === id);
     if (item) item.compartilhado = val;
     toast(val ? 'Compartilhado com o time' : 'Removido do compartilhamento', 'success');
@@ -74,7 +74,7 @@ async function deleteItem(table, id) {
   try {
     const item = painelData[table].find(i => i.id === id);
     if (item?.storage_path) await UpsidenStorage.remove(table, [item.storage_path]).catch(()=>{});
-    await UpsidenDB.from(table).eq('id', id).delete().execute();
+    await UpsidenDB.from(table).delete().eq('id', id);
     painelData[table] = painelData[table].filter(i => i.id !== id);
     renderSection(currentSection);
     toast('Item excluído', 'success');
@@ -100,7 +100,7 @@ async function handleAudioUpload(e) {
       const buf = await ctx.decodeAudioData(ab.slice(0)); const dur = buf.duration; await ctx.close();
       const path = `${userData.userId}/${Date.now()}_${file.name}`;
       await UpsidenStorage.upload('audios', path, file, file.type);
-      const res = await UpsidenDB.from('audios').insert({ nome: file.name.replace(/\.[^/.]+$/,''), nome_original: file.name, tipo_mime: file.type||'audio/mpeg', duracao: dur, tamanho: file.size, storage_path: path, criado_por: userData.userId, compartilhado: userData.isAdmin, favorito: false }).execute();
+      const res = await UpsidenDB.from('audios').insert({ nome: file.name.replace(/\.[^/.]+$/,''), nome_original: file.name, tipo_mime: file.type||'audio/mpeg', duracao: dur, tamanho: file.size, storage_path: path, criado_por: userData.userId, compartilhado: userData.isAdmin, favorito: false }).select();
       if (res?.length) painelData.audios.unshift(res[0]);
     } catch(err) { console.error(P, err); toast(`Erro: ${file.name}`, 'error'); }
   }
@@ -113,7 +113,7 @@ async function handleDocUpload(e) {
     try {
       const path = `${userData.userId}/${Date.now()}_${file.name}`;
       await UpsidenStorage.upload('documentos', path, file, file.type);
-      const res = await UpsidenDB.from('documentos').insert({ nome: file.name, tipo: file.type, tamanho: file.size, storage_path: path, criado_por: userData.userId, compartilhado: userData.isAdmin }).execute();
+      const res = await UpsidenDB.from('documentos').insert({ nome: file.name, tipo: file.type, tamanho: file.size, storage_path: path, criado_por: userData.userId, compartilhado: userData.isAdmin }).select();
       if (res?.length) painelData.documentos.unshift(res[0]);
     } catch(err) { toast(`Erro: ${file.name}`, 'error'); }
   }
@@ -126,7 +126,7 @@ async function handleMediaUpload(e) {
     try {
       const path = `${userData.userId}/${Date.now()}_${file.name}`;
       await UpsidenStorage.upload('midias', path, file, file.type);
-      const res = await UpsidenDB.from('midias').insert({ nome: file.name, tipo: file.type, tamanho: file.size, storage_path: path, criado_por: userData.userId, compartilhado: userData.isAdmin }).execute();
+      const res = await UpsidenDB.from('midias').insert({ nome: file.name, tipo: file.type, tamanho: file.size, storage_path: path, criado_por: userData.userId, compartilhado: userData.isAdmin }).select();
       if (res?.length) painelData.midias.unshift(res[0]);
     } catch(err) { toast(`Erro: ${file.name}`, 'error'); }
   }

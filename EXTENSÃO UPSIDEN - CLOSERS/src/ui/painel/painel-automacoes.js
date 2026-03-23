@@ -193,7 +193,7 @@ window.salvarGatilhos = async function() {
     if(p && r) triggers.push({ palavra: p, resposta: r });
   });
   try {
-    await UpsidenDB.from('gatilhos').eq('criado_por', userData.userId).delete().execute();
+    await UpsidenDB.from('gatilhos').delete().eq('criado_por', userData.userId);
     for (const t of triggers) {
       await UpsidenDB.from('gatilhos').insert({
         palavra: t.palavra, resposta: t.resposta, condicao: 'exata',
@@ -223,7 +223,7 @@ window.addTriggerRow = function(palavra='', resposta='') {
 window.loadAutomationConfig = async function() {
   try {
     if (window.autoSubTab === 'saudacao') {
-      const results = await UpsidenDB.from('config_automacao').select('*').eq('closer_id', userData.userId).execute();
+      const results = await UpsidenDB.from('config_automacao').select('*').eq('closer_id', userData.userId);
       const data = results && results.length > 0 ? results[0] : null;
       if (data) {
         const eMsg = document.getElementById('auto-saudacao');
@@ -247,12 +247,13 @@ window.loadAutomationConfig = async function() {
       }
     }
     if (window.autoSubTab === 'gatilhos') {
-      const gatilhos = await UpsidenDB.from('gatilhos').select('*').eq('criado_por', userData.userId).order('created_at', false).execute() || [];
+      const resGatilhos = await UpsidenDB.from('gatilhos').select('*').eq('criado_por', userData.userId).order('created_at', { ascending: false });
+      const gatilhos = resGatilhos.data || [];
       if (!gatilhos.length) window.addTriggerRow();
       else gatilhos.forEach(t => window.addTriggerRow(t.palavra, t.resposta));
     }
     if (window.autoSubTab === 'horario') {
-      const results = await UpsidenDB.from('config_automacao').select('*').eq('closer_id', userData.userId).execute();
+      const results = await UpsidenDB.from('config_automacao').select('*').eq('closer_id', userData.userId);
       const data = results && results.length > 0 ? results[0] : null;
       if (data) {
         if(document.getElementById('hora-ini')) document.getElementById('hora-ini').value = data.hora_inicio || '08:00';
@@ -262,7 +263,7 @@ window.loadAutomationConfig = async function() {
       }
     }
     if (window.autoSubTab === 'regras') {
-      const results = await UpsidenDB.from('config_automacao').select('*').eq('closer_id', userData.userId).execute();
+      const results = await UpsidenDB.from('config_automacao').select('*').eq('closer_id', userData.userId);
       const data = results && results.length > 0 ? results[0] : null;
       if (data) {
         if(document.getElementById('regra-digitando')) document.getElementById('regra-digitando').checked = data.simular_digitacao !== false;

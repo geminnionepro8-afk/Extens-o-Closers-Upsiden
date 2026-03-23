@@ -49,11 +49,11 @@ async function salvarTemplate(id) {
   if (!titulo || !conteudo) { toast('Preencha titulo e conteudo', 'error'); return; }
   try {
     if (id) {
-      await UpsidenDB.from('templates').eq('id', id).update({ titulo, conteudo }).execute();
+      await UpsidenDB.from('templates').update({ titulo, conteudo }).eq('id', id);
       const idx = painelData.templates.findIndex(t=>t.id===id);
       if (idx>=0) painelData.templates[idx] = {...painelData.templates[idx], titulo, conteudo};
     } else {
-      const res = await UpsidenDB.from('templates').insert({ titulo, conteudo, criado_por: userData.userId }).execute();
+      const res = await UpsidenDB.from('templates').insert({ titulo, conteudo, criado_por: userData.userId }).select();
       if (res?.length) painelData.templates.unshift(res[0]);
     }
     document.querySelector('.modal-overlay')?.remove();
@@ -102,7 +102,7 @@ async function renderCRM(c) {
   await loadCRMDynamics();
   
   document.getElementById('header-actions').innerHTML = `
-    <button class="btn btn-secondary" onclick="showCRMManagerModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Configurar Board</button>
+    <button class="btn btn-secondary" data-click="showCRMManagerModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Configurar Board</button>
     <button class="btn btn-primary" data-click="showNewLeadModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Lead</button>
   `;
 
@@ -133,7 +133,7 @@ async function renderCRM(c) {
         tagHtml += `</div>`;
       }
       
-      html += `<div class="kanban-card" draggable="true" data-lead-id="${lead.id}" onclick="editLeadModal('${lead.id}')" style="border-left: 3px solid ${stage.color};">
+      html += `<div class="kanban-card" draggable="true" data-lead-id="${lead.id}" data-click="editLeadModal('${lead.id}')" style="border-left: 3px solid ${stage.color};">
         <div style="display:flex;flex-direction:column;align-items:flex-start;">
           <div class="card-name" style="font-size:14px;font-weight:bold;">${lead.nome}</div>
           ${tagHtml}
@@ -150,6 +150,54 @@ async function renderCRM(c) {
   });
   html += '</div>';
   c.innerHTML = html;
+  
+  // Attach Native Drag & Drop Listeners
+  setTimeout(assignKanbanDragDrop, 100);
+}
+
+function assignKanbanDragDrop() {
+  const cards = document.querySelectorAll('.kanban-card');
+  const cols = document.querySelectorAll('.kanban-column');
+
+  cards.forEach(card => {
+    card.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', card.dataset.leadId);
+      setTimeout(() => card.style.opacity = '0.5', 0);
+    });
+    card.addEventListener('dragend', () => card.style.opacity = '1');
+  });
+
+  cols.forEach(col => {
+    const cardsContainer = col.querySelector('.kanban-cards');
+    if (!cardsContainer) return;
+
+    col.addEventListener('dragover', e => {
+      e.preventDefault();
+      cardsContainer.style.background = 'rgba(255,255,255,0.05)';
+    });
+    col.addEventListener('dragleave', () => cardsContainer.style.background = 'transparent');
+    col.addEventListener('drop', async e => {
+      e.preventDefault();
+      cardsContainer.style.background = 'transparent';
+      const leadId = e.dataTransfer.getData('text/plain');
+      const newStage = cardsContainer.dataset.stage;
+      if (leadId && newStage) {
+        // Encontra lead
+        const idx = painelData.leads.findIndex(l => l.id === leadId);
+        if (idx >= 0 && painelData.leads[idx].estagio !== newStage) {
+           const oldStage = painelData.leads[idx].estagio;
+           painelData.leads[idx].estagio = newStage;
+           renderSection('crm'); // Re-desenha com nova posicao
+           
+           // Atualiza banco em background silencioso
+           try { 
+              await UpsidenDB.from('leads').update({ estagio: newStage, updated_at: new Date().toISOString() }).eq('id', leadId); 
+              await UpsidenDB.from('historico_interacoes').insert({ lead_id: leadId, tipo: 'edicao', descricao: `Movido no Funil para ${newStage.toUpperCase()}`, criado_por: userData?.userId||undefined });
+           } catch(err) { console.warn('Falha db drop:', err); }
+        }
+      }
+    });
+  });
 }
 
 // === LEAD MODAL (Expanded) ===
@@ -228,21 +276,21 @@ async function salvarLeadCompleto(id) {
   try {
     if (id) {
       const upd = { nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, updated_at: new Date().toISOString() };
-      await UpsidenDB.from('leads').eq('id', id).update(upd).execute();
+      await UpsidenDB.from('leads').update(upd).eq('id', id);
       const idx = painelData.leads.findIndex(l=>l.id===id);
       if (idx>=0) {
          painelData.leads[idx] = {...painelData.leads[idx], ...upd};
          painelData.leads[idx].tag = tagsElegidas;
       }
-      try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: id, tipo: 'edicao', descricao: 'Anotações de CRM Atualizadas Diretamente no Painel', criado_por: userData?.userId||undefined, metadados: { campos_alterados: ['nome','telefone','valor','tag','notas','lembrete'], valor_novo: valor, tag_nova: tagsElegidas } }).execute(); } catch(e){}
+      try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: id, tipo: 'edicao', descricao: 'Anotações de CRM Atualizadas Diretamente no Painel', criado_por: userData?.userId||undefined, metadados: { campos_alterados: ['nome','telefone','valor','tag','notas','lembrete'], valor_novo: valor, tag_nova: tagsElegidas } }); } catch(e){}
     } else {
       // Default to first stage available if dynamic
       const estagioDefault = dynamicStages.length > 0 ? dynamicStages[0].id : 'prospeccao';
-      const res = await UpsidenDB.from('leads').insert({ nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, estagio: estagioDefault, criado_por: userData?.userId||undefined }).execute();
+      const res = await UpsidenDB.from('leads').insert({ nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, estagio: estagioDefault, criado_por: userData?.userId||undefined }).select();
       if (res?.length) { 
          res[0].tag = tagsElegidas;
          painelData.leads.unshift(res[0]); 
-         try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: res[0].id, tipo: 'criacao', descricao: `Novo Lead Inserido Manualmente 🤝`, criado_por: userData?.userId||undefined, metadados: { valor_inicial: valor, tags_iniciais: tagsElegidas, telefone } }).execute(); } catch(e){} 
+         try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: res[0].id, tipo: 'criacao', descricao: `Novo Lead Inserido Manualmente 🤝`, criado_por: userData?.userId||undefined, metadados: { valor_inicial: valor, tags_iniciais: tagsElegidas, telefone } }); } catch(e){} 
       }
     }
     if (lembreteData) { 
@@ -276,12 +324,12 @@ window.showCRMManagerModal = function() {
     <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
        <h4 style="margin-bottom:10px; color:var(--text-secondary);">1. Editar Fases do Funil (Colunas)</h4>
        <div id="cfg-col-container">${colsHtml}</div>
-       <button class="btn btn-secondary" style="width:100%; margin-top:8px;" onclick="addColField()">+ Nova Coluna</button>
+       <button class="btn btn-secondary" style="width:100%; margin-top:8px;" data-click="addColField()">+ Nova Coluna</button>
        
        <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
-       <h4 style="color:var(--text-muted); font-size:12px;">2. Para editar os Tags Visuais e Cores, em breve na seção Master.<br>As colunas salvas atualizarão o Kanban instantaneamente.</h4>
+       <h4 style="color:var(--text-muted); font-size:12px;">2. Para editar as Tags Visuais e Cores, em breve na seção Master.<br>As colunas salvas atualizarão o Kanban instantaneamente.</h4>
     </div>
-    <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Sair</button><button class="btn btn-primary" onclick="saveCRMManager()">Salvar Novo Funil</button></div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Sair</button><button class="btn btn-primary" data-click="saveCRMManager()">Salvar Novo Funil</button></div>
   </div>`;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
@@ -321,6 +369,10 @@ window.saveCRMManager = function() {
   });
 }
 
+window.closeHistoryModal = function() {
+  document.getElementById('history-mini-modal')?.remove();
+};
+
 // === HISTORY MODAL ===
 window.showLeadHistory = async function(leadId) {
   const existing = document.getElementById('history-mini-modal'); if(existing) existing.remove();
@@ -329,7 +381,7 @@ window.showLeadHistory = async function(leadId) {
   div.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:90%; max-width:500px; max-height:80vh; background:#0B141A; border:1px solid var(--border); border-radius:12px; z-index:10000; display:flex; flex-direction:column; box-shadow:0 12px 40px rgba(0,0,0,0.8);';
   div.innerHTML = `<div style="padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
     <h3 style="margin:0;">📜 Histórico Passivo WPP</h3>
-    <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:white; cursor:pointer;">✖</button>
+    <button data-click="closeHistoryModal()" style="background:none; border:none; color:white; cursor:pointer;">✖</button>
   </div><div id="h-body" style="padding:16px; overflow-y:auto; flex:1; font-size:13px; color:var(--text-secondary);"><div style="text-align:center;">Buscando logs de disparo no Servidor...</div></div>`;
   document.body.appendChild(div);
 
