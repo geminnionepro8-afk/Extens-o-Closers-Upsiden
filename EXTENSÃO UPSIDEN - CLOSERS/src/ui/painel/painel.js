@@ -445,7 +445,7 @@ async function salvarLead() {
   const telefone = document.getElementById('lead-tel').value.trim();
   if (!nome) { toast('Informe o nome do lead', 'error'); return; }
   try {
-    const res = await UpsidenDB.from('leads').insert({ nome, telefone, estagio: 'prospeccao', criado_por: userData.userId }).execute();
+    const res = await UpsidenDB.from('leads').insert({ nome, telefone, estagio: 'prospeccao' }).execute();
     if (res?.length) painelData.leads.unshift(res[0]);
     document.querySelector('.modal-overlay')?.remove();
     renderSection('crm'); toast('Lead criado!', 'success');

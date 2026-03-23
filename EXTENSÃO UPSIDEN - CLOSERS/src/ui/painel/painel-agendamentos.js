@@ -112,9 +112,9 @@ window.renderAgendamentos = async function() {
            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
               <h2 style="margin:0;">Minha Visão do Calendário</h2>
               <div style="display:flex; gap:10px;">
-                 <button class="btn btn-secondary" style="padding:4px 12px; font-size:16px;" onclick="mudarMes(-1)">←</button>
+                 <button class="btn btn-secondary" style="padding:4px 12px; font-size:16px;" data-click="mudarMes(-1)">←</button>
                  <span id="cal-mes-atual" style="font-weight:bold; font-size:16px; align-self:center; min-width:120px; text-align:center;">Novembro 2026</span>
-                 <button class="btn btn-secondary" style="padding:4px 12px; font-size:16px;" onclick="mudarMes(1)">→</button>
+                 <button class="btn btn-secondary" style="padding:4px 12px; font-size:16px;" data-click="mudarMes(1)">→</button>
               </div>
            </div>
            
@@ -204,18 +204,43 @@ window.renderAgendamentos = async function() {
         recorrencia: document.getElementById('agend-recorrencia').value
      };
 
-     // Repassa pacote ao Motor Assíncrono para garantir o Wake Lock
-     chrome.runtime.sendMessage({ action: 'SET_AGENDAMENTO', payload }, (res) => {
-       if (res && res.sucesso) {
-         typeof toast === 'function' && toast('Disparo Blindado com a data certa!', 'success');
-         document.getElementById('agend-texto').value = '';
-         document.getElementById('agend-data').value = '';
-         if (tp !== 'texto') fileLbl.textContent = "Nenhum arquivo.";
-         refreshAgendamentosList();
-       } else {
-         typeof toast === 'function' && toast('Falha ao acionar a engenharia de precisão (background)', 'error');
-       }
+     // 1) OBRIGA SALVAR NA NUVEM PRIMEIRO (Source of Truth)
+     const btn = document.getElementById('btn-salvar-agendamento');
+     btn.textContent = "Sincronizando com a Nuvem...";
+     btn.disabled = true;
+
+     UpsidenDB.from('agendamentos').insert({
+        id: payload.id,
+        chat_id: payload.chatId,
+        nome_contato: payload.nomeContato,
+        when_ms: payload.when,
+        tipo: payload.tipo,
+        conteudo: payload.conteudo,
+        base64: payload.base64,
+        mime: payload.mime,
+        nome_arq: payload.nomeArq,
+        recorrencia: payload.recorrencia
+     }).select().execute().then(() => {
+         // 2) Repassa pacote ao Motor Assíncrono para garantir o Wake Lock
+         chrome.runtime.sendMessage({ action: 'SET_AGENDAMENTO', payload }, (res) => {
+           btn.disabled = false;
+           btn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Agendar Envio Imediatamente';
+           if (res && res.sucesso) {
+             typeof toast === 'function' && toast('Disparo Blindado com a data certa!', 'success');
+             document.getElementById('agend-texto').value = '';
+             document.getElementById('agend-data').value = '';
+             if (tp !== 'texto') fileLbl.textContent = "Nenhum arquivo.";
+             refreshAgendamentosList();
+           } else {
+             typeof toast === 'function' && toast('Falha ao acionar a engenharia de precisão (background)', 'error');
+           }
+         });
+     }).catch(err => {
+         btn.disabled = false;
+         btn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Agendar Envio Imediatamente';
+         typeof toast === 'function' && toast('Erro no Supabase: ' + err.message, 'error');
      });
+
   });
 
   refreshAgendamentosList();
@@ -224,7 +249,7 @@ window.renderAgendamentos = async function() {
 // -- Controles do Relógio/Mês
 let calMonthOffset = 0;
 window.mudarMes = function(offset) {
-  calMonthOffset += offset;
+  calMonthOffset += parseInt(offset, 10) || 0;
   if(typeof refreshAgendamentosList === 'function') refreshAgendamentosList();
 }
 
@@ -234,6 +259,35 @@ window.mudarMes = function(offset) {
  * 2) O Calendário Interativo em Malha 
  */
 async function refreshAgendamentosList() {
+  // CLOUD SYNC: Atualiza do Supabase inteligentemente
+  try {
+     const resCloud = await UpsidenDB.from('agendamentos').select('*').execute();
+     if (resCloud && resCloud.length >= 0) {
+        const currentRes = await new Promise(r => chrome.storage.local.get('ups_agendamentos', r));
+        const currentAgends = currentRes.ups_agendamentos || {};
+        
+        let shouldSave = false;
+        resCloud.forEach(r => {
+           // Verifica se o alarme do BD não existe no array de V8 atual para não destruir as chaves (pointers de alarmName)
+           const existingKey = Object.keys(currentAgends).find(k => currentAgends[k].id === r.id);
+           if (!existingKey) {
+              const alarmName = `agend_${r.id}_sync`;
+              currentAgends[alarmName] = {
+                 id: r.id, chatId: r.chat_id, nomeContato: r.nome_contato,
+                 when: parseInt(r.when_ms), tipo: r.tipo, conteudo: r.conteudo,
+                 base64: r.base64, mime: r.mime, nomeArq: r.nome_arq, recorrencia: r.recorrencia
+              };
+              shouldSave = true;
+              if (parseInt(r.when_ms) > Date.now()) chrome.alarms.create(alarmName, { when: parseInt(r.when_ms) });
+           }
+        });
+        if (shouldSave) await new Promise(resolve => chrome.storage.local.set({ ups_agendamentos: currentAgends }, resolve));
+     }
+  } catch (err) {
+     console.warn('Sincronização Cloud Agendamentos abortada, usando local.', err);
+  }
+
+  // RENDERIZAÇÃO
   chrome.storage.local.get('ups_agendamentos', (res) => {
     const agends = res.ups_agendamentos || {};
     const items = Object.values(agends).sort((a,b) => a.when - b.when);
@@ -255,7 +309,7 @@ async function refreshAgendamentosList() {
                  <b>${d.toLocaleDateString()}</b> pontualmente às <b>${d.toLocaleTimeString().slice(0,5)}</b> | <span style="color:var(--accent-glow)">${repet}</span>
               </span>
             </div>
-            <button class="btn btn-danger" style="padding:8px 14px; font-size:12px;" onclick="deletarAgendamento('${ai.id}')">Excluir Alarme</button>
+            <button class="btn btn-danger" style="padding:8px 14px; font-size:12px;" data-click="deletarAgendamento('${ai.id}')">Excluir Alarme</button>
           </div>
         `;
       }).join('');
@@ -332,6 +386,10 @@ window.deletarAgendamento = function(id) {
      // Localiza a Chave baseada no Objeto UUID interno
      let keyName = Object.keys(agends).find(k => agends[k].id === id);
      if (keyName) {
+       // Deleção Cloud (Sync Opcional Assíncrono)
+       UpsidenDB.from('agendamentos').delete().eq('id', id).execute().catch(e=>console.log(e));
+       
+       // Deleção Local imediata pro Alarme V8 morrer
        chrome.alarms.clear(keyName); // Retira da memória suspensa de Wake/Background
        delete agends[keyName];      // Limpa HD local
        chrome.storage.local.set({ ups_agendamentos: agends }, () => {

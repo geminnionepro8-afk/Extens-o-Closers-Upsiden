@@ -30,7 +30,7 @@ function navigate(section) {
   const titles = {
     dashboard: 'Dashboard', audios: 'Biblioteca de Áudios', documentos: 'Documentos',
     midias: 'Mídias', templates: 'Templates de Texto', crm: 'CRM / Funil',
-    agendamentos: 'Calendário de Envios', automacoes: 'Automações Clássicas', flow: 'Automação Visual (Flow)', campanhas: 'Campanhas de Envio', admin: 'Gestão da Equipe', config: 'Configurações'
+    agendamentos: 'Calendário de Envios', automacoes: 'Automações Clássicas', flow: 'Automação Visual (Flow)', campanhas: 'Campanhas de Envio', contatos: 'Gestão de Contatos', admin: 'Gestão da Equipe', config: 'Configurações'
   };
   const title = titles[section] || section;
   document.getElementById('page-title').textContent = title;
@@ -54,6 +54,7 @@ function renderSection(section) {
     case 'agendamentos': return renderAgendamentos(c);
     case 'flow': return renderFlow(c);
     case 'campanhas': return renderCampanhas(c);
+    case 'contatos': return renderContatos(c);
     case 'admin': return renderAdmin(c);
     default: c.innerHTML = `<div class="empty-state"><div class="empty-icon">🚧</div><h3>Em desenvolvimento</h3><p>Esta seção estará disponível em breve.</p></div>`;
   }

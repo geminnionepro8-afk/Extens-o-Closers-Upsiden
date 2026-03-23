@@ -64,6 +64,25 @@ chrome.runtime.onMessage.addListener((msg, _, responder) => {
       .catch(e => responder({ sucesso: false, erro: e.message }));
     return true;
   }
+  // ── GESTÃO DE CONTATOS E EXTRATOR ──
+  if (msg.tipo === 'open_chat_unsaved') {
+    enviarParaPagina({ tipoMensagem: 'open_chat_unsaved', dados: msg.dados })
+      .then(r => responder(r))
+      .catch(e => responder({ sucesso: false, erro: e.message }));
+    return true;
+  }
+  if (msg.tipo === 'get_groups') {
+    enviarParaPagina({ tipoMensagem: 'get_groups' })
+      .then(r => responder(r))
+      .catch(e => responder({ sucesso: false, erro: e.message }));
+    return true;
+  }
+  if (msg.tipo === 'extract_group_members') {
+    enviarParaPagina({ tipoMensagem: 'extract_group_members', dados: msg.dados })
+      .then(r => responder(r))
+      .catch(e => responder({ sucesso: false, erro: e.message }));
+    return true;
+  }
   // ── BULK SEND: Receber comando do Painel (via background) ──
   if (msg.tipo === 'bulk_send_start') {
     enviarParaPagina({ tipoMensagem: 'bulk_send_start', dados: msg.dados });

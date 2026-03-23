@@ -98,7 +98,7 @@ class AutomationController {
     this.limparCacheDiario();
     
     const isGroup = msg.isGroupMsg;
-    const chatId = msg.chatId;
+    const chatId = (msg.id && msg.id.remote) || msg.from || (msg.chatId && msg.chatId._serialized) || msg.chatId;
     const textoRecebido = (msg.body || msg.text || msg.content || '').trim().toLowerCase();
 
     // 1. Processar Triggers de Palavra-chave

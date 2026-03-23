@@ -221,6 +221,40 @@ window.addTriggerRow = function(palavra='', resposta='') {
 };
 
 window.loadAutomationConfig = async function() {
+  const fallbackLocal = () => {
+    chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers', 'ups_config_horario', 'ups_config_regras'], res => {
+      if(window.autoSubTab === 'saudacao' && res.ups_config_saudacao) {
+        const eMsg = document.getElementById('auto-saudacao'); const eAtivo = document.getElementById('auto-saudacao-ativo');
+        if(eMsg) eMsg.value = res.ups_config_saudacao.mensagem || '';
+        if(eAtivo) eAtivo.checked = res.ups_config_saudacao.ativo || false;
+        if(document.getElementById('auto-privado')) document.getElementById('auto-privado').checked = res.ups_config_saudacao.apenasPrivado !== false;
+        if(document.getElementById('auto-grupo')) document.getElementById('auto-grupo').checked = res.ups_config_saudacao.apenasGrupo || false;
+        // Restore followups
+        const list = document.getElementById('followups-list');
+        if (list) list.innerHTML = '';
+        if (res.ups_config_saudacao.followupSteps && Array.isArray(res.ups_config_saudacao.followupSteps)) {
+           res.ups_config_saudacao.followupSteps.forEach(p => window.addFollowupRow(p.tipo, p.tipo === 'texto' ? p.conteudo : p.base64, p.delay_segundos));
+        }
+      }
+      if(window.autoSubTab === 'gatilhos') {
+        const triggers = res.ups_config_triggers || [];
+        if(!triggers.length) window.addTriggerRow();
+        else triggers.forEach(t => window.addTriggerRow(t.palavra, t.resposta));
+      }
+      if (window.autoSubTab === 'horario' && res.ups_config_horario) {
+        if(document.getElementById('hora-ini')) document.getElementById('hora-ini').value = res.ups_config_horario.ini || '08:00';
+        if(document.getElementById('hora-fim')) document.getElementById('hora-fim').value = res.ups_config_horario.fim || '18:00';
+        if(document.getElementById('msg-fechado')) document.getElementById('msg-fechado').value = res.ups_config_horario.msg || '';
+        if(document.getElementById('horario-ativo')) document.getElementById('horario-ativo').checked = res.ups_config_horario.ativo || false;
+      }
+      if (window.autoSubTab === 'regras' && res.ups_config_regras) {
+        if(document.getElementById('regra-digitando')) document.getElementById('regra-digitando').checked = res.ups_config_regras.simular !== false;
+        if(document.getElementById('regra-gravando')) document.getElementById('regra-gravando').checked = res.ups_config_regras.simularGravacao !== false;
+        if(document.getElementById('regra-timer')) document.getElementById('regra-timer').value = res.ups_config_regras.timer || 'dinamico';
+      }
+    });
+  };
+
   try {
     if (window.autoSubTab === 'saudacao') {
       const results = await UpsidenDB.from('config_automacao').select('*').eq('closer_id', userData.userId);
@@ -244,12 +278,14 @@ window.loadAutomationConfig = async function() {
              }
            } catch(e) {}
         }
+      } else {
+        fallbackLocal();
       }
     }
     if (window.autoSubTab === 'gatilhos') {
       const resGatilhos = await UpsidenDB.from('gatilhos').select('*').eq('criado_por', userData.userId).order('created_at', { ascending: false });
-      const gatilhos = resGatilhos.data || [];
-      if (!gatilhos.length) window.addTriggerRow();
+      const gatilhos = resGatilhos.data || resGatilhos || [];
+      if (!gatilhos.length) fallbackLocal();
       else gatilhos.forEach(t => window.addTriggerRow(t.palavra, t.resposta));
     }
     if (window.autoSubTab === 'horario') {
@@ -260,7 +296,7 @@ window.loadAutomationConfig = async function() {
         if(document.getElementById('hora-fim')) document.getElementById('hora-fim').value = data.hora_fim || '18:00';
         if(document.getElementById('msg-fechado')) document.getElementById('msg-fechado').value = data.msg_fora_horario || '';
         if(document.getElementById('horario-ativo')) document.getElementById('horario-ativo').checked = data.usar_horario || false;
-      }
+      } else { fallbackLocal(); }
     }
     if (window.autoSubTab === 'regras') {
       const results = await UpsidenDB.from('config_automacao').select('*').eq('closer_id', userData.userId);
@@ -273,30 +309,10 @@ window.loadAutomationConfig = async function() {
           const dmin = data.delay_min || 2;
           timerEl.value = dmin <= 2 ? '2' : dmin >= 5 ? '5' : 'dinamico';
         }
-      }
+      } else { fallbackLocal(); }
     }
   } catch(e) {
-    // Fallback: carregar do local
-    chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers', 'ups_config_horario', 'ups_config_regras'], res => {
-      if(window.autoSubTab === 'saudacao' && res.ups_config_saudacao) {
-        const eMsg = document.getElementById('auto-saudacao'); const eAtivo = document.getElementById('auto-saudacao-ativo');
-        if(eMsg) eMsg.value = res.ups_config_saudacao.mensagem || '';
-        if(eAtivo) eAtivo.checked = res.ups_config_saudacao.ativo || false;
-        if(document.getElementById('auto-privado')) document.getElementById('auto-privado').checked = res.ups_config_saudacao.apenasPrivado !== false;
-        if(document.getElementById('auto-grupo')) document.getElementById('auto-grupo').checked = res.ups_config_saudacao.apenasGrupo || false;
-        // Restore followups
-        const list = document.getElementById('followups-list');
-        if (list) list.innerHTML = '';
-        if (res.ups_config_saudacao.followupSteps && Array.isArray(res.ups_config_saudacao.followupSteps)) {
-           res.ups_config_saudacao.followupSteps.forEach(p => window.addFollowupRow(p.tipo, p.tipo === 'texto' ? p.conteudo : p.base64, p.delay_segundos));
-        }
-      }
-      if(window.autoSubTab === 'gatilhos') {
-        const triggers = res.ups_config_triggers || [];
-        if(!triggers.length) window.addTriggerRow();
-        else triggers.forEach(t => window.addTriggerRow(t.palavra, t.resposta));
-      }
-    });
+    fallbackLocal();
   }
 };
 
