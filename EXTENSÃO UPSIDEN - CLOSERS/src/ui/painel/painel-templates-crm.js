@@ -184,14 +184,14 @@ function assignKanbanDragDrop() {
       if (leadId && newStage) {
         // Encontra lead
         const idx = painelData.leads.findIndex(l => l.id === leadId);
-        if (idx >= 0 && painelData.leads[idx].estagio !== newStage) {
-           const oldStage = painelData.leads[idx].estagio;
-           painelData.leads[idx].estagio = newStage;
+        if (idx >= 0 && (painelData.leads[idx].estagio || painelData.leads[idx].etapa) !== newStage) {
+           painelData.leads[idx].etapa = newStage;
+           painelData.leads[idx].estagio = newStage; // fallback dual param
            renderSection('crm'); // Re-desenha com nova posicao
            
            // Atualiza banco em background silencioso
            try { 
-              await UpsidenDB.from('leads').update({ estagio: newStage, updated_at: new Date().toISOString() }).eq('id', leadId); 
+              await UpsidenDB.from('leads').update({ etapa: newStage, updated_at: new Date().toISOString() }).eq('id', leadId); 
               await UpsidenDB.from('historico_interacoes').insert({ lead_id: leadId, tipo: 'edicao', descricao: `Movido no Funil para ${newStage.toUpperCase()}`, criado_por: userData?.userId||undefined });
            } catch(err) { console.warn('Falha db drop:', err); }
         }
@@ -286,7 +286,7 @@ async function salvarLeadCompleto(id) {
     } else {
       // Default to first stage available if dynamic
       const estagioDefault = dynamicStages.length > 0 ? dynamicStages[0].id : 'prospeccao';
-      const res = await UpsidenDB.from('leads').insert({ nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, estagio: estagioDefault, criado_por: userData?.userId||undefined }).select();
+      const res = await UpsidenDB.from('leads').insert({ nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, etapa: estagioDefault }).select();
       if (res?.length) { 
          res[0].tag = tagsElegidas;
          painelData.leads.unshift(res[0]); 
@@ -301,7 +301,9 @@ async function salvarLeadCompleto(id) {
     renderSection('crm'); typeof toast === 'function' && toast('Lead salvo!', 'success');
   } catch(e) { 
     console.error('Falha monstruosa no salvar lead:', e); 
-    typeof toast === 'function' && toast('Erro ao salvar lead', 'error'); 
+    const msg = e.message || String(e);
+    typeof toast === 'function' && toast('Erro SQL: '+msg.substring(0,25), 'error'); 
+    alert("ERRO SUPABASE DETECTADO:\n\n" + msg + "\n\n(Tire um print da tela para me enviar!)");
   }
 }
 
