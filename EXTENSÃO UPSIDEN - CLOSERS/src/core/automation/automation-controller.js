@@ -116,8 +116,18 @@ class AutomationController {
 
         if (match) {
           if (this.DEBUG_MODE) console.log(`[Automation] Trigger: ${palavra}`);
-          // Engine de Envio fará a naturalidade automaticamente
-          await window.InjetorWPP.enviarTexto({ texto: this.parseTemplate(trig.resposta, chatName) }, chatId);
+          
+          let parsedSteps = null;
+          try { 
+              const possibleArray = JSON.parse(trig.resposta);
+              if (Array.isArray(possibleArray)) parsedSteps = possibleArray;
+          } catch(e) {}
+
+          if (parsedSteps && parsedSteps.length > 0) {
+             await this.executeSequentialFollowup(chatId, parsedSteps, chatName);
+          } else {
+             await window.InjetorWPP.enviarTexto({ texto: this.parseTemplate(trig.resposta, chatName) }, chatId);
+          }
           return; // Para no primeiro gatilho
         }
       }
@@ -152,30 +162,37 @@ class AutomationController {
   }
 
   /**
-   * Executa pipeline de envio sequencial (Regra #6)
+   * Executa pipeline de envio sequencial (Regra #6 e Fase 2 Multimedia)
    */
   static async executeSequentialFollowup(chatId, steps, chatName) {
     if (this.DEBUG_MODE) console.log(`[Automation] Pipeline: ${steps.length} steps`);
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
-      // O delay está contido na base dos assets? O delay adicional será processado no Engine Envio
-      // Wait for specific time explicitly requested by the sequence
-      const ms = (step.delay_segundos || 3) * 1000;
+      const ms = (step.delay_segundos !== undefined ? step.delay_segundos : 3) * 1000;
       await new Promise(r => setTimeout(r, ms));
       
       try {
         if (step.tipo === 'texto') {
            const texto = this.parseTemplate(step.conteudo || '', chatName);
-           await window.InjetorWPP.enviarTexto({ texto }, chatId);
+           await window.InjetorWPP.enviarTexto({ texto, duracaoSimulacao: step.duracaoSimulacao ? step.duracaoSimulacao * 1000 : null }, chatId);
         }
-        else if (step.tipo === 'audio' && step.base64) {
-           await window.InjetorWPP.enviarAudio({ base64: step.base64, tipoMime: 'audio/ogg' }, chatId);
+        else if (step.tipo === 'audio') {
+           await window.InjetorWPP.enviarAudio({ 
+               base64: step.base64, 
+               url: step.url, 
+               tipoMime: 'audio/ogg', 
+               duracaoSimulacao: step.duracaoSimulacao ? step.duracaoSimulacao * 1000 : null 
+           }, chatId);
         }
-        else if ((step.tipo === 'documento' || step.tipo === 'midia') && step.base64) {
+        else if ((step.tipo === 'documento' || step.tipo === 'midia' || step.tipo === 'imagem' || step.tipo === 'video')) {
+           const captionParsed = this.parseTemplate(step.conteudo || '', chatName);
            await window.InjetorWPP.enviarArquivo({ 
               base64: step.base64, 
+              url: step.url, 
               tipo: step.mime || 'application/octet-stream', 
-              nome: step.nome || `file_${Date.now()}` 
+              nome: step.nome || `file_${Date.now()}`, 
+              caption: captionParsed,
+              duracaoSimulacao: step.duracaoSimulacao ? step.duracaoSimulacao * 1000 : null 
            }, chatId);
         }
       } catch (e) { if (this.DEBUG_MODE) console.error('[Automation] Pipeline err', e); }
