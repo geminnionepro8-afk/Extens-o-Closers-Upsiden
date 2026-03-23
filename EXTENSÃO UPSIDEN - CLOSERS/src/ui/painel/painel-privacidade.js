@@ -102,8 +102,6 @@ window.renderPrivacidade = async function(container) {
         el.addEventListener('change', (e) => {
           const val = e.target.checked;
           chrome.storage.local.set({ [key]: val }, () => {
-             // Injetar mensagem pro WhatsApp Web recarregar configuracoes (subindo via parent do iframe)
-             window.parent.postMessage({ origem: 'PAINEL', acao: 'privacy_update', chave: key, valor: val }, '*');
              if(typeof toast === 'function') toast('Regra de privacidade salva: ' + key, 'info');
              
              if(key === 'privacy_pin_enabled') {
@@ -138,8 +136,6 @@ window.renderPrivacidade = async function(container) {
      }
      chrome.storage.local.set({ privacy_pin_code: val }, () => {
          if(typeof toast === 'function') toast('PIN Mestre Gravado com Seguranca.', 'success');
-         // Relay pin setup explicitly
-         window.parent.postMessage({ origem: 'PAINEL', acao: 'privacy_update', chave: 'privacy_pin_code', valor: val }, '*');
      });
   });
 };

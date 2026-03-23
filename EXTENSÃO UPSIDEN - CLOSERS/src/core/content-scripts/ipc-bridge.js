@@ -138,8 +138,35 @@ function sincronizarConfigAutomacao() {
       tipoMensagem: 'set_config_regras',
       dados: res.ups_config_regras || null
     }, '*');
+    window.postMessage({
+      origem: 'CONTENT_SCRIPT',
+      msgId: Date.now().toString() + 'P',
+      tipoMensagem: 'set_config_privacidade',
+      dados: res
+    }, '*');
   });
 }
+
+// ── SINC PRIVACIDADE EM TEMPO REAL ──
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local') return;
+  const pKeys = [
+    'privacy_hide_online', 'privacy_hide_typing', 'privacy_hide_read', 
+    'privacy_hide_status', 'privacy_recover_deleted', 'privacy_blur_contacts', 
+    'privacy_blur_avatars', 'privacy_blur_msgs', 'privacy_pin_enabled', 'privacy_pin_code'
+  ];
+  
+  for (let key in changes) {
+    if (pKeys.includes(key)) {
+       window.postMessage({
+         origem: 'CONTENT_SCRIPT',
+         tipoMensagem: 'set_config_privacidade_single',
+         chave: key,
+         valor: changes[key].newValue
+       }, '*');
+    }
+  }
+});
 
 function sincronizarConfigPrivacidade() {
   const keys = [
