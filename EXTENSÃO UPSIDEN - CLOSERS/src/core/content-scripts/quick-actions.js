@@ -25,6 +25,7 @@ function inicializarObserverDoChat() {
       injetarQuickActions();
       injetarInputActions();
       injetarTopTabs();
+      if (typeof injetarTagsVisuaisGlobais === 'function') injetarTagsVisuaisGlobais();
     } catch(e) {
       console.log(CTX, 'Silenciando erro de inject:', e);
     }

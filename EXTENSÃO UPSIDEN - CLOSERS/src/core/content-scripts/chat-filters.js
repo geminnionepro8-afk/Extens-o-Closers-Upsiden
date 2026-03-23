@@ -105,3 +105,97 @@ function aplicarFiltroChats(tabId) {
     }
   });
 }
+
+// ── Injeção Persistente Visual de CRM Tags em todos os Chats ──
+let lastTagsSync = 0;
+let cachedLeads = [];
+let cachedTags = {};
+let cachedStages = [];
+
+function injetarTagsVisuaisGlobais() {
+  const paneSide = document.getElementById('pane-side');
+  if (!paneSide) return;
+  const chats = paneSide.querySelectorAll('div[role="listitem"]');
+  if (chats.length === 0) return;
+
+  const now = Date.now();
+  if (now - lastTagsSync > 3000) { // Sync leve a cada 3s com o painel Chrome local
+     chrome.storage.local.get(['ups_leads', 'ups_crm_tags', 'ups_crm_colunas'], res => {
+         cachedLeads = res.ups_leads || [];
+         cachedTags = res.ups_crm_tags || {
+            quente:  { bg: '#FFB4B4', cor: '#8B1A1A', emoji: '🔥' },
+            morno:   { bg: '#FFE5B4', cor: '#8B6914', emoji: '☀️' },
+            frio:    { bg: '#B4D7FF', cor: '#1A4B8B', emoji: '❄️' },
+            vip:     { bg: '#E5B4FF', cor: '#5A1A8B', emoji: '⭐' },
+            urgente: { bg: '#FFB4D7', cor: '#8B1A4B', emoji: '🚨' }
+         };
+         cachedStages = res.ups_crm_colunas || [
+            { id: 'prospeccao', label: 'Prospecção', color: '#FFD666' },
+            { id: 'negociacao', label: 'Negociação', color: '#66B2FF' },
+            { id: 'fechado', label: 'Fechado', color: '#66FFB2' }
+         ];
+         lastTagsSync = now;
+         renderizarTagsNosChats(chats);
+     });
+  } else {
+     renderizarTagsNosChats(chats);
+  }
+}
+
+function renderizarTagsNosChats(chats) {
+  if (cachedLeads.length === 0) return;
+  chats.forEach(chatEl => {
+      const titleContainer = chatEl.querySelector('div[data-testid="cell-frame-title"]');
+      if (!titleContainer) return;
+      const infoSpan = titleContainer.querySelector('span[dir="auto"]');
+      if (!infoSpan) return;
+      
+      const chatName = infoSpan.title || infoSpan.textContent;
+      const lead = cachedLeads.find(l => l.nome === chatName || (l.telefone && chatName.includes(l.telefone)));
+      
+      if (lead) {
+          let containerTags = titleContainer.querySelector('.ups-global-tag-wrapper');
+          if (!containerTags) {
+             containerTags = document.createElement('div');
+             containerTags.className = 'ups-global-tag-wrapper';
+             containerTags.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; margin-left:8px;';
+             titleContainer.appendChild(containerTags);
+          }
+          
+          const dataSignature = lead.estagio + (lead.tag ? JSON.stringify(lead.tag) : '');
+          if (containerTags.dataset.signature === dataSignature) return; // Performance check
+          containerTags.dataset.signature = dataSignature;
+          
+          containerTags.innerHTML = '';
+          
+          // 1. Funnel Stage
+          if (lead.estagio) {
+             const stageObj = cachedStages.find(s => s.id === lead.estagio);
+             if (stageObj) {
+                const fTag = document.createElement('span');
+                fTag.className = 'ups-list-tag';
+                fTag.textContent = String(stageObj.label).toUpperCase();
+                fTag.style.cssText = `font-size:9px; font-weight:bold; background:${stageObj.color}22; color:${stageObj.color}; padding:2px 6px; border-radius:4px; border: 1px solid ${stageObj.color}44; line-height:1.2;`;
+                containerTags.appendChild(fTag);
+             }
+          }
+          
+          // 2. Custom Tags
+          if (lead.tag) {
+             const tags = (Array.isArray(lead.tag) ? lead.tag : [lead.tag]).filter(Boolean);
+             tags.forEach(tgKey => {
+                 if (cachedTags[tgKey]) {
+                    const cTag = document.createElement('span');
+                    cTag.className = 'ups-custom-tag';
+                    cTag.textContent = `${cachedTags[tgKey].emoji} ${tgKey}`;
+                    cTag.style.cssText = `font-size:9px; font-weight:bold; background:${cachedTags[tgKey].bg}; color:${cachedTags[tgKey].cor}; padding:2px 6px; border-radius:4px; line-height:1.2;`;
+                    containerTags.appendChild(cTag);
+                 }
+             });
+          }
+      } else {
+         const oldWrapper = titleContainer.querySelector('.ups-global-tag-wrapper');
+         if (oldWrapper) oldWrapper.remove();
+      }
+  });
+}

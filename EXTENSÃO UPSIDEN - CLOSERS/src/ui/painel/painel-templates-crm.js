@@ -61,25 +61,53 @@ async function salvarTemplate(id) {
   } catch(e) { toast('Erro ao salvar template', 'error'); }
 }
 
-// === CRM ===
-const CRM_TAGS = {
-  quente:  { bg: '#FFB4B4', cor: '#8B1A1A', emoji: '🔥' },
-  morno:   { bg: '#FFE5B4', cor: '#8B6914', emoji: '☀️' },
-  frio:    { bg: '#B4D7FF', cor: '#1A4B8B', emoji: '❄️' },
-  vip:     { bg: '#E5B4FF', cor: '#5A1A8B', emoji: '⭐' },
-  urgente: { bg: '#FFB4D7', cor: '#8B1A4B', emoji: '🚨' }
-};
+// === CRM DYNAMICS (Colunas e Tags) ===
+let dynamicStages = [];
+let dynamicTags = {};
+
+async function loadCRMDynamics() {
+  return new Promise(resolve => {
+    chrome.storage.local.get(['ups_crm_colunas', 'ups_crm_tags'], (res) => {
+      // 1. Colunas (Fases do Funil)
+      if (res.ups_crm_colunas && res.ups_crm_colunas.length > 0) {
+        dynamicStages = res.ups_crm_colunas;
+      } else {
+        dynamicStages = [
+          { id: 'prospeccao', label: 'Prospecção', color: '#FFD666' },
+          { id: 'negociacao', label: 'Negociação', color: '#66B2FF' },
+          { id: 'fechado', label: 'Fechado', color: '#66FFB2' }
+        ];
+      }
+      
+      // 2. Multi-Tags Coloridas (Labels)
+      if (res.ups_crm_tags && Object.keys(res.ups_crm_tags).length > 0) {
+        dynamicTags = res.ups_crm_tags;
+      } else {
+        dynamicTags = {
+          quente:  { bg: '#FFB4B4', cor: '#8B1A1A', emoji: '🔥' },
+          morno:   { bg: '#FFE5B4', cor: '#8B6914', emoji: '☀️' },
+          frio:    { bg: '#B4D7FF', cor: '#1A4B8B', emoji: '❄️' },
+          vip:     { bg: '#E5B4FF', cor: '#5A1A8B', emoji: '⭐' },
+          urgente: { bg: '#FFB4D7', cor: '#8B1A4B', emoji: '🚨' }
+        };
+      }
+      resolve();
+    });
+  });
+}
+
 function fmtMoeda(v) { return (parseFloat(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 
-function renderCRM(c) {
-  document.getElementById('header-actions').innerHTML = `<button class="btn btn-primary" data-click="showNewLeadModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Lead</button>`;
-  const stages = [
-    { id: 'prospeccao', label: 'Prospeccao', color: '#FFD666' },
-    { id: 'negociacao', label: 'Negociacao', color: '#66B2FF' },
-    { id: 'fechado', label: 'Fechado', color: '#66FFB2' }
-  ];
+async function renderCRM(c) {
+  await loadCRMDynamics();
+  
+  document.getElementById('header-actions').innerHTML = `
+    <button class="btn btn-secondary" onclick="showCRMManagerModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Configurar Board</button>
+    <button class="btn btn-primary" data-click="showNewLeadModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Lead</button>
+  `;
+
   let html = '<div class="kanban-board">';
-  stages.forEach(stage => {
+  dynamicStages.forEach(stage => {
     const stageLeads = painelData.leads.filter(l => (l.estagio||l.etapa) === stage.id);
     const somaValor = stageLeads.reduce((a,l) => a + (parseFloat(l.valor)||0), 0);
     html += `<div class="kanban-column">
@@ -90,13 +118,25 @@ function renderCRM(c) {
       <div class="kanban-cards" data-stage="${stage.id}">`;
     stageLeads.forEach(lead => {
       let tagHtml = '';
-      if (lead.tag && CRM_TAGS[lead.tag]) {
-        const t = CRM_TAGS[lead.tag];
-        tagHtml = `<span style="font-size:9px;padding:1px 6px;border-radius:10px;background:${t.bg};color:${t.cor};font-weight:600;">${t.emoji} ${lead.tag}</span>`;
+      if (lead.tag) {
+        // Multi-tags compatibility or solid single-tag 
+        // Lead.tag might be string or array
+        let tagsArray = Array.isArray(lead.tag) ? lead.tag : [lead.tag];
+        
+        tagHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:2px;">`;
+        tagsArray.forEach(tgKey => {
+           if (dynamicTags[tgKey]) {
+             const t = dynamicTags[tgKey];
+             tagHtml += `<span style="font-size:9px;padding:2px 6px;border-radius:12px;background:${t.bg};color:${t.cor};font-weight:700;">${t.emoji} ${tgKey}</span>`;
+           }
+        });
+        tagHtml += `</div>`;
       }
-      html += `<div class="kanban-card" draggable="true" data-lead-id="${lead.id}" data-click="editLeadModal('${lead.id}')" style="backdrop-filter:blur(10px);background:rgba(32,44,51,0.85);border-radius:10px;transition:all 0.3s;cursor:pointer;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div class="card-name">${lead.nome}</div>${tagHtml}
+      
+      html += `<div class="kanban-card" draggable="true" data-lead-id="${lead.id}" data-click="editLeadModal('${lead.id}')" style="backdrop-filter:blur(10px);background:rgba(32,44,51,0.85);border-radius:10px;transition:all 0.3s;cursor:pointer;border-left: 3px solid ${stage.color};">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+          <div class="card-name" style="font-size:14px;font-weight:bold;">${lead.nome}</div>
+          ${tagHtml}
         </div>
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:4px;">
           <span>${lead.telefone || ''}</span>
@@ -119,19 +159,50 @@ function editLeadModal(id) { const l = painelData.leads.find(x=>x.id===id); if(l
 function showLeadEditModal(lead) {
   const existing = document.querySelector('.modal-overlay'); if (existing) existing.remove();
   const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
-  overlay.style.cssText = 'backdrop-filter:blur(6px);';
-  const tagOptions = Object.entries(CRM_TAGS).map(([k,v]) => `<option value="${k}" ${lead?.tag===k?'selected':''}>${v.emoji} ${k}</option>`).join('');
+  overlay.style.cssText = 'backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;';
+  
+  // Array format compatibility
+  let selectedTags = lead && lead.tag ? (Array.isArray(lead.tag) ? lead.tag : [lead.tag]) : [];
+  
+  const tagOptions = Object.entries(dynamicTags).map(([k,v]) => `<option value="${k}" ${selectedTags.includes(k)?'selected':''}>${v.emoji} ${k}</option>`).join('');
   const lembreteVal = lead?.lembrete_data ? new Date(lead.lembrete_data).toISOString().slice(0,16) : '';
   const leadId = lead?.id || '';
-  overlay.innerHTML = `<div class="modal" style="max-width:480px;border-radius:16px;backdrop-filter:blur(20px);background:rgba(17,27,33,0.95);">
-    <div class="modal-header"><h3>${lead ? '📋 '+lead.nome : 'Novo Lead'}</h3><button class="btn-ghost" data-click="closeModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
-    <div class="modal-body">
-      <div style="display:flex;gap:10px;"><div class="form-group" style="flex:1;"><label class="form-label">Nome</label><input class="form-input" id="lead-nome" value="${lead?.nome||''}"></div><div class="form-group" style="flex:1;"><label class="form-label">Telefone</label><input class="form-input" id="lead-tel" value="${lead?.telefone||''}"></div></div>
-      <div style="display:flex;gap:10px;"><div class="form-group" style="flex:1;"><label class="form-label">Valor (R$)</label><input type="number" class="form-input" id="lead-valor" value="${lead?.valor||0}" min="0" step="0.01"></div><div class="form-group" style="flex:1;"><label class="form-label">Tag</label><select class="form-input" id="lead-tag"><option value="">Sem tag</option>${tagOptions}</select></div></div>
-      <div class="form-group"><label class="form-label">Notas</label><textarea class="form-textarea" id="lead-notas" rows="2">${lead?.notas||''}</textarea></div>
-      <div style="display:flex;gap:10px;"><div class="form-group" style="flex:1;"><label class="form-label">Lembrete</label><input type="datetime-local" class="form-input" id="lead-lembrete" value="${lembreteVal}"></div><div class="form-group" style="flex:1;"><label class="form-label">Texto</label><input class="form-input" id="lead-lembrete-txt" value="${lead?.lembrete_texto||''}"></div></div>
+
+  // Interação Histórico (Mock UI for now, logic below)
+  const historyLink = leadId ? `<button data-click="showLeadHistory('${leadId}')" class="btn btn-secondary" style="font-size:12px; padding:4px 8px; margin-left:auto;">📜 Ver Histórico de Interações</button>` : '';
+
+  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:540px; border-radius:16px; backdrop-filter:blur(20px); background:rgba(17,27,33,0.95); border: 1px solid var(--border);">
+    <div class="modal-header" style="display:flex; align-items:center;">
+       <h3>${lead ? '📋 Informações do Negócio' : 'Novo Lead'}</h3>
+       ${historyLink}
+       <button class="btn-ghost" data-click="closeModal()" style="margin-left:8px;"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
     </div>
-    <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Cancelar</button><button class="btn btn-primary" data-click="salvarLeadCompleto('${leadId}')">Salvar</button></div>
+    <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
+      <div style="display:flex;gap:10px;"><div class="form-group" style="flex:1;"><label class="form-label">Qual o Nome?</label><input class="form-input" id="lead-nome" placeholder="Ex: Maria" value="${lead?.nome||''}"></div><div class="form-group" style="flex:1;"><label class="form-label">Telefone Exact (WPP)</label><input class="form-input" id="lead-tel" placeholder="55119..." value="${lead?.telefone||''}"></div></div>
+      
+      <div style="display:flex;gap:10px; margin-top:6px;">
+         <div class="form-group" style="flex:1;">
+            <label class="form-label" style="color:var(--success);">Valor do Deal (R$)</label>
+            <input type="number" class="form-input" id="lead-valor" value="${lead?.valor||0.00}" min="0" step="0.01" style="border-color:var(--success-dim); font-weight:bold; color:var(--success);">
+         </div>
+         <div class="form-group" style="flex:1;">
+            <label class="form-label">Multi-Tags Form (Aperte CTRL)</label>
+            <select class="form-input" id="lead-tag" multiple style="height:64px; font-size:12px; background:var(--bg-card);">
+               ${tagOptions}
+            </select>
+         </div>
+      </div>
+
+      <div class="form-group" style="margin-top:6px;"><label class="form-label">Anotações Fixadas</label><textarea class="form-textarea" id="lead-notas" rows="3" placeholder="Contexto da negociação...">${lead?.notas||''}</textarea></div>
+      
+      <div style="padding:12px; background:var(--bg-card); border-radius:8px; border:1px solid var(--border); margin-top:12px;">
+         <div style="display:flex;gap:10px;">
+           <div class="form-group" style="flex:1; margin:0;"><label class="form-label" style="color:var(--accent);">🔔 Agendar Alarme de Ligação</label><input type="datetime-local" class="form-input" id="lead-lembrete" value="${lembreteVal}"></div>
+           <div class="form-group" style="flex:1; margin:0;"><label class="form-label">Motivo (Despertador)</label><input class="form-input" id="lead-lembrete-txt" placeholder="Ex: Ligar pra fechar doc" value="${lead?.lembrete_texto||''}"></div>
+         </div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Sair</button><button class="btn btn-primary" data-click="salvarLeadCompleto('${leadId}')">Salvar Ficha do Lead</button></div>
   </div>`;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
@@ -141,28 +212,133 @@ async function salvarLeadCompleto(id) {
   const nome = document.getElementById('lead-nome').value.trim();
   const telefone = document.getElementById('lead-tel').value.trim();
   const valor = parseFloat(document.getElementById('lead-valor').value) || 0;
-  const tag = document.getElementById('lead-tag').value;
-  const tagCor = CRM_TAGS[tag]?.bg || '#8696a0';
+  
+  // Extract multiple selected tags
+  const tagSelect = document.getElementById('lead-tag');
+  const tagsElegidas = Array.from(tagSelect.selectedOptions).map(opt => opt.value).filter(val => val !== '');
+  
+  // Tag Cor (Using the first one arbitrarily for fallback legacy color needs)
+  const tagCor = tagsElegidas.length > 0 && dynamicTags[tagsElegidas[0]] ? dynamicTags[tagsElegidas[0]].bg : '#8696a0';
   const notas = document.getElementById('lead-notas').value.trim();
   const lembreteInput = document.getElementById('lead-lembrete').value;
   const lembreteData = lembreteInput ? new Date(lembreteInput).toISOString() : null;
   const lembreteTexto = document.getElementById('lead-lembrete-txt').value.trim();
-  if (!nome) { toast('Informe o nome do lead', 'error'); return; }
+  if (!nome) { typeof toast === 'function' && toast('Informe o nome primário do lead', 'error'); return; }
   try {
     if (id) {
-      const upd = { nome, telefone, valor, tag, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, updated_at: new Date().toISOString() };
+      const upd = { nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, updated_at: new Date().toISOString() };
       await UpsidenDB.from('leads').eq('id', id).update(upd).execute();
       const idx = painelData.leads.findIndex(l=>l.id===id);
       if (idx>=0) painelData.leads[idx] = {...painelData.leads[idx], ...upd};
-      try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: id, tipo: 'edicao', descricao: 'Lead atualizado', criado_por: userData.userId, metadados: { campos_alterados: ['nome','telefone','valor','tag','notas','lembrete'], valor_novo: valor, tag_nova: tag } }).execute(); } catch(e){}
+      try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: id, tipo: 'edicao', descricao: 'Anotações de CRM Atualizadas Diretamente no Painel', criado_por: userData.userId, metadados: { campos_alterados: ['nome','telefone','valor','tag','notas','lembrete'], valor_novo: valor, tag_nova: tagsElegidas } }).execute(); } catch(e){}
     } else {
-      const res = await UpsidenDB.from('leads').insert({ nome, telefone, valor, tag, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, estagio: 'prospeccao', criado_por: userData.userId }).execute();
-      if (res?.length) { painelData.leads.unshift(res[0]); try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: res[0].id, tipo: 'criacao', descricao: `Lead "${nome}" criado`, criado_por: userData.userId, metadados: { valor_inicial: valor, tag_inicial: tag, telefone } }).execute(); } catch(e){} }
+      // Default to first stage available if dynamic
+      const estagioDefault = dynamicStages.length > 0 ? dynamicStages[0].id : 'prospeccao';
+      const res = await UpsidenDB.from('leads').insert({ nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, estagio: estagioDefault, criado_por: userData.userId }).execute();
+      if (res?.length) { painelData.leads.unshift(res[0]); try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: res[0].id, tipo: 'criacao', descricao: `Novo Lead Inserido Manualmente 🤝`, criado_por: userData.userId, metadados: { valor_inicial: valor, tags_iniciais: tagsElegidas, telefone } }).execute(); } catch(e){} }
     }
-    if (lembreteData) { try { chrome.runtime.sendMessage({ action: 'SET_REMINDER', payload: { leadId: id||'new', nome, data: lembreteData, texto: lembreteTexto } }); } catch(e){} }
+    if (lembreteData) { 
+        typeof toast === 'function' && toast('Sino de Alarme ativado com precisão Background', 'info');
+        try { chrome.runtime.sendMessage({ action: 'SET_REMINDER', payload: { leadId: id||'new', nome, data: lembreteData, texto: lembreteTexto } }); } catch(e){} 
+    }
     document.querySelector('.modal-overlay')?.remove();
     renderSection('crm'); toast('Lead salvo!', 'success');
   } catch(e) { toast('Erro ao salvar lead', 'error'); }
+}
+
+// === CRM CONFIGURATION MANAGER ===
+window.showCRMManagerModal = function() {
+  const existing = document.querySelector('.modal-overlay'); if (existing) existing.remove();
+  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;';
+  
+  let colsHtml = dynamicStages.map((s, idx) => `
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+       <input class="form-input" style="width:40px;height:40px;padding:0;" type="color" id="cfg-col-cor-${idx}" value="${s.color}">
+       <input class="form-input" style="flex:1;" type="text" id="cfg-col-lbl-${idx}" value="${s.label}">
+       <input class="form-input" style="width:100px;" type="text" id="cfg-col-id-${idx}" value="${s.id}" placeholder="ID curto">
+    </div>
+  `).join('');
+
+  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:540px; border-radius:16px; backdrop-filter:blur(20px); background:rgba(17,27,33,0.95); border: 1px solid var(--border);">
+    <div class="modal-header"><h3>⚙️ Configuração do Funil Upsiden</h3><button class="btn-ghost" data-click="closeModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
+    <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
+       <h4 style="margin-bottom:10px; color:var(--text-secondary);">1. Editar Fases do Funil (Colunas)</h4>
+       <div id="cfg-col-container">${colsHtml}</div>
+       <button class="btn btn-secondary" style="width:100%; margin-top:8px;" onclick="addColField()">+ Nova Coluna</button>
+       
+       <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
+       <h4 style="color:var(--text-muted); font-size:12px;">2. Para editar os Tags Visuais e Cores, em breve na seção Master.<br>As colunas salvas atualizarão o Kanban instantaneamente.</h4>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Sair</button><button class="btn btn-primary" onclick="saveCRMManager()">Salvar Novo Funil</button></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+}
+
+window.addColField = function() {
+  const container = document.getElementById('cfg-col-container');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;';
+  div.innerHTML = `
+     <input class="form-input" style="width:40px;height:40px;padding:0;" type="color" id="cfg-col-cor-${idx}" value="#FF4D00">
+     <input class="form-input" style="flex:1;" type="text" id="cfg-col-lbl-${idx}" placeholder="Nova Coluna">
+     <input class="form-input" style="width:100px;" type="text" id="cfg-col-id-${idx}" placeholder="id_curto">
+  `;
+  container.appendChild(div);
+}
+
+window.saveCRMManager = function() {
+  const container = document.getElementById('cfg-col-container');
+  let newStages = [];
+  for(let i=0; i<container.children.length; i++) {
+     const cor = document.getElementById(`cfg-col-cor-${i}`).value;
+     const lbl = document.getElementById(`cfg-col-lbl-${i}`).value.trim();
+     let cid = document.getElementById(`cfg-col-id-${i}`).value.trim();
+     if(lbl) {
+       if(!cid) cid = lbl.toLowerCase().replace(/[^a-z0-9]/g, '');
+       newStages.push({ id: cid, label: lbl, color: cor });
+     }
+  }
+  if(newStages.length === 0) { typeof toast === 'function' && toast('É necessário ter ao menos 1 fase no funil.', 'error'); return; }
+  
+  chrome.storage.local.set({ ups_crm_colunas: newStages }, () => {
+     typeof toast === 'function' && toast('Funil atualizado com RedSun Engine!', 'success');
+     document.querySelector('.modal-overlay')?.remove();
+     renderSection('crm');
+  });
+}
+
+// === HISTORY MODAL ===
+window.showLeadHistory = async function(leadId) {
+  const existing = document.getElementById('history-mini-modal'); if(existing) existing.remove();
+  const div = document.createElement('div');
+  div.id = 'history-mini-modal';
+  div.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:90%; max-width:500px; max-height:80vh; background:#0B141A; border:1px solid var(--border); border-radius:12px; z-index:10000; display:flex; flex-direction:column; box-shadow:0 12px 40px rgba(0,0,0,0.8);';
+  div.innerHTML = `<div style="padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="margin:0;">📜 Histórico Passivo WPP</h3>
+    <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:white; cursor:pointer;">✖</button>
+  </div><div id="h-body" style="padding:16px; overflow-y:auto; flex:1; font-size:13px; color:var(--text-secondary);"><div style="text-align:center;">Buscando logs de disparo no Servidor...</div></div>`;
+  document.body.appendChild(div);
+
+  try {
+     const { data, error } = await UpsidenDB.from('historico_interacoes').select('*').eq('lead_id', leadId).order('criado_em', { ascending: false });
+     const hub = document.getElementById('h-body');
+     if (!hub) return;
+     if (error || !data || data.length === 0) { hub.innerHTML = '<div style="text-align:center;">Nenhuma interação registrada ainda para este prospect.</div>'; return; }
+     
+     hub.innerHTML = data.map(log => `
+       <div style="margin-bottom:12px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; border-left: 2px solid var(--accent);">
+          <div style="font-size:11px; color:#667781; margin-bottom:4px;">${new Date(log.criado_em).toLocaleString('pt-BR')}</div>
+          <div style="color:white; font-weight:600; margin-bottom:4px;">${log.tipo.toUpperCase()}</div>
+          <div>${log.descricao}</div>
+       </div>
+     `).join('');
+  } catch(e) {
+     const hub = document.getElementById('h-body');
+     if(hub) hub.innerHTML = '<div style="color:var(--danger); text-align:center;">Falha ao buscar auditoria do funil.</div>';
+  }
 }
 
 // === EXPORT ALL FUNCTIONS TO WINDOW (required for data-click delegation) ===

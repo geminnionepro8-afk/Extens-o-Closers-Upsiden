@@ -143,11 +143,35 @@ window.addEventListener('message', async (ev) => {
       sincronizarConfigAutomacao();
     }
     // ── BULK: Progresso e conclusão — relay pro Painel via chrome.runtime ──
+    // ── BULK: Progresso e conclusão — relay pro Painel via chrome.runtime ──
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'bulk_progresso') {
       chrome.runtime.sendMessage({ tipo: 'bulk_progresso', dados: ev.data.dados });
     }
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'bulk_concluido') {
       chrome.runtime.sendMessage({ tipo: 'bulk_concluido', dados: ev.data.dados });
+    }
+    // ── AUTOMATED CRM LOGGING ──
+    if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'upsiden_interaction_log') {
+       try {
+          const { chatId, descricao } = ev.data.dados;
+          if (!chatId) return;
+          // Tenta puxar do cache local pra descobrir qual o Lead ID atrelado a esse contato
+          chrome.storage.local.get(['ups_leads'], (res) => {
+             const leads = res.ups_leads || [];
+             const phoneOnly = chatId.split('@')[0];
+             // Simple contains check instead of strict match (country codes might vary +55 vs 55)
+             const lRef = leads.find(l => l.telefone && (l.telefone.includes(phoneOnly) || phoneOnly.includes(l.telefone)));
+             
+             if (lRef && lRef.id && window.UpsidenDB) {
+                 window.UpsidenDB.from('historico_interacoes').insert({
+                     lead_id: lRef.id,
+                     tipo: 'envio',
+                     descricao: descricao,
+                     criado_por: 'engine_extensao'
+                 }).execute().catch(e=>console.warn(IPC_CTX, 'Fail CRM Log:', e));
+             }
+          });
+       } catch(e) {}
     }
     return;
   }
@@ -182,14 +206,50 @@ window.addEventListener('message', async (ev) => {
     if (contatoAtivo) {
       const containerTitulo = contatoAtivo.querySelector('div[data-testid="cell-frame-title"]');
       if (containerTitulo) {
-        let tag = containerTitulo.querySelector('.ups-list-tag');
-        if (!tag) {
-          tag = document.createElement('span');
-          tag.className = 'ups-list-tag';
-          containerTitulo.appendChild(tag);
+        // Locate the target wrapper
+        let containerTags = containerTitulo.querySelector('.ups-tag-wrapper');
+        if (!containerTags) {
+          containerTags = document.createElement('div');
+          containerTags.className = 'ups-tag-wrapper';
+          containerTags.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; margin-left:8px;';
+          containerTitulo.appendChild(containerTags);
         }
-        tag.textContent = ev.data.data.funil.toUpperCase();
-        tag.style.cssText = 'margin-left:8px; font-size:10px; font-weight:bold; background:#2a3942; color:#00a884; padding:2px 6px; border-radius:4px;';
+        
+        containerTags.innerHTML = ''; // Wipe existing
+        
+        const ledData = ev.data.data;
+        const baseTags = Array.isArray(ledData.tag) ? ledData.tag : [ledData.tag];
+        const tags = baseTags.filter(Boolean); // remove empty
+
+        // Adiciona a tag de Funil Primeiro
+        if (ledData.funil) {
+             const fTag = document.createElement('span');
+             fTag.className = 'ups-list-tag';
+             fTag.textContent = String(ledData.funil).toUpperCase();
+             fTag.style.cssText = 'font-size:9px; font-weight:bold; background:#2a3942; color:#00a884; padding:2px 6px; border-radius:4px; line-height:1.2;';
+             containerTags.appendChild(fTag);
+        }
+
+        // Adiciona as multi-tags Customizadas
+        chrome.storage.local.get(['ups_crm_tags'], (res) => {
+             const dynamicTags = res.ups_crm_tags || {
+                 quente:  { bg: '#FFB4B4', cor: '#8B1A1A', emoji: '🔥' },
+                 morno:   { bg: '#FFE5B4', cor: '#8B6914', emoji: '☀️' },
+                 frio:    { bg: '#B4D7FF', cor: '#1A4B8B', emoji: '❄️' },
+                 vip:     { bg: '#E5B4FF', cor: '#5A1A8B', emoji: '⭐' },
+                 urgente: { bg: '#FFB4D7', cor: '#8B1A4B', emoji: '🚨' }
+             };
+             
+             tags.forEach(tgKey => {
+                 if (dynamicTags[tgKey]) {
+                    const cTag = document.createElement('span');
+                    cTag.className = 'ups-custom-tag';
+                    cTag.textContent = `${dynamicTags[tgKey].emoji} ${tgKey}`;
+                    cTag.style.cssText = `font-size:9px; font-weight:bold; background:${dynamicTags[tgKey].bg}; color:${dynamicTags[tgKey].cor}; padding:2px 6px; border-radius:4px; line-height:1.2;`;
+                    containerTags.appendChild(cTag);
+                 }
+             });
+        });
       }
     }
   }
