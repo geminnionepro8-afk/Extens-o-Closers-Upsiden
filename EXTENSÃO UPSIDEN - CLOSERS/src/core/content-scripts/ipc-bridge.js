@@ -162,12 +162,29 @@ window.addEventListener('message', async (ev) => {
       sincronizarConfigAutomacao();
     }
     // ── BULK: Progresso e conclusão — relay pro Painel via chrome.runtime ──
-    // ── BULK: Progresso e conclusão — relay pro Painel via chrome.runtime ──
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'bulk_progresso') {
       chrome.runtime.sendMessage({ tipo: 'bulk_progresso', dados: ev.data.dados });
     }
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'bulk_concluido') {
       chrome.runtime.sendMessage({ tipo: 'bulk_concluido', dados: ev.data.dados });
+    }
+    // ── CSP BYPASS PROXY PARA DOWNLOAD DE MÍDIAS ──
+    if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'fetch_media_base64') {
+       try {
+          const res = await fetch(ev.data.url);
+          const blob = await res.blob();
+          const reader = new FileReader();
+          reader.onloadend = () => {
+             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, base64: reader.result }, '*');
+          };
+          reader.onerror = () => {
+             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, erro: 'Falha FileReader na montagem do Blob' }, '*');
+          };
+          reader.readAsDataURL(blob);
+       } catch(e) {
+          window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, erro: e.message }, '*');
+       }
+       return;
     }
     // ── AUTOMATED CRM LOGGING ──
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'upsiden_interaction_log') {
