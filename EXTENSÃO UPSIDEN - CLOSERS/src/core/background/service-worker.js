@@ -104,6 +104,25 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
     return false;
   }
 
+  // ── CSP IMMUNE PROXY (BLOB -> BASE64) ──
+  if (mensagem.tipo === 'fetch_media_base64_bg') {
+     fetch(mensagem.url)
+       .then(r => r.blob())
+       .then(async blob => {
+           const buffer = await blob.arrayBuffer();
+           const bytes = new Uint8Array(buffer);
+           let binary = '';
+           for (let i = 0; i < bytes.byteLength; i += 1024) {
+               binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 1024));
+           }
+           const b64 = btoa(binary);
+           const mime = blob.type || mensagem.mime || 'application/octet-stream';
+           responder({ sucesso: true, base64: `data:${mime};base64,${b64}` });
+       })
+       .catch(e => responder({ sucesso: false, erro: e.message }));
+     return true;
+  }
+
   // ── AGENDAMENTO DE MENSAGENS ──
   if (mensagem.action === 'SET_AGENDAMENTO' && mensagem.payload) {
     const dataAgend = mensagem.payload; // { id, chatId, when, tipo, conteudo, base64, mime, nome, recorrencia }

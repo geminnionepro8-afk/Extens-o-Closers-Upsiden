@@ -170,20 +170,15 @@ window.addEventListener('message', async (ev) => {
     }
     // ── CSP BYPASS PROXY PARA DOWNLOAD DE MÍDIAS ──
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'fetch_media_base64') {
-       try {
-          const res = await fetch(ev.data.url);
-          const blob = await res.blob();
-          const reader = new FileReader();
-          reader.onloadend = () => {
-             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, base64: reader.result }, '*');
-          };
-          reader.onerror = () => {
-             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, erro: 'Falha FileReader na montagem do Blob' }, '*');
-          };
-          reader.readAsDataURL(blob);
-       } catch(e) {
-          window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, erro: e.message }, '*');
-       }
+       chrome.runtime.sendMessage({ tipo: 'fetch_media_base64_bg', url: ev.data.url }, (resposta) => {
+          if (chrome.runtime.lastError) {
+             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, erro: chrome.runtime.lastError.message }, '*');
+          } else if (resposta && !resposta.sucesso) {
+             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, erro: resposta.erro }, '*');
+          } else if (resposta && resposta.base64) {
+             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, base64: resposta.base64 }, '*');
+          }
+       });
        return;
     }
     // ── AUTOMATED CRM LOGGING ──
