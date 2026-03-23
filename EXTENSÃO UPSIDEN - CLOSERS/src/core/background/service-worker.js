@@ -106,20 +106,38 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
 
   // ── CSP IMMUNE PROXY (BLOB -> BASE64) ──
   if (mensagem.tipo === 'fetch_media_base64_bg') {
-     fetch(mensagem.url)
-       .then(r => r.blob())
-       .then(async blob => {
-           const buffer = await blob.arrayBuffer();
-           const bytes = new Uint8Array(buffer);
-           let binary = '';
-           for (let i = 0; i < bytes.byteLength; i += 1024) {
-               binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 1024));
-           }
-           const b64 = btoa(binary);
-           const mime = blob.type || mensagem.mime || 'application/octet-stream';
-           responder({ sucesso: true, base64: `data:${mime};base64,${b64}` });
-       })
-       .catch(e => responder({ sucesso: false, erro: e.message }));
+     chrome.storage.local.get(['ups_supabase_session'], (resStore) => {
+        let headers = {};
+        if (resStore.ups_supabase_session) {
+           try {
+              const session = JSON.parse(resStore.ups_supabase_session);
+              if (session && session.access_token) {
+                 headers['Authorization'] = `Bearer ${session.access_token}`;
+              }
+           } catch(e) {}
+        }
+        
+        fetch(mensagem.url, { headers })
+          .then(async r => {
+              if (!r.ok) {
+                 const errText = await r.text();
+                 throw new Error(`Supabase Bloqueou o Download (HTTP ${r.status}): ${errText}`);
+              }
+              return r.blob();
+          })
+          .then(async blob => {
+              const buffer = await blob.arrayBuffer();
+              const bytes = new Uint8Array(buffer);
+              let binary = '';
+              for (let i = 0; i < bytes.byteLength; i += 1024) {
+                  binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 1024));
+              }
+              const b64 = btoa(binary);
+              const mime = blob.type || mensagem.mime || 'application/octet-stream';
+              responder({ sucesso: true, base64: `data:${mime};base64,${b64}` });
+          })
+          .catch(e => responder({ sucesso: false, erro: e.message }));
+     });
      return true;
   }
 
