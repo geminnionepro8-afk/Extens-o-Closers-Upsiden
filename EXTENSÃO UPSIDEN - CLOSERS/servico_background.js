@@ -26,6 +26,18 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
     return true;
   }
 
+  // ── GERENCIADOR DE TIMEOUTS E FLOWS EM BACKROUND ──
+  if (mensagem.tipo === 'schedule_flow_task') {
+    chrome.storage.local.get(['ups_pending_flows'], (res) => {
+      const p = res.ups_pending_flows || [];
+      p.push(mensagem.task);
+      chrome.storage.local.set({ ups_pending_flows: p }, () => {
+         responder({ sucesso: true });
+      });
+    });
+    return true;
+  }
+
   // ── Abrir Painel em nova aba ──
   if (mensagem.tipo === 'abrir_painel') {
     chrome.tabs.create({ url: chrome.runtime.getURL('painel.html') });
@@ -51,14 +63,58 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
     return true;
   }
 
-  // ── BULK: Relay de progresso/conclusão do Content Script para o Painel ──
+  //   BULK: Relay de progresso/concluso do Content Script para o Painel  
   if (mensagem.tipo === 'bulk_progresso' || mensagem.tipo === 'bulk_concluido') {
     // Enviar para todas as abas do painel
     chrome.runtime.sendMessage(mensagem).catch(() => {});
+    return false;
+  }
+
+  //   METRICS LOGGING: Rastreio silencioso pelo WhatsApp Web  
+  if (mensagem.tipo === 'log_metric') {
+    chrome.storage.local.get(['ups_user'], async (res) => {
+      if (!res.ups_user || !res.ups_user.id) return;
+      try {
+        await supabaseClient.from('metrics').insert({
+          user_id: res.ups_user.id,
+          evento: mensagem.evento,
+          metadata: mensagem.metadata || {}
+        });
+      } catch(e) { console.error('BG Metric Fail:', e); }
+    });
     return false;
   }
 });
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log(`${CONTEXTO} Instalado/Atualizado — Engine v2.`);
+});
+
+// CRON JOB para Timeouts/Delays longos (Rodando a cada 1 minício)
+chrome.alarms.create("upsiden_flow_cron", { periodInMinutes: 1 });
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "upsiden_flow_cron") {
+    chrome.storage.local.get(['ups_pending_flows'], (res) => {
+      const pending = res.ups_pending_flows || [];
+      if (!pending.length) return;
+      
+      const now = Date.now();
+      const ready = pending.filter(p => now >= p.targetTime);
+      const remaining = pending.filter(p => now < p.targetTime);
+
+      if (ready.length > 0) {
+        chrome.storage.local.set({ ups_pending_flows: remaining });
+        chrome.tabs.query({ url: '*://web.whatsapp.com/*' }).then((abas) => {
+          if (!abas || abas.length === 0) return;
+          ready.forEach(task => {
+             chrome.tabs.sendMessage(abas[0].id, {
+                tipo: 'resume_flow_task',
+                dados: task
+             });
+          });
+        });
+      }
+    });
+  }
 });

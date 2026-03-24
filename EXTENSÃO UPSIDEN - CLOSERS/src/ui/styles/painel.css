@@ -49,6 +49,39 @@
   --transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+/* ═══ LIGHT MODE VARS ════════════════════════════════════════════════ */
+:root[data-theme="light"] {
+  --bg-primary:    #F8FAFC;
+  --bg-secondary:  #FFFFFF;
+  --bg-card:       #FFFFFF;
+  --bg-card-hover: #F1F5F9;
+  --bg-input:      #F8FAFC;
+  --border:        #E2E8F0;
+  --border-light:  #F1F5F9;
+  --text-primary:  #0F172A;
+  --text-secondary:#334155;
+  --text-muted:    #64748B;
+  
+  --sb-bg:          #FFFFFF;
+  --sb-surface:     #F8FAFC;
+  --sb-border:      #E2E8F0;
+  --sb-highlight:   #F1F5F9;
+  --sb-text:        #475569;
+  --sb-text-dim:    #94A3B8;
+}
+
+/* Base Light Theme fix for shadows */
+:root[data-theme="light"] .painel-sidebar {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08), 0 0 0 1px var(--sb-border);
+}
+:root[data-theme="light"] .stat-card:hover {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+:root[data-theme="light"] .user-menu-popup {
+  background: var(--bg-secondary);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 1px 0 rgba(0,0,0,0.06) inset;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -162,10 +195,17 @@ html, body {
   height: 38px;
   transition: margin 0.3s ease;
 }
-.brand-logo-full { height: 26px; object-fit: contain; display: block; margin-left: -2px; }
+.brand-logo-full { height: 26px; object-fit: contain; margin-left: -2px; }
 .brand-logo-mini { height: 24px; width: 24px; object-fit: contain; display: none; margin: 0 auto; }
-.painel-sidebar.collapsed .brand-logo-full { display: none; }
-.painel-sidebar.collapsed .brand-logo-mini { display: block; }
+
+/* ── Dynamic Logo Utility Classes ── */
+.light-logo { display: none; }
+.dark-logo { display: block; }
+:root[data-theme="light"] .dark-logo { display: none; }
+:root[data-theme="light"] .light-logo { display: block; }
+
+.painel-sidebar.collapsed .brand-logo-full { display: none !important; }
+.painel-sidebar.collapsed .brand-logo-mini { display: block !important; }
 .painel-sidebar.collapsed .sidebar-brand { justify-content: center; padding: 0; flex-direction: column; height: 100px; padding-top: 15px; border-bottom: none; }
 .painel-sidebar.collapsed .sidebar-toggle { margin-left: 0; margin-top: 8px; }
 .brand-name { display: none; }

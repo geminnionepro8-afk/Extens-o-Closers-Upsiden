@@ -44,8 +44,8 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
     return false;
   }
 
-  // ── BULK & CONTATOS: Relay do Painel para Content Script ──
-  const rotasPermitidas = ['bulk_send_start', 'bulk_pausar', 'bulk_continuar', 'bulk_cancelar', 'open_chat_unsaved', 'get_groups', 'extract_group_members'];
+  // ── BULK & CONTATOS & ETIQUETAS: Relay do Painel para Content Script ──
+  const rotasPermitidas = ['bulk_send_start', 'bulk_pausar', 'bulk_continuar', 'bulk_cancelar', 'open_chat_unsaved', 'get_groups', 'extract_group_members', 'get_wpp_labels', 'wpp_update_label'];
   if (rotasPermitidas.includes(mensagem.tipo)) {
     chrome.tabs.query({ url: '*://web.whatsapp.com/*' }).then((abas) => {
       const aba = abas[0];

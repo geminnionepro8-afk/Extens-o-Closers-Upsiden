@@ -98,14 +98,35 @@ async function loadCRMDynamics() {
 
 function fmtMoeda(v) { return (parseFloat(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 
+window.crmSyncModeActive = false;
+
+window.toggleCRMSyncMode = function(checked) {
+   window.crmSyncModeActive = checked;
+   if (typeof renderSection === 'function') renderSection('crm');
+};
+
 async function renderCRM(c) {
+   if (window.crmSyncModeActive) {
+       await renderSyncLabelsCRM(c);
+   } else {
+       await renderCustomCRM(c);
+   }
+}
+
+// === CRM PERSONALIZADO (ANTIGO) ===
+async function renderCustomCRM(c) {
   await loadCRMDynamics();
   
   document.getElementById('header-actions').innerHTML = `
-    <button class="btn btn-secondary" data-click="showCRMManagerModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Configurar Board</button>
-    <button class="btn btn-secondary" data-click="navigate('contatos')" style="color: var(--accent); border-color: rgba(255, 98, 0, 0.3);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Importar / Extrair</button>
+    <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:bold; cursor:pointer;" title="Sincronizar Funil com Etiquetas do WhatsApp conectado">
+       <input type="checkbox" id="kb-sync-toggle" style="cursor:pointer;" ${window.crmSyncModeActive ? 'checked' : ''}> Sincronizar Etiquetas WPP
+    </label>
+    <button class="btn btn-secondary" data-click="showCRMManagerModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Board</button>
+    <button class="btn btn-secondary" data-click="navigate('contatos')" style="color: var(--accent); border-color: rgba(255, 98, 0, 0.3);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Importar</button>
     <button class="btn btn-primary" data-click="showNewLeadModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Lead</button>
   `;
+
+  document.getElementById('kb-sync-toggle')?.addEventListener('change', (e) => toggleCRMSyncMode(e.target.checked));
 
   let html = '<div class="kanban-board">';
   dynamicStages.forEach(stage => {
@@ -154,6 +175,151 @@ async function renderCRM(c) {
   
   // Attach Native Drag & Drop Listeners
   setTimeout(assignKanbanDragDrop, 100);
+}
+
+// === CRM SINCRONIZADO (ETIQUETAS DO WPP) ===
+async function renderSyncLabelsCRM(c) {
+   document.getElementById('header-actions').innerHTML = `
+     <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:bold; cursor:pointer; color:var(--accent);">
+       <input type="checkbox" id="kb-sync-toggle-wpp" checked style="cursor:pointer;"> 🔄 Etiquetas WPP
+     </label>
+   `;
+   
+   document.getElementById('kb-sync-toggle-wpp')?.addEventListener('change', (e) => toggleCRMSyncMode(e.target.checked));
+
+   c.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted); width:100%;"><div class="loading-spinner"></div><br><br>Sincronizando com o celular conectado...<br>Pode levar alguns segundos se houver muitos contatos nas etiquetas.</div>';
+   
+   chrome.runtime.sendMessage({ tipo: 'get_wpp_labels' }, (res) => {
+      if (!res || !res.sucesso) {
+         const motivo = res ? (res.erro || 'Erro interno desconhecido.') : 'Sem Resposta (Timeout) do WhatsApp. F5 na aba do Zap!';
+         c.innerHTML = `<div style="padding:40px; text-align:center; color:var(--danger);">
+            <h4>Falha ao sincronizar Etiquetas</h4>
+            <p style="margin-top:10px; font-family:monospace; background:rgba(0,0,0,0.5); padding:10px; border-radius:8px;">LOG: ${motivo}</p>
+         </div>`;
+         return;
+      }
+      
+      const labels = res.labels || [];
+      if (labels.length === 0) {
+         c.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted);">Você não tem nenhuma Etiqueta criada no seu WhatsApp Business ainda.</div>';
+         return;
+      }
+      
+      let html = '<div class="kanban-board">';
+      labels.forEach(lbl => {
+         const corHex = lbl.hexColor || '#8696a0';
+         html += `<div class="kanban-column">
+           <div class="kanban-column-header">
+             <span style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:${corHex}"></span>${lbl.name}</span>
+             <span style="display:flex;flex-direction:column;align-items:flex-end;"><span class="count">${lbl.items.length}</span></span>
+           </div>
+           <div class="kanban-cards wpp-sync-cards" data-label-id="${lbl.id}">`;
+         
+         lbl.items.forEach(contato => {
+            const foneTratado = contato.id.replace('@c.us', '').replace('@g.us', '');
+            const nomeEscapado = (contato.nome || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            html += `<div class="kanban-card wpp-sync-card" draggable="true" data-click="showWppContactModal('${contato.id}', '${nomeEscapado}')" data-contact-id="${contato.id}" data-old-label-id="${lbl.id}" style="border-left: 3px solid ${corHex}; cursor: grab;">
+              <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                <div class="card-name" style="font-size:14px;font-weight:bold;">${contato.nome}</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:4px;">
+                <span>${foneTratado}</span>
+                <span title="Integração Nativa">🟢</span>
+              </div>
+            </div>`;
+         });
+         
+         if (lbl.items.length === 0) html += `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px;">Vazio</div>`;
+         
+         html += `</div></div>`;
+      });
+      html += '</div>';
+      c.innerHTML = html;
+      
+      setTimeout(assignSyncKanbanDragDrop, 100);
+   });
+}
+
+function assignSyncKanbanDragDrop() {
+  const cards = document.querySelectorAll('.wpp-sync-card');
+  const cols = document.querySelectorAll('.kanban-column');
+
+  cards.forEach(card => {
+    card.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('contactId', card.dataset.contactId);
+      e.dataTransfer.setData('oldLabelId', card.dataset.oldLabelId);
+      setTimeout(() => card.style.opacity = '0.5', 0);
+    });
+    card.addEventListener('dragend', () => card.style.opacity = '1');
+  });
+
+  cols.forEach(col => {
+    const cardsContainer = col.querySelector('.wpp-sync-cards');
+    if (!cardsContainer) return;
+
+    col.addEventListener('dragover', e => {
+      e.preventDefault();
+      cardsContainer.style.background = 'rgba(255,100,0,0.05)';
+    });
+    col.addEventListener('dragleave', () => cardsContainer.style.background = 'transparent');
+    col.addEventListener('drop', e => {
+      e.preventDefault();
+      cardsContainer.style.background = 'transparent';
+      
+      const contactId = e.dataTransfer.getData('contactId');
+      const oldLabelId = e.dataTransfer.getData('oldLabelId');
+      const newLabelId = cardsContainer.dataset.labelId;
+      
+      if (contactId && newLabelId && oldLabelId !== newLabelId) {
+         typeof toast === 'function' && toast('Trocando Etiqueta no WhatsApp...', 'info');
+         
+         chrome.runtime.sendMessage({ 
+             tipo: 'wpp_update_label', 
+             dados: { contactId, oldLabelId, newLabelId } 
+         }, (res) => {
+             if (res && res.sucesso) {
+                 typeof toast === 'function' && toast('Etiqueta movida com sucesso!', 'success');
+                 renderSection('crm'); // Re-desenha com nova posicao direto do celular!
+             } else {
+                 const errStr = res && res.erro ? res.erro : 'Timeout/Desconhecido';
+                 typeof toast === 'function' && toast('Falha WPP: ' + errStr, 'error');
+             }
+         });
+      }
+    });
+  });
+}
+
+// Modal Rápido do Modo Sync
+window.showWppContactModal = function(contactId, nome) {
+  const existing = document.querySelector('.modal-overlay'); if (existing) existing.remove();
+  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;';
+  
+  const fone = contactId.replace('@c.us','').replace('@g.us','');
+  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:400px; border-radius:16px; backdrop-filter:blur(20px); background:rgba(17,27,33,0.95); border: 1px solid var(--border);">
+    <div class="modal-header">
+       <h3>👤 Contato Sincronizado</h3>
+       <button class="btn-ghost" data-click="closeModal()"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+       <div style="width:80px;height:80px;border-radius:50%;background:rgba(255, 98, 0, 0.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:bold;margin:0 auto 16px;">${(nome||'C').charAt(0).toUpperCase()}</div>
+       <h2 style="margin-bottom:8px;">${nome}</h2>
+       <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">📱 ${fone}</p>
+       
+       <button class="btn btn-primary" style="width:100%; justify-content:center;" data-click="openWppChatSync('${fone}')">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Abrir Conversa no Web
+       </button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+}
+
+window.openWppChatSync = function(fone) {
+   typeof toast === 'function' && toast('Trazendo conversa...', 'info');
+   chrome.runtime.sendMessage({ tipo: 'open_chat_unsaved', dados: { telefone: fone } });
+   document.querySelector('.modal-overlay')?.remove();
 }
 
 function assignKanbanDragDrop() {

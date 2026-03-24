@@ -64,6 +64,12 @@ chrome.runtime.onMessage.addListener((msg, _, responder) => {
       .catch(e => responder({ sucesso: false, erro: e.message }));
     return true;
   }
+  // ── RETOMAR FLOWS E TIMEOUTS LONGOS ──
+  if (msg.tipo === 'resume_flow_task') {
+    enviarParaPagina({ tipoMensagem: 'resume_bg_flow', dados: msg.dados });
+    responder({ sucesso: true });
+    return false;
+  }
   // ── GESTÃO DE CONTATOS E EXTRATOR ──
   if (msg.tipo === 'open_chat_unsaved') {
     enviarParaPagina({ tipoMensagem: 'open_chat_unsaved', dados: msg.dados })
@@ -73,6 +79,18 @@ chrome.runtime.onMessage.addListener((msg, _, responder) => {
   }
   if (msg.tipo === 'get_groups') {
     enviarParaPagina({ tipoMensagem: 'get_groups' })
+      .then(r => responder(r))
+      .catch(e => responder({ sucesso: false, erro: e.message }));
+    return true;
+  }
+  if (msg.tipo === 'get_wpp_labels') {
+    enviarParaPagina({ tipoMensagem: 'get_wpp_labels' })
+      .then(r => responder(r))
+      .catch(e => responder({ sucesso: false, erro: e.message }));
+    return true;
+  }
+  if (msg.tipo === 'wpp_update_label') {
+    enviarParaPagina({ tipoMensagem: 'wpp_update_label', dados: msg.dados })
       .then(r => responder(r))
       .catch(e => responder({ sucesso: false, erro: e.message }));
     return true;
@@ -113,7 +131,7 @@ chrome.runtime.onMessage.addListener((msg, _, responder) => {
  * de automação saiba como responder mensagens recebidas.
  */
 function sincronizarConfigAutomacao() {
-  chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers', 'ups_config_horario', 'ups_config_regras'], (res) => {
+  chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers', 'ups_config_horario', 'ups_config_regras', 'ups_config_flows'], (res) => {
     window.postMessage({
       origem: 'CONTENT_SCRIPT',
       msgId: Date.now().toString(),
@@ -137,6 +155,12 @@ function sincronizarConfigAutomacao() {
       msgId: Date.now().toString() + 'R',
       tipoMensagem: 'set_config_regras',
       dados: res.ups_config_regras || null
+    }, '*');
+    window.postMessage({
+      origem: 'CONTENT_SCRIPT',
+      msgId: Date.now().toString() + 'F',
+      tipoMensagem: 'set_config_flows',
+      dados: res.ups_config_flows || []
     }, '*');
     window.postMessage({
       origem: 'CONTENT_SCRIPT',
@@ -206,14 +230,18 @@ window.addEventListener('message', async (ev) => {
       sincronizarConfigAutomacao();
       sincronizarConfigPrivacidade();
     }
-    // ── BULK: Progresso e conclusão — relay pro Painel via chrome.runtime ──
+    //   BULK: Progresso e conclusão — relay pro Painel via chrome.runtime  
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'bulk_progresso') {
       chrome.runtime.sendMessage({ tipo: 'bulk_progresso', dados: ev.data.dados });
     }
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'bulk_concluido') {
       chrome.runtime.sendMessage({ tipo: 'bulk_concluido', dados: ev.data.dados });
     }
-    // ── CSP BYPASS PROXY PARA DOWNLOAD DE MÍDIAS ──
+    //   TELEMETRIA DE MÉTRICAS OMNICANAL  
+    if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'upsiden_metric_bg') {
+      chrome.runtime.sendMessage({ tipo: 'log_metric', evento: ev.data.evento, metadata: ev.data.metadata });
+    }
+    //   CSP BYPASS PROXY PARA DOWNLOAD DE MÍDIAS  
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'fetch_media_base64') {
        chrome.runtime.sendMessage({ tipo: 'fetch_media_base64_bg', url: ev.data.url }, (resposta) => {
           if (chrome.runtime.lastError) {
@@ -225,6 +253,10 @@ window.addEventListener('message', async (ev) => {
           }
        });
        return;
+    }
+    //   AGENDAMENTO PARA CRON JOB (FLOW RUNNER)
+    if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'schedule_bg_flow') {
+       chrome.runtime.sendMessage({ tipo: 'schedule_flow_task', task: ev.data.task });
     }
     // ── AUTOMATED CRM LOGGING ──
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'upsiden_interaction_log') {

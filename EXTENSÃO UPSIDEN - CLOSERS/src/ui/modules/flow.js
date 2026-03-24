@@ -165,9 +165,13 @@ class FlowEngine {
     if (this.zoomLabel) this.zoomLabel.textContent = `${Math.round(this.zoom * 100)}%`;
   }
 
-  saveFlow() {
+  async saveFlow() {
+    const btn = document.getElementById('flow-btn-save');
+    if (btn) btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:4px;display:inline-block;vertical-align:middle;"></div> Salvando...';
+
     const payload = {
-      id: 'flow_' + Date.now(),
+      id: this.currentFlowId || null,
+      name: this.currentFlowName || 'Novo Fluxo Automático',
       nodes: Object.values(this.nodes).map(n => ({
         id: n.id,
         type: n.type,
@@ -181,15 +185,58 @@ class FlowEngine {
       }))
     };
     
-    console.log('[Flow Builder] Arquitetura Salva:', JSON.stringify(payload, null, 2));
+    if (!payload.id) {
+       payload.id = 'flow_' + Date.now();
+       this.currentFlowId = payload.id;
+    }
     
-    if (typeof window.toast === 'function') {
-      window.toast('Progresso do fluxo salvo no estado local!', 'success');
-    } else {
-      alert('Fluxo salvo! Verifique o console.');
+    try {
+      if (window.FlowService) {
+        await window.FlowService.saveFlow(payload);
+        if (typeof window.toast === 'function') window.toast('Fluxo salvo com sucesso no banco de dados!', 'success');
+      } else {
+        console.warn('[Flow Builder] FlowService não encontrado. Print local:', payload);
+        if (typeof window.toast === 'function') window.toast('Progresso do fluxo salvo localmente!', 'success');
+      }
+    } catch (err) {
+      if (typeof window.toast === 'function') window.toast('Erro ao salvar fluxo: ' + err.message, 'error');
+    } finally {
+      if (btn) btn.innerHTML = 'Salvar Fluxo';
     }
     
     return payload;
+  }
+
+  loadFlow(flowData) {
+    this.nodesContainer.innerHTML = '';
+    this.edgesGroup.innerHTML = '';
+    if (this.dragLine) this.dragLine.style.display = 'none';
+    
+    this.nodes = {};
+    this.edges = [];
+    this.nodeCounter = 0;
+    this.edgeCounter = 0;
+    this.currentFlowId = flowData.id;
+    this.currentFlowName = flowData.name;
+    
+    if (flowData.nodes_json) {
+      flowData.nodes_json.forEach(n => {
+        // Find max ID sequence to restore counters
+        const numId = parseInt(n.id.replace('node_', '')) || 0;
+        if (numId > this.nodeCounter) this.nodeCounter = numId;
+        
+        this.createNode(n.type, n.position.x, n.position.y, n.id, n.data);
+      });
+    }
+    
+    if (flowData.edges_json) {
+      flowData.edges_json.forEach(e => {
+        const numId = parseInt(e.id.replace('edge_', '')) || 0;
+        if (numId > this.edgeCounter) this.edgeCounter = numId;
+        
+        this.createEdge(e.source, e.target, e.id);
+      });
+    }
   }
 
   /* ═══ 2. PALETTE DRAG & DROP ══════════════════════════════════ */
@@ -222,9 +269,8 @@ class FlowEngine {
   }
 
   /* ═══ 3. NODE CREATION & DRAGGING ═════════════════════════════ */
-  createNode(type, x, y) {
-    this.nodeCounter++;
-    const id = `node_${this.nodeCounter}`;
+  createNode(type, x, y, forceId = null, initialData = {}) {
+    const id = forceId || `node_${++this.nodeCounter}`;
     
     const titles = {
       'trigger': '⚡ Gatilho Manual',
@@ -259,9 +305,27 @@ class FlowEngine {
     }
 
     this.nodesContainer.appendChild(el);
-    this.nodes[id] = { id, type, x, y, el, data: {} };
+    this.nodes[id] = { id, type, x, y, el, data: initialData };
+
+    // Set initial preview if properties exist
+    if (initialData && Object.keys(initialData).length > 0) {
+       this.updateNodePreview(id, initialData);
+    }
 
     this.bindNodeInteractions(id, el);
+  }
+
+  updateNodePreview(id, data) {
+    const node = this.nodes[id];
+    if (!node) return;
+    const preview = node.el.querySelector('.node-content-preview');
+    if (!preview) return;
+    
+    if (node.type === 'message' && data.text) preview.textContent = data.text;
+    if (node.type === 'audio' && data.audioId) preview.textContent = data.audioName || 'Áudio ' + data.audioId;
+    if ((node.type === 'trigger' || node.type === 'keyword') && data.keyword) preview.textContent = data.keyword;
+    if (node.type === 'delay' && data.seconds) preview.textContent = data.seconds + 's';
+    if (node.type === 'condition' && data.tag) preview.textContent = 'Tag: ' + data.tag;
   }
 
   bindNodeInteractions(id, el) {
@@ -371,6 +435,7 @@ class FlowEngine {
     } else if (node.type === 'audio') {
       document.getElementById('fp-audio-select').addEventListener('change', (e) => {
         const title = e.target.options[e.target.selectedIndex].text;
+        node.data.audioName = title; // save name too
         this.updateNodeData(id, 'audioId', e.target.value, title);
       });
     } else if (node.type === 'trigger' || node.type === 'keyword') {
@@ -405,11 +470,10 @@ class FlowEngine {
   }
 
   /* ═══ 5. EDGE CONNECTIONS (BEZIER MATH) ═══════════════════════ */
-  createEdge(sourceId, targetId) {
+  createEdge(sourceId, targetId, forceId = null) {
     if (this.edges.some(e => e.source === sourceId && e.target === targetId)) return; // Prevent duplicate
     
-    this.edgeCounter++;
-    const id = `edge_${this.edgeCounter}`;
+    const id = forceId || `edge_${++this.edgeCounter}`;
     
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute('id', id);

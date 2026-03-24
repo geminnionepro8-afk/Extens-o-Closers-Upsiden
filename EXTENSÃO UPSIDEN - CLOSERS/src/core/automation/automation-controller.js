@@ -16,7 +16,8 @@ class AutomationController {
     triggers: [],
     followups: [],
     horario: null,
-    regras_globais: null
+    regras_globais: null,
+    flows: []
   };
   
   static chatsSaudados = new Set();
@@ -32,6 +33,7 @@ class AutomationController {
     if (payload.followups !== undefined) this.config.followups = payload.followups;
     if (payload.horario !== undefined) this.config.horario = payload.horario;
     if (payload.regras_globais !== undefined) this.config.regras_globais = payload.regras_globais;
+    if (payload.flows !== undefined) this.config.flows = payload.flows;
   }
 
   /**
@@ -101,7 +103,24 @@ class AutomationController {
     const chatId = (msg.id && msg.id.remote) || msg.from || (msg.chatId && msg.chatId._serialized) || msg.chatId;
     const textoRecebido = (msg.body || msg.text || msg.content || '').trim().toLowerCase();
 
-    // 1. Processar Triggers de Palavra-chave
+    // 0. Processar Fluxos Visuais (Flow Builder)
+    if (this.config.flows && this.config.flows.length > 0 && textoRecebido.length > 0) {
+       for (const flow of this.config.flows) {
+           if (flow.is_active === false) continue;
+           const startNodes = (flow.nodes_json || []).filter(n => n.type === 'trigger' || n.type === 'keyword');
+           for (const node of startNodes) {
+               if ((node.type === 'keyword' || node.type === 'trigger') && node.data?.keyword && textoRecebido.includes(node.data.keyword.toLowerCase())) {
+                   if (window.FlowRunner) {
+                       console.log(`[AutomationController] Encaminhando mensagem para o FlowRunner (Fluxo: ${flow.name})`);
+                       window.FlowRunner.startFlow(flow, chatId, node.data.keyword);
+                       return; // Para tudo e deixa o FlowRunner assumir a conversa
+                   }
+               }
+           }
+       }
+    }
+
+    // 1. Processar Triggers de Palavra-chave (Clássicos)
     if (this.config.triggers.length > 0 && textoRecebido.length > 0) {
       for (const trig of this.config.triggers) {
         if (!trig.palavra) continue;

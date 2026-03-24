@@ -6,6 +6,7 @@
   <title>Upsiden - Painel</title>
   <link rel="icon" href="../../../public/icons/icone48.png" type="image/png">
   <link rel="stylesheet" href="../styles/painel.css">
+  <script src="theme-init.js"></script>
 </head>
 <body>
   <!-- Loading -->
@@ -34,8 +35,9 @@
 
       <div class="sidebar-brand">
         <div class="brand-icon">
-          <img src="../../../public/icons/up_logo_branca.png" alt="Upsiden" onerror="this.src='../../../public/icons/icone48.png'" class="brand-logo-full">
-          <img src="../../../public/icons/up_logo_branca.png" alt="U" class="brand-logo-mini">
+          <img src="../../../public/icons/up_logo_branca.png" alt="Upsiden" class="brand-logo-full dark-logo">
+          <img src="../../../public/icons/upsiden_logo.png" alt="Upsiden" class="brand-logo-full light-logo">
+          <img src="../../../public/icons/icone128.png" alt="U" class="brand-logo-mini">
         </div>
         <span class="brand-name">Upsiden</span>
         <!-- Toggle Button -->
@@ -109,12 +111,12 @@
 
         <div class="nav-section-label"><span>Ferramentas</span></div>
         <button class="nav-item" data-section="agendamentos" title="Agendamentos & Calendário">
-          <div class="nav-icon-wrap" style="background: var(--accent-dim); border-color: var(--accent-glow);">
-            <svg class="nav-icon" viewBox="0 0 24 24" style="stroke: #00e676;">
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
           </div>
-          <span class="nav-label" style="color: var(--text-primary); font-weight: 500;">Calendário de Envios</span>
+          <span class="nav-label">Calendário de Envios</span>
         </button>
         <button class="nav-item" data-section="crm" title="CRM / Funil">
           <div class="nav-icon-wrap">
@@ -124,21 +126,21 @@
           </div>
           <span class="nav-label">CRM / Funil</span>
         </button>
-        <button class="nav-item" data-section="automacoes" title="Automacoes Classicas">
+        <button class="nav-item" data-section="automacoes" title="Automações Clássicas">
           <div class="nav-icon-wrap">
             <svg class="nav-icon" viewBox="0 0 24 24">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
           </div>
-          <span class="nav-label">Automacoes Classicas</span>
+          <span class="nav-label">Automações Clássicas</span>
         </button>
-        <button class="nav-item" data-section="flow" title="Automacao Visual (Flow Builder)">
-          <div class="nav-icon-wrap" style="background: var(--accent-dim); border-color: var(--accent-glow);">
-            <svg class="nav-icon" viewBox="0 0 24 24" style="stroke: var(--accent);">
+        <button class="nav-item" data-section="flow" title="Automação Visual (Flow Builder)">
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
             </svg>
           </div>
-          <span class="nav-label" style="color: var(--text-primary); font-weight: 500;">Automacao Visual</span>
+          <span class="nav-label">Automação Visual</span>
         </button>
         <button class="nav-item" data-section="campanhas" title="Campanhas">
           <div class="nav-icon-wrap">
@@ -149,14 +151,14 @@
           <span class="nav-label">Campanhas</span>
         </button>
 
-        <div class="nav-section-label"><span>Seguranca e Privacidade</span></div>
+        <div class="nav-section-label"><span>Segurança e Privacidade</span></div>
         <button class="nav-item" data-section="privacidade" title="Modo Fantasma & Blur">
-          <div class="nav-icon-wrap" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
-            <svg class="nav-icon" viewBox="0 0 24 24" style="stroke: #ef4444;">
+          <div class="nav-icon-wrap">
+            <svg class="nav-icon" viewBox="0 0 24 24">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
-          <span class="nav-label" style="color: var(--text-primary); font-weight: 500;">Privacidade & Blur</span>
+          <span class="nav-label">Privacidade & Blur</span>
         </button>
 
         <div class="nav-section-label" id="admin-section-label" style="display:none;"><span>Administracao</span></div>
@@ -211,6 +213,10 @@
           Notificacoes
         </button>
         <div class="ump-divider"></div>
+        <button class="ump-item" id="btn-toggle-theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          Alternar Tema (Claro/Escuro)
+        </button>
         <button class="ump-item ump-danger" id="btn-logout">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           Sair
@@ -243,10 +249,14 @@
 
   <script src="../../libs/supabase.min.js"></script>
   <script src="../../libs/supabase-config.js"></script>
+  <script src="../../libs/chart.min.js"></script>
+  <script src="../../libs/jspdf.min.js"></script>
+  <script src="../../libs/jspdf-autotable.min.js"></script>
   <script src="../../services/auth.service.js"></script>
   <script src="../../services/db.service.js"></script>
   <script src="../../services/storage.service.js"></script>
   <script src="../../services/metrics.service.js"></script>
+  <script src="../../services/flow.service.js"></script>
   <script src="painel-helpers.js"></script>
   <script src="painel-dashboard.js"></script>
   <script src="painel-biblioteca.js"></script>

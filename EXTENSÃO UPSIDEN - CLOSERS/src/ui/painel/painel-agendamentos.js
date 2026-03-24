@@ -52,14 +52,41 @@ window.renderAgendamentos = async function() {
            <span style="color:var(--accent);">✧</span> Programar Disparo
         </h2>
         
-        <div style="margin-top:20px;">
-          <label class="form-lbl">🎯 Contato ou WhatsApp ID</label>
-          <input type="text" id="agend-numero" placeholder="Ex: 5511999999999" class="upx-input">
+        <div style="margin-top:20px; display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+           <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text);"><input type="radio" name="agend-alvo" value="contato" checked> Contato Individual</label>
+           <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text);"><input type="radio" name="agend-alvo" value="grupo"> Grupo do WhatsApp</label>
+           <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:14px; color:var(--accent); font-weight:600;"><input type="radio" name="agend-alvo" value="status"> Status do WhatsApp</label>
         </div>
 
-        <div style="margin-top:16px;">
-          <label class="form-lbl">👤 Nome do Contato (Visor)</label>
-          <input type="text" id="agend-nome" placeholder="Ex: João Silva" class="upx-input">
+        <div id="wrapper-contato">
+          <div style="margin-top:8px;">
+            <label class="form-lbl">🎯 Contato ou WhatsApp ID</label>
+            <input type="text" id="agend-numero" placeholder="Ex: 5511999999999" class="upx-input">
+          </div>
+          <div style="margin-top:16px;">
+            <label class="form-lbl">👤 Nome do Contato (Visor)</label>
+            <input type="text" id="agend-nome" placeholder="Ex: João Silva" class="upx-input">
+          </div>
+        </div>
+
+        <div id="wrapper-grupo" style="display:none; margin-top:8px;">
+          <label class="form-lbl">👥 Selecione o Grupo</label>
+          <select id="agend-grupo-select" class="upx-input">
+            <option value="">Carregando grupos...</option>
+          </select>
+        </div>
+
+        <div id="wrapper-status" style="display:none; margin-top:8px;">
+          <label class="form-lbl">👁️ Privacidade do Status</label>
+          <select id="agend-status-privacy" class="upx-input">
+            <option value="contacts">Todos os Contatos (Padrão)</option>
+            <option value="contactBlacklist">Meus contatos, exceto...</option>
+            <option value="contactWhitelist">Compartilhar apenas com...</option>
+          </select>
+          <div id="wrapper-status-list" style="display:none; margin-top:12px;">
+            <label class="form-lbl">📝 Lista de Contatos (Ex: 55119.., 55118..)</label>
+            <input type="text" id="agend-status-list" placeholder="Números separados por vírgula" class="upx-input">
+          </div>
         </div>
 
         <div style="margin-top:16px;">
@@ -89,6 +116,11 @@ window.renderAgendamentos = async function() {
         <div id="agend-conteudo-wrapper" style="margin-top:16px;">
           <textarea id="agend-texto" rows="4" placeholder="Escreva sua mensagem humanizada aqui..." class="upx-input" style="resize:vertical;"></textarea>
           
+          <div id="agend-bg-wrapper" style="display:none; margin-top:10px; align-items:center; gap:12px;">
+            <label class="form-lbl" style="margin:0;">🎨 Cor de Fundo do Status:</label>
+            <input type="color" id="agend-status-bg" value="#ff4d00" style="cursor:pointer; background:none; border:none; width:36px; height:36px; padding:0; border-radius:6px;">
+          </div>
+
           <div id="agend-media-wrapper" style="display:none; margin-top:10px;">
             <label class="btn btn-secondary" style="width:100%; display:block; text-align:center; cursor:pointer; padding: 12px; border: 1px dashed var(--accent);">
               📁 Selecionar Arquivo Destino
@@ -109,6 +141,13 @@ window.renderAgendamentos = async function() {
         
         <!-- Bloco do Calendário Interativo -->
         <div class="panel-card" style="padding:24px; overflow:hidden;">
+           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <select id="filtro-visao-cal" class="upx-input" style="max-width:260px; padding:6px 10px; font-size:13px;" onchange="refreshAgendamentosList()">
+                 <option value="todos">Visão Geral (Tudo)</option>
+                 <option value="contatos">Apenas Contatos Privados</option>
+                 <option value="grupos">Apenas Grupos WhatsApp</option>
+              </select>
+           </div>
            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
               <h2 style="margin:0;">Minha Visão do Calendário</h2>
               <div style="display:flex; gap:10px;">
@@ -137,6 +176,59 @@ window.renderAgendamentos = async function() {
   `;
 
   // --- Lógicas Visuais Formulário ---
+  const radiosAlvo = document.querySelectorAll('input[name="agend-alvo"]');
+  const wrapperContato = document.getElementById('wrapper-contato');
+  const wrapperGrupo = document.getElementById('wrapper-grupo');
+  const wrapperStatus = document.getElementById('wrapper-status');
+  const grupoSelect = document.getElementById('agend-grupo-select');
+  const bgWrapper = document.getElementById('agend-bg-wrapper');
+  
+  radiosAlvo.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+       wrapperContato.style.display = 'none';
+       wrapperGrupo.style.display = 'none';
+       if (wrapperStatus) wrapperStatus.style.display = 'none';
+       if (bgWrapper) bgWrapper.style.display = 'none';
+
+       if (e.target.value === 'grupo') {
+          wrapperGrupo.style.display = 'block';
+          if (grupoSelect.options.length <= 1) {
+             grupoSelect.innerHTML = '<option value="">Buscando grupos ativos no WhatsApp...</option>';
+             chrome.runtime.sendMessage({ tipo: 'get_groups' }, (res) => {
+                const alvoSelect = document.getElementById('agend-grupo-select');
+                if (!alvoSelect) return;
+
+                if (res && res.sucesso && res.grupos) {
+                   alvoSelect.innerHTML = '<option value="">-- Selecione o Grupo --</option>';
+                   res.grupos.forEach(g => {
+                      const opt = document.createElement('option');
+                      opt.value = g.id;
+                      opt.textContent = g.nome;
+                      alvoSelect.appendChild(opt);
+                   });
+                } else {
+                   alvoSelect.innerHTML = '<option value="">Nenhum grupo encontrado ou WPP fechado.</option>';
+                }
+             });
+          }
+       } else if (e.target.value === 'status') {
+          if (wrapperStatus) wrapperStatus.style.display = 'block';
+          if (document.getElementById('agend-tipo').value === 'texto' && bgWrapper) bgWrapper.style.display = 'flex';
+       } else {
+          wrapperContato.style.display = 'block';
+       }
+    });
+  });
+
+  const privacySelect = document.getElementById('agend-status-privacy');
+  const statusListWrapper = document.getElementById('wrapper-status-list');
+  if (privacySelect) {
+     privacySelect.addEventListener('change', (e) => {
+        if (e.target.value === 'contacts') statusListWrapper.style.display = 'none';
+        else statusListWrapper.style.display = 'block';
+     });
+  }
+
   const tipoSelect = document.getElementById('agend-tipo');
   const txtArea = document.getElementById('agend-texto');
   const midiaWrap = document.getElementById('agend-media-wrapper');
@@ -148,15 +240,19 @@ window.renderAgendamentos = async function() {
 
   tipoSelect.addEventListener('change', (e) => {
     const v = e.target.value;
+    const isStatus = document.querySelector('input[name="agend-alvo"]:checked').value === 'status';
+
     if (v === 'texto') {
        txtArea.style.display = 'block';
        midiaWrap.style.display = 'none';
        fileInp.value = ''; base64File = null;
+       if (isStatus && bgWrapper) bgWrapper.style.display = 'flex';
     } else {
        txtArea.style.display = 'none';
        midiaWrap.style.display = 'block';
        fileInp.value = ''; base64File = null;
        fileLbl.textContent = 'Nenhum arquivo processado.';
+       if (bgWrapper) bgWrapper.style.display = 'none';
     }
   });
 
@@ -174,12 +270,31 @@ window.renderAgendamentos = async function() {
 
   // --- Função Enviar pro Background (Chrome Alarms) ---
   document.getElementById('btn-salvar-agendamento').addEventListener('click', () => {
-     const num = document.getElementById('agend-numero').value.trim();
-     let numParsed = num.replace(/\D/g, '');
-     if (!numParsed) return typeof toast === 'function' && toast('Número inválido!', 'error');
-     
-     // Sufixo de compatibilidade WPP
-     if (!numParsed.includes('@')) numParsed += '@c.us';
+     const alvoAtivo = document.querySelector('input[name="agend-alvo"]:checked').value;
+     let numParsed = '';
+     let nomeNomeParsed = '';
+
+     if (alvoAtivo === 'contato') {
+        const num = document.getElementById('agend-numero').value.trim();
+        numParsed = num.replace(/\D/g, '');
+        if (!numParsed) return typeof toast === 'function' && toast('Número inválido!', 'error');
+        if (!numParsed.includes('@')) numParsed += '@c.us';
+        nomeNomeParsed = document.getElementById('agend-nome').value.trim() || numParsed.split('@')[0];
+     } else if (alvoAtivo === 'grupo') {
+        const selG = document.getElementById('agend-grupo-select');
+        if (!selG.value) return typeof toast === 'function' && toast('Selecione um grupo!', 'error');
+        numParsed = selG.value;
+        nomeNomeParsed = selG.options[selG.selectedIndex].text;
+     } else if (alvoAtivo === 'status') {
+        const pType = document.getElementById('agend-status-privacy').value;
+        const rawList = document.getElementById('agend-status-list').value;
+        if (pType !== 'contacts' && !rawList.trim()) return typeof toast === 'function' && toast('Insira os contatos para a Privacidade!', 'error');
+        const pList = rawList.split(',').map(n => n.replace(/\D/g, '')).filter(n => n).join(',');
+        const bgColor = document.getElementById('agend-status-bg').value;
+        
+        numParsed = `status@broadcast|${pType}|${pList}|${bgColor}`;
+        nomeNomeParsed = 'Status do WhatsApp (Story)';
+     }
 
      const dt = document.getElementById('agend-data').value;
      if (!dt) return typeof toast === 'function' && toast('Selecione Data e Hora', 'error');
@@ -194,7 +309,7 @@ window.renderAgendamentos = async function() {
      const payload = {
         id: Date.now().toString() + Math.floor(Math.random() * 1000),
         chatId: numParsed,
-        nomeContato: document.getElementById('agend-nome').value.trim() || numParsed.split('@')[0],
+        nomeContato: nomeNomeParsed,
         when: whenMs,
         tipo: tp,
         conteudo: txtArea.value.trim(),
@@ -290,7 +405,41 @@ async function refreshAgendamentosList() {
   // RENDERIZAÇÃO
   chrome.storage.local.get('ups_agendamentos', (res) => {
     const agends = res.ups_agendamentos || {};
-    const items = Object.values(agends).sort((a,b) => a.when - b.when);
+    let items = Object.values(agends).sort((a,b) => a.when - b.when);
+
+    // Dynamic Options Extraction for Groups
+    const gruposUnicos = new Map();
+    items.forEach(i => {
+       if (i.chatId && i.chatId.includes('@g.us')) gruposUnicos.set(i.chatId, i.nomeContato);
+    });
+
+    const fSelect = document.getElementById('filtro-visao-cal');
+    if (fSelect) {
+       const curVal = fSelect.value;
+       let opts = `
+         <option value="todos">Visão Geral (Tudo)</option>
+         <option value="contatos">Apenas Contatos Privados</option>
+         <option value="grupos">Todos os Grupos Agendados</option>
+         <option value="status">Apenas Status (Stories)</option>
+       `;
+       for (const [idG, nomG] of gruposUnicos.entries()) {
+          opts += `<option value="${idG}">Ver: ${nomG}</option>`;
+       }
+       fSelect.innerHTML = opts;
+       if ([...fSelect.options].some(o => o.value === curVal)) fSelect.value = curVal;
+    }
+
+    const filtroVal = fSelect?.value || 'todos';
+    
+    if (filtroVal === 'contatos') {
+       items = items.filter(i => i.chatId && !i.chatId.includes('@g.us') && !i.chatId.startsWith('status@'));
+    } else if (filtroVal === 'grupos') {
+       items = items.filter(i => i.chatId && i.chatId.includes('@g.us'));
+    } else if (filtroVal === 'status') {
+       items = items.filter(i => i.chatId && i.chatId.startsWith('status@'));
+    } else if (filtroVal !== 'todos') {
+       items = items.filter(i => i.chatId === filtroVal);
+    }
     
     // --- 1. A Lista Timeline Exata ---
     const listCont = document.getElementById('lista-agendamentos');

@@ -149,6 +149,15 @@ async function initPainel() {
       window.location.reload();
     });
 
+    // Toggle Theme
+    document.getElementById('btn-toggle-theme')?.addEventListener('click', () => {
+      closeUserMenu();
+      const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+      const nxt = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nxt);
+      localStorage.setItem('upsiden_theme', nxt);
+    });
+
     console.log(P, 'Painel pronto!');
     navigate('dashboard');
 

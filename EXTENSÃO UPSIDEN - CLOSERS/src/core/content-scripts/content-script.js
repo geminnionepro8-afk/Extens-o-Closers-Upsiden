@@ -27,6 +27,7 @@ console.log(CTX, '=== CONTENT SCRIPT BOOT ===', new Date().toISOString());
 function injetarScripts() {
   const scriptsToInject = [
     'src/core/utils/helper.js',
+    'src/core/page-scripts/flow-runner.js',
     'src/core/automation/automation-controller.js',
     'src/core/page-scripts/wpp-engine.js'
   ];
@@ -36,6 +37,10 @@ function injetarScripts() {
     const s = document.createElement('script');
     s.src = chrome.runtime.getURL(scriptsToInject[index]);
     s.onload = () => injectSequential(index + 1);
+    s.onerror = (e) => {
+        console.error(CTX, 'Failed to inject script:', s.src, e);
+        injectSequential(index + 1); // Continua mesmo se algo falhar
+    };
     document.documentElement.appendChild(s);
   };
   
