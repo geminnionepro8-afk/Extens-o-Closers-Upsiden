@@ -322,14 +322,14 @@ window.showWppContactModal = function(contactId, nome, fotoUrl) {
       `<img src="${fotoUrl}" style="width:80px;height:80px;border-radius:50%;margin:0 auto 16px;object-fit:cover;border:2px solid var(--accent);box-shadow:0 8px 16px rgba(255,98,0,0.2);">` :
       `<div style="width:80px;height:80px;border-radius:50%;background:rgba(255, 98, 0, 0.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:bold;margin:0 auto 16px;box-shadow:0 8px 16px rgba(255,98,0,0.2);">${(nome||'C').charAt(0).toUpperCase()}</div>`;
 
-  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:400px; border-radius:16px; backdrop-filter:blur(20px); background:rgba(17,27,33,0.95); border: 1px solid var(--border);">
+  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:400px; border-radius:16px; backdrop-filter:blur(20px); background:var(--bg-secondary); border: 1px solid var(--border);">
     <div class="modal-header">
        <h3>👤 Perfil Live do Zap</h3>
        <button class="btn-ghost" data-click="closeModal()"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
     </div>
     <div class="modal-body" style="text-align:center;">
        ${hgFoto}
-       <h2 style="margin-bottom:8px;font-size:22px;color:var(--text);">${nome}</h2>
+       <h2 style="margin-bottom:8px;font-size:22px;color:var(--text-primary);">${nome}</h2>
        <p style="color:var(--text-muted);font-size:15px;margin-bottom:24px;font-family:monospace;">📱 ${fone}</p>
        
        <button class="btn btn-primary" style="width:100%; justify-content:center;font-weight:bold;padding:12px;" data-click="openWppChatSync('${fone}')">
@@ -411,7 +411,7 @@ function showLeadEditModal(lead) {
   // Interação Histórico (Mock UI for now, logic below)
   const historyLink = leadId ? `<button data-click="showLeadHistory('${leadId}')" class="btn btn-secondary" style="font-size:12px; padding:4px 8px; margin-left:auto;">📜 Ver Histórico de Interações</button>` : '';
 
-  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:540px; border-radius:16px; backdrop-filter:blur(20px); background:rgba(17,27,33,0.95); border: 1px solid var(--border);">
+  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:540px; border-radius:16px; backdrop-filter:blur(20px); background:var(--bg-secondary); border: 1px solid var(--border);">
     <div class="modal-header" style="display:flex; align-items:center;">
        <h3>${lead ? '📋 Informações do Negócio' : 'Novo Lead'}</h3>
        ${historyLink}
@@ -427,7 +427,7 @@ function showLeadEditModal(lead) {
          </div>
          <div class="form-group" style="flex:1;">
             <label class="form-label">Multi-Tags Form (Aperte CTRL)</label>
-            <select class="form-input" id="lead-tag" multiple style="height:64px; font-size:12px; background:var(--bg-card);">
+            <select class="form-input" id="lead-tag" multiple style="height:64px; font-size:12px; background:var(--bg-card); color:var(--text-primary);">
                ${tagOptions}
             </select>
          </div>
@@ -513,7 +513,7 @@ window.showCRMManagerModal = function() {
     </div>
   `).join('');
 
-  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:540px; border-radius:16px; backdrop-filter:blur(20px); background:rgba(17,27,33,0.95); border: 1px solid var(--border);">
+  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:540px; border-radius:16px; backdrop-filter:blur(20px); background:var(--bg-secondary); border: 1px solid var(--border);">
     <div class="modal-header"><h3>⚙️ Configuração do Funil Upsiden</h3><button class="btn-ghost" data-click="closeModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
     <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
        <h4 style="margin-bottom:10px; color:var(--text-secondary);">1. Editar Fases do Funil (Colunas)</h4>
@@ -572,10 +572,10 @@ window.showLeadHistory = async function(leadId) {
   const existing = document.getElementById('history-mini-modal'); if(existing) existing.remove();
   const div = document.createElement('div');
   div.id = 'history-mini-modal';
-  div.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:90%; max-width:500px; max-height:80vh; background:#0B141A; border:1px solid var(--border); border-radius:12px; z-index:10000; display:flex; flex-direction:column; box-shadow:0 12px 40px rgba(0,0,0,0.8);';
+  div.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:90%; max-width:500px; max-height:80vh; background:var(--bg-secondary); border:1px solid var(--border); border-radius:12px; z-index:10000; display:flex; flex-direction:column; box-shadow:0 12px 40px rgba(0,0,0,0.8);';
   div.innerHTML = `<div style="padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
     <h3 style="margin:0;">📜 Histórico Passivo WPP</h3>
-    <button data-click="closeHistoryModal()" style="background:none; border:none; color:white; cursor:pointer;">✖</button>
+    <button data-click="closeHistoryModal()" style="background:none; border:none; color:var(--text-primary); cursor:pointer;">✖</button>
   </div><div id="h-body" style="padding:16px; overflow-y:auto; flex:1; font-size:13px; color:var(--text-secondary);"><div style="text-align:center;">Buscando logs de disparo no Servidor...</div></div>`;
   document.body.appendChild(div);
 
@@ -588,7 +588,7 @@ window.showLeadHistory = async function(leadId) {
      hub.innerHTML = data.map(log => `
        <div style="margin-bottom:12px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; border-left: 2px solid var(--accent);">
           <div style="font-size:11px; color:#667781; margin-bottom:4px;">${new Date(log.criado_em).toLocaleString('pt-BR')}</div>
-          <div style="color:white; font-weight:600; margin-bottom:4px;">${log.tipo.toUpperCase()}</div>
+          <div style="color:var(--text-primary); font-weight:600; margin-bottom:4px;">${log.tipo.toUpperCase()}</div>
           <div>${log.descricao}</div>
        </div>
      `).join('');

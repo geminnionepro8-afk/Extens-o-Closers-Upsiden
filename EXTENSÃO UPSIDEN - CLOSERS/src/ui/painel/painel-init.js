@@ -14,7 +14,7 @@
 
 const P = '[Painel]';
 let currentSection = 'dashboard';
-let userData = { userId: null, nome: '', email: '', isAdmin: false };
+let userData = { userId: null, nome: '', email: '', isAdmin: false, avatar_url: '' };
 let painelData = { audios: [], documentos: [], midias: [], templates: [], leads: [], membros: [] };
 
 // === TOAST ===
@@ -49,6 +49,7 @@ async function initPainel() {
     const profile = await UpsidenAuth.getProfile();
     userData.nome = profile?.nome || profile?.email?.split('@')[0] || '';
     userData.email = profile?.email || '';
+    userData.avatar_url = profile?.avatar_url || '';
 
     // UI - user info
     document.getElementById('user-display-name').textContent = userData.nome;
@@ -141,6 +142,12 @@ async function initPainel() {
     if (umpName) umpName.textContent = userData.nome || 'Usuario';
     if (umpEmail) umpEmail.textContent = userData.email || '';
     if (umpAvatar) umpAvatar.textContent = (userData.nome[0] || 'U').toUpperCase();
+
+    // Perfil (inside popup)
+    document.getElementById('btn-nav-perfil')?.addEventListener('click', () => {
+      closeUserMenu();
+      navigate('perfil');
+    });
 
     // Logout (inside popup)
     document.getElementById('btn-logout')?.addEventListener('click', async () => {

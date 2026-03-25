@@ -35,10 +35,13 @@
 
       <div class="sidebar-brand">
         <div class="brand-icon">
-          <!-- Logo cheio (Texto + Símbolo Branco longo) para o modo expandido -->
-          <img src="../../../public/icons/upsiden_logo.png" alt="Upsiden" class="brand-logo-full">
-          <!-- Logo condensado (Apenas UP) para o modo fechado -->
-          <img src="../../../public/icons/up_logo_branca.png" alt="UP" class="brand-logo-mini">
+          <!-- Logos Full (Sidebar Aberta) -->
+          <img src="../../../public/icons/upsiden_logo.png" alt="Upsiden" class="brand-logo-full dark-logo">
+          <img src="../../../public/icons/upsiden_logo_light.png" alt="Upsiden" class="brand-logo-full light-logo">
+          
+          <!-- Logos Mini (Sidebar Fechada) -->
+          <img src="../../../public/icons/up_logo_branca.png" alt="UP" class="brand-logo-mini dark-logo">
+          <img src="../../../public/icons/up_logo_light.png" alt="UP" class="brand-logo-mini light-logo">
         </div>
         <!-- O Nome escrito isolado ao lado do ícone foi removido pois a nova logo já tem a marca textual -->
         <!-- Toggle Button -->
@@ -169,7 +172,7 @@
 
       <!-- Sidebar Footer / User -->
       <div class="sidebar-footer" id="sidebar-footer">
-        <button class="user-card" id="btn-user-menu" title="Menu do usuario">
+        <button class="user-card" id="btn-user-menu">
           <div class="user-avatar" id="user-avatar">U</div>
           <div class="user-info">
             <div class="user-name" id="user-display-name">Usuario</div>
@@ -193,7 +196,7 @@
         </div>
       </div>
       <div class="user-menu-items">
-        <button class="ump-item">
+        <button class="ump-item" id="btn-nav-perfil">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Perfil
         </button>
@@ -261,6 +264,7 @@
   <script src="painel-privacidade.js"></script>
   <script src="painel-contatos.js"></script>
   <script src="painel-admin.js"></script>
+  <script src="painel-perfil.js"></script>
   <script src="painel-init.js"></script>
 </body>
 </html>

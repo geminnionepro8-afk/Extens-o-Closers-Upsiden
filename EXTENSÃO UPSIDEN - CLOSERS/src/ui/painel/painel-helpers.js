@@ -28,7 +28,7 @@ function navigate(section) {
   if (active) active.classList.add('active');
 
   const titles = {
-    dashboard: 'Dashboard', audios: 'Biblioteca de Áudios', documentos: 'Documentos',
+    perfil: 'Meu Perfil', dashboard: 'Dashboard', audios: 'Biblioteca de Áudios', documentos: 'Documentos',
     midias: 'Mídias', templates: 'Templates de Texto', crm: 'CRM / Funil',
     agendamentos: 'Calendário de Envios', automacoes: 'Automações Clássicas', flow: 'Automação Visual (Flow)', campanhas: 'Campanhas de Envio', contatos: 'Gestão de Contatos', admin: 'Gestão da Equipe', config: 'Configurações',
     privacidade: 'Privacidade & Segurança'
@@ -58,6 +58,7 @@ function renderSection(section) {
     case 'contatos': return renderContatos(c);
     case 'privacidade': return renderPrivacidade(c);
     case 'admin': return renderAdmin(c);
+    case 'perfil': return renderPerfil(c);
     default: c.innerHTML = `<div class="empty-state"><div class="empty-icon">🚧</div><h3>Em desenvolvimento</h3><p>Esta seção estará disponível em breve.</p></div>`;
   }
 }

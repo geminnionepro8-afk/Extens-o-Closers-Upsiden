@@ -55,7 +55,7 @@ async function renderDashboard(c) {
     `;
 
     const rankingRows = data.ranking.length > 0 ? data.ranking.map((r, i) => `
-      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;">
+      <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
         <td style="padding: 12px; font-weight: 500;">
           ${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)}
         </td>
@@ -74,9 +74,9 @@ async function renderDashboard(c) {
     c.innerHTML = `
       <style>
         .dash-icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        .chart-box { background: rgba(20, 20, 25, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); backdrop-filter: blur(10px); }
+        .chart-box { background: var(--chart-bg); border: 1px solid var(--chart-border); border-radius: 12px; padding: 20px; box-shadow: var(--shadow-md); backdrop-filter: blur(10px); }
         .ranking-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .ranking-table th { text-align: left; padding: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .ranking-table th { text-align: left; padding: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--chart-border); }
         .dash-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .export-btn { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-glow); padding: 8px 16px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 13px; transition: all 0.2s; }
         .export-btn:hover { background: var(--accent); color: #fff; transform: translateY(-1px); }
@@ -149,8 +149,9 @@ async function renderDashboard(c) {
     // Render Charts
     setTimeout(() => {
       if (window.Chart) {
-        Chart.defaults.color = 'rgba(255,255,255,0.6)';
-        Chart.defaults.font.family = "'Inter', sans-serif";
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        Chart.defaults.color = isLight ? '#4A5568' : 'rgba(255,255,255,0.6)';
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 
         const ctxActivity = document.getElementById('activityChart');
         if (ctxActivity) {
@@ -179,7 +180,7 @@ async function renderDashboard(c) {
               maintainAspectRatio: false,
               plugins: { legend: { display: false } },
               scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false } },
+                y: { beginAtZero: true, grid: { color: isLight ? '#E2E8F0' : 'rgba(255,255,255,0.05)' }, border: { display: false } },
                 x: { grid: { display: false }, border: { display: false } }
               }
             }
@@ -194,7 +195,7 @@ async function renderDashboard(c) {
               labels: ['Convertidos', 'Pendentes'],
               datasets: [{
                 data: [data.conversionRate, 100 - data.conversionRate],
-                backgroundColor: ['#e91e63', 'rgba(255,255,255,0.05)'],
+                backgroundColor: ['#e91e63', isLight ? '#EDF2F7' : 'rgba(255,255,255,0.05)'],
                 borderWidth: 0,
                 hoverOffset: 2
               }]

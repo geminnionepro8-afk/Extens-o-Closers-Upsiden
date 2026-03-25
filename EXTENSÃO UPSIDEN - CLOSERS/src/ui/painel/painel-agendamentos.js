@@ -14,9 +14,9 @@ window.renderAgendamentos = async function() {
       .upx-input {
         width: 100%;
         box-sizing: border-box;
-        background: var(--bg-input, #1a1a24);
-        border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-        color: var(--text-primary, #fff);
+        background: var(--bg-input);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
         padding: 12px 14px;
         border-radius: 10px;
         font-size: 14px;
@@ -29,10 +29,10 @@ window.renderAgendamentos = async function() {
         box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.15);
       }
       .upx-input::placeholder {
-        color: var(--text-muted, rgba(255, 255, 255, 0.4));
+        color: var(--text-muted);
       }
       .upx-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-        filter: invert(1);
+        filter: var(--calendar-filter, invert(1));
         cursor: pointer;
         opacity: 0.6;
         transition: 0.2s;
@@ -41,13 +41,13 @@ window.renderAgendamentos = async function() {
         opacity: 1;
       }
       .form-lbl {
-        display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary, #CBD5E1); font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase;
+        display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary); font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase;
       }
     </style>
     <div class="modulo-container" style="display:flex; gap:24px; min-height: 80vh; flex-wrap:wrap;">
       
       <!-- Coluna Esquerda: Novo Agendamento (Form) -->
-      <div class="panel-card" style="flex: 1; min-width: 320px; max-width: 400px; height:fit-content; border-color: rgba(255,77,0, 0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+      <div class="panel-card" style="flex: 1; min-width: 320px; max-width: 400px; height:fit-content; border: 1px solid var(--border); box-shadow: var(--shadow-md);">
         <h2 style="margin-top:0; border-bottom:1px solid var(--border); padding-bottom:14px; font-weight:800; font-size:20px; display:flex; align-items:center; gap:8px;">
            <span style="color:var(--accent);">✧</span> Programar Disparo
         </h2>
@@ -451,7 +451,7 @@ async function refreshAgendamentosList() {
         const icon = ai.tipo === 'texto' ? '📝' : ai.tipo === 'audio' ? '🎤' : '🖼️';
         const repet = ai.recorrencia === 'nenhuma' ? 'Apenas uma vez' : 'Regerado automáticamente';
         return `
-          <div style="background:var(--surface); padding:16px 20px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition:transform 0.2s;">
+          <div style="background:var(--bg-secondary); padding:16px 20px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition:transform 0.2s;">
             <div style="display:flex; flex-direction:column; gap:6px;">
               <span style="font-weight:700; color:var(--text-primary); font-size:16px;">${icon} Para: ${ai.nomeContato}</span>
               <span style="font-size:13px; color:var(--text-muted);">
@@ -499,7 +499,7 @@ async function refreshAgendamentosList() {
        
        calHTML += `
          <div style="
-            background:var(--surface); 
+            background:var(--bg-secondary); 
             border: 1px solid ${isToday ? 'var(--accent)' : 'var(--border)'}; 
             border-radius:6px; 
             min-height:75px; 
