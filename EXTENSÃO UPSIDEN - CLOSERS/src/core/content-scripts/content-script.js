@@ -35,7 +35,7 @@ function injetarScripts() {
   const injectSequential = (index) => {
     if (index >= scriptsToInject.length) return;
     const s = document.createElement('script');
-    s.src = chrome.runtime.getURL(scriptsToInject[index]);
+    s.src = chrome.runtime.getURL(scriptsToInject[index]) + '?v=' + Date.now();
     s.onload = () => injectSequential(index + 1);
     s.onerror = (e) => {
         console.error(CTX, 'Failed to inject script:', s.src, e);
@@ -59,7 +59,7 @@ function injetarWppConnect() {
   }
   console.log(CTX, 'Painel lateral do WA detectado. Injetando WPPConnect...');
   const s = document.createElement('script');
-  s.src = chrome.runtime.getURL('src/libs/wppconnect-wa.js');
+  s.src = chrome.runtime.getURL('src/libs/wppconnect-wa.js') + '?v=' + Date.now();
   s.onload = () => injetarScripts();
   document.documentElement.appendChild(s);
 }

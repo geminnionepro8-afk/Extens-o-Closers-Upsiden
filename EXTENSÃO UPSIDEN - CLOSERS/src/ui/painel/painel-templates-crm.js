@@ -214,15 +214,21 @@ async function renderSyncLabelsCRM(c) {
              <span style="display:flex;flex-direction:column;align-items:flex-end;"><span class="count">${lbl.items.length}</span></span>
            </div>
            <div class="kanban-cards wpp-sync-cards" data-label-id="${lbl.id}">`;
-         
          lbl.items.forEach(contato => {
             const foneTratado = contato.id.replace('@c.us', '').replace('@g.us', '');
             const nomeEscapado = (contato.nome || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
-            html += `<div class="kanban-card wpp-sync-card" draggable="true" data-click="showWppContactModal('${contato.id}', '${nomeEscapado}')" data-contact-id="${contato.id}" data-old-label-id="${lbl.id}" style="border-left: 3px solid ${corHex}; cursor: grab;">
-              <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                <div class="card-name" style="font-size:14px;font-weight:bold;">${contato.nome}</div>
+            const fotoUrlEscapada = contato.foto ? contato.foto.replace(/'/g, "\\'") : '';
+            
+            const avatarHtml = contato.foto ? 
+               `<img src="${contato.foto}" style="width:24px;height:24px;border-radius:50%;margin-right:8px;object-fit:cover;">` : 
+               `<div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.1);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:10px;margin-right:8px;font-weight:bold;">${(contato.nome||'C').charAt(0).toUpperCase()}</div>`;
+               
+            html += `<div class="kanban-card wpp-sync-card" draggable="true" data-click="showWppContactModal('${contato.id}', '${nomeEscapado}', '${fotoUrlEscapada}')" data-contact-id="${contato.id}" data-old-label-id="${lbl.id}" style="border-left: 3px solid ${corHex}; cursor: grab;">
+              <div style="display:flex;align-items:center;margin-bottom:6px;">
+                ${avatarHtml}
+                <div class="card-name" style="font-size:14px;font-weight:bold;line-height:1.2;">${contato.nome}</div>
               </div>
-              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:4px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted);">
                 <span>${foneTratado}</span>
                 <span title="Integração Nativa">🟢</span>
               </div>
@@ -246,8 +252,10 @@ function assignSyncKanbanDragDrop() {
 
   cards.forEach(card => {
     card.addEventListener('dragstart', e => {
-      e.dataTransfer.setData('contactId', card.dataset.contactId);
-      e.dataTransfer.setData('oldLabelId', card.dataset.oldLabelId);
+      e.dataTransfer.setData('text/plain', JSON.stringify({
+         contactId: card.dataset.contactId,
+         oldLabelId: card.dataset.oldLabelId
+      }));
       setTimeout(() => card.style.opacity = '0.5', 0);
     });
     card.addEventListener('dragend', () => card.style.opacity = '1');
@@ -266,49 +274,66 @@ function assignSyncKanbanDragDrop() {
       e.preventDefault();
       cardsContainer.style.background = 'transparent';
       
-      const contactId = e.dataTransfer.getData('contactId');
-      const oldLabelId = e.dataTransfer.getData('oldLabelId');
-      const newLabelId = cardsContainer.dataset.labelId;
+      const payloadStr = e.dataTransfer.getData('text/plain');
+      if (!payloadStr) return;
       
-      if (contactId && newLabelId && oldLabelId !== newLabelId) {
-         typeof toast === 'function' && toast('Trocando Etiqueta no WhatsApp...', 'info');
+      try {
+         const payload = JSON.parse(payloadStr);
+         const contactId = payload.contactId;
+         const oldLabelId = payload.oldLabelId;
+         const newLabelId = cardsContainer.dataset.labelId;
          
-         chrome.runtime.sendMessage({ 
-             tipo: 'wpp_update_label', 
-             dados: { contactId, oldLabelId, newLabelId } 
-         }, (res) => {
-             if (res && res.sucesso) {
-                 typeof toast === 'function' && toast('Etiqueta movida com sucesso!', 'success');
-                 renderSection('crm'); // Re-desenha com nova posicao direto do celular!
-             } else {
-                 const errStr = res && res.erro ? res.erro : 'Timeout/Desconhecido';
-                 typeof toast === 'function' && toast('Falha WPP: ' + errStr, 'error');
-             }
-         });
-      }
+         if (contactId && newLabelId && oldLabelId !== newLabelId) {
+            typeof toast === 'function' && toast(`Mapeado ID: ${contactId.substring(0,25)}... Transferindo!`, 'info');
+            
+            chrome.runtime.sendMessage({ 
+                tipo: 'wpp_update_label', 
+                dados: { contactId, oldLabelId, newLabelId } 
+            }, res => {
+                const toast = document.querySelector('.toast-root') ? window.addToast || window.toast : console.log;
+                if (res && res.sucesso) {
+                    typeof toast === 'function' && toast('Sincronização na Meta Concluída!', 'success');
+                    
+                    // Modifica os IDs localmente para o frontend acompanhar a mudança
+                    card.dataset.oldLabelId = newLabelId;
+                } else {
+                    alert("🚨 CRASH FATAL NO WA-JS DETECTADO 🚨\n\nPor favor, tire um PRINT desta tela ou copie o texto abaixo e mande pro Arquiteto:\n\n" + (res.erro || 'Erro Desconhecido'));
+                    
+                    // Reverte o card pro local de origem em caso de erro extremo na API
+                    const origemContainer = document.querySelector(`.kanban-cards[data-label-id="${oldLabelId}"]`);
+                    if (origemContainer) origemContainer.appendChild(card);
+                }
+            });
+         }
+      } catch(err) { console.error('Erro no parser do drag:', err); }
     });
   });
 }
 
-// Modal Rápido do Modo Sync
-window.showWppContactModal = function(contactId, nome) {
+// Modal Rápido do Modo Sync com Suporte a Foto Reais
+window.showWppContactModal = function(contactId, nome, fotoUrl) {
   const existing = document.querySelector('.modal-overlay'); if (existing) existing.remove();
   const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
   overlay.style.cssText = 'backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;';
   
-  const fone = contactId.replace('@c.us','').replace('@g.us','');
+  const fone = contactId.replace('@c.us','').replace('@g.us','').replace('@lid','');
+  
+  const hgFoto = fotoUrl && fotoUrl.startsWith('http') ?
+      `<img src="${fotoUrl}" style="width:80px;height:80px;border-radius:50%;margin:0 auto 16px;object-fit:cover;border:2px solid var(--accent);box-shadow:0 8px 16px rgba(255,98,0,0.2);">` :
+      `<div style="width:80px;height:80px;border-radius:50%;background:rgba(255, 98, 0, 0.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:bold;margin:0 auto 16px;box-shadow:0 8px 16px rgba(255,98,0,0.2);">${(nome||'C').charAt(0).toUpperCase()}</div>`;
+
   overlay.innerHTML = `<div class="modal" style="width:100%; max-width:400px; border-radius:16px; backdrop-filter:blur(20px); background:rgba(17,27,33,0.95); border: 1px solid var(--border);">
     <div class="modal-header">
-       <h3>👤 Contato Sincronizado</h3>
+       <h3>👤 Perfil Live do Zap</h3>
        <button class="btn-ghost" data-click="closeModal()"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
     </div>
     <div class="modal-body" style="text-align:center;">
-       <div style="width:80px;height:80px;border-radius:50%;background:rgba(255, 98, 0, 0.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:bold;margin:0 auto 16px;">${(nome||'C').charAt(0).toUpperCase()}</div>
-       <h2 style="margin-bottom:8px;">${nome}</h2>
-       <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">📱 ${fone}</p>
+       ${hgFoto}
+       <h2 style="margin-bottom:8px;font-size:22px;color:var(--text);">${nome}</h2>
+       <p style="color:var(--text-muted);font-size:15px;margin-bottom:24px;font-family:monospace;">📱 ${fone}</p>
        
-       <button class="btn btn-primary" style="width:100%; justify-content:center;" data-click="openWppChatSync('${fone}')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Abrir Conversa no Web
+       <button class="btn btn-primary" style="width:100%; justify-content:center;font-weight:bold;padding:12px;" data-click="openWppChatSync('${fone}')">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="margin-right:8px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Abrir Conversa no Web
        </button>
     </div>
   </div>`;

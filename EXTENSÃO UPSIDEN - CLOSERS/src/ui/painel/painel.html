@@ -35,28 +35,21 @@
 
       <div class="sidebar-brand">
         <div class="brand-icon">
-          <img src="../../../public/icons/up_logo_branca.png" alt="Upsiden" class="brand-logo-full dark-logo">
-          <img src="../../../public/icons/upsiden_logo.png" alt="Upsiden" class="brand-logo-full light-logo">
-          <img src="../../../public/icons/icone128.png" alt="U" class="brand-logo-mini">
+          <!-- Logo cheio (Texto + Símbolo Branco longo) para o modo expandido -->
+          <img src="../../../public/icons/upsiden_logo.png" alt="Upsiden" class="brand-logo-full">
+          <!-- Logo condensado (Apenas UP) para o modo fechado -->
+          <img src="../../../public/icons/up_logo_branca.png" alt="UP" class="brand-logo-mini">
         </div>
-        <span class="brand-name">Upsiden</span>
+        <!-- O Nome escrito isolado ao lado do ícone foi removido pois a nova logo já tem a marca textual -->
         <!-- Toggle Button -->
         <button class="sidebar-toggle" id="sidebar-toggle" title="Expandir/Recolher menu">
-          <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <path d="M9 3v18"/>
+          <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
       </div>
 
-      <!-- Quick Search -->
-      <div class="sidebar-search">
-        <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" placeholder="Pesquisa rapida..." id="sidebar-search-input" class="search-text">
-        <kbd class="search-kbd">/</kbd>
-      </div>
+
 
       <!-- Navigation -->
       <nav class="sidebar-nav" id="sidebar-nav">
@@ -73,7 +66,7 @@
         </button>
 
         <div class="nav-section-label"><span>Biblioteca</span></div>
-        <button class="nav-item" data-section="audios" title="Audios">
+        <button class="nav-item hide-on-collapsed" data-section="audios" title="Audios">
           <div class="nav-icon-wrap">
             <svg class="nav-icon" viewBox="0 0 24 24">
               <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
@@ -81,7 +74,7 @@
           </div>
           <span class="nav-label">Audios</span>
         </button>
-        <button class="nav-item" data-section="documentos" title="Documentos">
+        <button class="nav-item hide-on-collapsed" data-section="documentos" title="Documentos">
           <div class="nav-icon-wrap">
             <svg class="nav-icon" viewBox="0 0 24 24">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -91,7 +84,7 @@
           </div>
           <span class="nav-label">Documentos</span>
         </button>
-        <button class="nav-item" data-section="midias" title="Midias">
+        <button class="nav-item hide-on-collapsed" data-section="midias" title="Midias">
           <div class="nav-icon-wrap">
             <svg class="nav-icon" viewBox="0 0 24 24">
               <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
@@ -100,7 +93,7 @@
           </div>
           <span class="nav-label">Midias</span>
         </button>
-        <button class="nav-item" data-section="templates" title="Templates">
+        <button class="nav-item hide-on-collapsed" data-section="templates" title="Templates">
           <div class="nav-icon-wrap">
             <svg class="nav-icon" viewBox="0 0 24 24">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -116,7 +109,7 @@
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
           </div>
-          <span class="nav-label">Calendário de Envios</span>
+          <span class="nav-label">Calendário</span>
         </button>
         <button class="nav-item" data-section="crm" title="CRM / Funil">
           <div class="nav-icon-wrap">
@@ -124,7 +117,7 @@
               <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
             </svg>
           </div>
-          <span class="nav-label">CRM / Funil</span>
+          <span class="nav-label">CRM</span>
         </button>
         <button class="nav-item" data-section="automacoes" title="Automações Clássicas">
           <div class="nav-icon-wrap">
@@ -132,7 +125,7 @@
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
           </div>
-          <span class="nav-label">Automações Clássicas</span>
+          <span class="nav-label">Automações</span>
         </button>
         <button class="nav-item" data-section="flow" title="Automação Visual (Flow Builder)">
           <div class="nav-icon-wrap">
@@ -140,7 +133,7 @@
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
             </svg>
           </div>
-          <span class="nav-label">Automação Visual</span>
+          <span class="nav-label">Flows</span>
         </button>
         <button class="nav-item" data-section="campanhas" title="Campanhas">
           <div class="nav-icon-wrap">
@@ -152,13 +145,13 @@
         </button>
 
         <div class="nav-section-label"><span>Segurança e Privacidade</span></div>
-        <button class="nav-item" data-section="privacidade" title="Modo Fantasma & Blur">
+        <button class="nav-item hide-on-collapsed" data-section="privacidade" title="Modo Fantasma & Blur">
           <div class="nav-icon-wrap">
             <svg class="nav-icon" viewBox="0 0 24 24">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
-          <span class="nav-label">Privacidade & Blur</span>
+          <span class="nav-label">Privacidade</span>
         </button>
 
         <div class="nav-section-label" id="admin-section-label" style="display:none;"><span>Administracao</span></div>
@@ -169,7 +162,7 @@
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
           </div>
-          <span class="nav-label">Gestao de Equipe</span>
+          <span class="nav-label">Equipe</span>
         </button>
 
       </nav>
@@ -260,7 +253,7 @@
   <script src="painel-helpers.js"></script>
   <script src="painel-dashboard.js"></script>
   <script src="painel-biblioteca.js"></script>
-  <script src="painel-templates-crm.js"></script>
+  <script src="painel-templates-crm.js?v=2"></script>
   <script src="painel-agendamentos.js"></script>
   <script src="painel-automacoes.js"></script>
   <script src="painel-flow.js"></script>
