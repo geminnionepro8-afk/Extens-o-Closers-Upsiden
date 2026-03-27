@@ -60,6 +60,7 @@
         "src/core/page-scripts/flow-runner.js",
         "src/core/automation/automation-controller.js",
         "src/libs/wppconnect-wa.js",
+        "src/libs/fullcalendar.min.js",
         "src/core/page-scripts/wpp-engine.js",
         "src/ui/styles/injetado.css",
         "public/icons/*",

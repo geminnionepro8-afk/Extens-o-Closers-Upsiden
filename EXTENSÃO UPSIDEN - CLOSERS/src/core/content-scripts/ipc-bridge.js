@@ -205,8 +205,120 @@ function sincronizarConfigPrivacidade() {
       tipoMensagem: 'set_config_privacidade',
       dados: res
     }, '*');
+    
+    // Aplicar Blur CSS baseado no estado salvo
+    aplicarBlurCSS(res);
   });
 }
+
+// ── BLUR CSS INJECTION ENGINE ──
+// Injeta/Remove CSS no DOM do WhatsApp Web para borrar elementos visuais
+function aplicarBlurCSS(cfg) {
+  const STYLE_ID = 'upsiden-privacy-blur-css';
+  let existente = document.getElementById(STYLE_ID);
+  if (existente) existente.remove();
+  
+  let regras = [];
+  
+  // Borrar Nomes de Contatos (lista lateral + cabeçalho do chat)
+  if (cfg.privacy_blur_contacts === true || cfg.privacy_blur_contacts === 'true') {
+    regras.push(`
+      /* Nomes na lista de conversas */
+      [data-testid="cell-frame-title"] span,
+      ._ahxt span, ._ahxu span, ._ahxk > span,
+      /* Nome no cabeçalho do chat aberto */
+      header [data-testid="conversation-info-header-chat-title"] span,
+      header ._amig span, header ._amid span,
+      /* Nome em grupos */
+      [data-testid="msg-container"] [data-testid="author"] span,
+      ._amk6 ._ao3e {
+        filter: blur(6px) !important;
+        transition: filter 0.3s ease !important;
+      }
+      [data-testid="cell-frame-title"] span:hover,
+      ._ahxt span:hover, ._ahxu span:hover, ._ahxk > span:hover,
+      header [data-testid="conversation-info-header-chat-title"] span:hover,
+      header ._amig span:hover, header ._amid span:hover,
+      [data-testid="msg-container"] [data-testid="author"] span:hover,
+      ._amk6 ._ao3e:hover {
+        filter: blur(0px) !important;
+      }
+    `);
+  }
+  
+  // Borrar Avatares (fotos de perfil)
+  if (cfg.privacy_blur_avatars === true || cfg.privacy_blur_avatars === 'true') {
+    regras.push(`
+      /* Avatares na lista de conversas */
+      [data-testid="cell-frame-primary"] img,
+      [data-testid="chat-list"] img[draggable="false"],
+      ._ahlk img, ._ahli img,
+      /* Avatar no header do chat */
+      header [data-testid="conversation-panel-header"] img,
+      header ._amia img,
+      /* Avatares genéricos do WA */
+      [data-testid="default-user"] svg,
+      [data-testid="image-thumb"] img {
+        filter: blur(8px) !important;
+        transition: filter 0.3s ease !important;
+      }
+      [data-testid="cell-frame-primary"] img:hover,
+      [data-testid="chat-list"] img[draggable="false"]:hover,
+      ._ahlk img:hover, ._ahli img:hover,
+      header [data-testid="conversation-panel-header"] img:hover,
+      header ._amia img:hover,
+      [data-testid="default-user"] svg:hover,
+      [data-testid="image-thumb"] img:hover {
+        filter: blur(0px) !important;
+      }
+    `);
+  }
+  
+  // Borrar Mensagens (conteúdo do chat)
+  if (cfg.privacy_blur_msgs === true || cfg.privacy_blur_msgs === 'true') {
+    regras.push(`
+      /* Conteúdo das mensagens */
+      [data-testid="msg-container"] [data-testid="balloon-message-text"],
+      [data-testid="msg-container"] ._ao3e,
+      ._amjy ._ao3e,
+      .message-in .selectable-text, .message-out .selectable-text,
+      /* Mídia nas mensagens */
+      [data-testid="msg-container"] [data-testid="media-url-cover"],
+      [data-testid="msg-container"] img.selectable-text,
+      [data-testid="msg-container"] video {
+        filter: blur(6px) !important;
+        transition: filter 0.3s ease !important;
+      }
+      [data-testid="msg-container"] [data-testid="balloon-message-text"]:hover,
+      [data-testid="msg-container"] ._ao3e:hover,
+      ._amjy ._ao3e:hover,
+      .message-in .selectable-text:hover, .message-out .selectable-text:hover,
+      [data-testid="msg-container"] [data-testid="media-url-cover"]:hover,
+      [data-testid="msg-container"] img.selectable-text:hover,
+      [data-testid="msg-container"] video:hover {
+        filter: blur(0px) !important;
+      }
+    `);
+  }
+  
+  if (regras.length > 0) {
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = regras.join('\n');
+    document.head.appendChild(style);
+    console.log('[Upsiden-IPC] Blur CSS injetado com', regras.length, 'regras ativas.');
+  }
+}
+
+// Reagir a mudanças de blur em TEMPO REAL
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local') return;
+  const blurKeys = ['privacy_blur_contacts', 'privacy_blur_avatars', 'privacy_blur_msgs'];
+  const hasBlurChange = Object.keys(changes).some(k => blurKeys.includes(k));
+  if (hasBlurChange) {
+    chrome.storage.local.get(blurKeys, (res) => aplicarBlurCSS(res));
+  }
+});
 
 // ── Receber mensagens dos iframes (Módulos UI) ───────────
 /**

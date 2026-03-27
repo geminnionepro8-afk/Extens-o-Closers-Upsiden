@@ -82,3 +82,18 @@ function renderMidias(c) {
     c.innerHTML = html;
   }
 }
+
+// ═══ BIBLIOTECA CENTRAL (UNIFICADA) ══════════════════════════
+function renderBiblioteca(c) {
+  // Restore last active tab or default to 'audios'
+  const lastTab = localStorage.getItem('upsiden_last_lib_tab') || 'audios';
+  
+  // Update state
+  window.bibliotecaTabAtiva = lastTab;
+
+  // Render the official sub-nav in the header
+  renderBibliotecaHeader();
+  
+  // Call the switcher to render the initial module content
+  switchBibliotecaTab(lastTab);
+}

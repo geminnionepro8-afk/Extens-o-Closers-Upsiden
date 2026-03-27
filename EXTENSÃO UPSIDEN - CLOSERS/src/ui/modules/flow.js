@@ -521,8 +521,237 @@ class FlowEngine {
   }
 }
 
+/* ═══ 6. CHAT SIMULATOR (SPRINT 9) ════════════════════════════ */
+class FlowSimulator {
+  constructor(engine) {
+    this.engine = engine;
+    this.container = document.getElementById('wa-sim-messages');
+    this.progressBar = document.querySelector('#wa-sim-progress-bar .wa-sim-progress-inner');
+    this.btnPlay = document.getElementById('sim-btn-play');
+    this.btnPause = document.getElementById('sim-btn-pause');
+    this.btnReset = document.getElementById('sim-btn-reset');
+    this.typingIndicator = document.getElementById('wa-sim-typing-indicator');
+    
+    this.isPlaying = false;
+    this.isPaused = false;
+    this.simulationSequence = [];
+    this.currentIndex = 0;
+    this.timer = null;
+    
+    this.bindEvents();
+    this.bindTabs();
+  }
+
+  bindTabs() {
+    const tabs = document.querySelectorAll('.flow-right-sidebar .tab-btn');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        tabs.forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.flow-right-sidebar .sidebar-pane').forEach(p => {
+          p.classList.remove('active');
+          p.style.display = 'none';
+        });
+        
+        tab.classList.add('active');
+        const target = tab.getAttribute('data-target');
+        const targetEl = document.getElementById(target);
+        if(targetEl) {
+          targetEl.classList.add('active');
+          targetEl.style.display = 'flex';
+        }
+      });
+    });
+  }
+
+  bindEvents() {
+    this.btnPlay?.addEventListener('click', () => {
+      if (this.isPaused) {
+        this.resume();
+      } else {
+        this.start();
+      }
+    });
+
+    this.btnPause?.addEventListener('click', () => {
+      this.pause();
+    });
+
+    this.btnReset?.addEventListener('click', () => {
+      this.reset();
+    });
+  }
+
+  buildSequence() {
+    // Find a trigger node to start
+    let startNode = Object.values(this.engine.nodes).find(n => n.type === 'trigger' || n.type === 'keyword');
+    if (!startNode) return [];
+
+    let seq = [];
+    let currentNodeId = startNode.id;
+    let visited = new Set();
+
+    while (currentNodeId && !visited.has(currentNodeId)) {
+      visited.add(currentNodeId);
+      const node = this.engine.nodes[currentNodeId];
+      if (node) seq.push(node);
+
+      // Find next edge
+      const edge = this.engine.edges.find(e => e.source === currentNodeId);
+      if (edge) {
+        currentNodeId = edge.target;
+      } else {
+        currentNodeId = null;
+      }
+    }
+    return seq;
+  }
+
+  reset() {
+    this.isPlaying = false;
+    this.isPaused = false;
+    clearTimeout(this.timer);
+    this.currentIndex = 0;
+    
+    if (this.container) {
+      this.container.innerHTML = `
+        <div class="wa-msg received">
+          <div class="wa-msg-text">Olá! Tenho interesse.</div>
+          <div class="wa-msg-time">10:00</div>
+        </div>
+      `;
+    }
+    if (this.progressBar) this.progressBar.style.width = '0%';
+    this.updateControls();
+    this.setTyping(false);
+  }
+
+  start() {
+    this.simulationSequence = this.buildSequence();
+    if (this.simulationSequence.length === 0) {
+      if (typeof window.toast === 'function') window.toast('Adicione um Gatilho e conecte os nós!', 'warning');
+      return;
+    }
+    
+    this.reset();
+    this.isPlaying = true;
+    this.isPaused = false;
+    this.updateControls();
+    this.processNext();
+  }
+
+  pause() {
+    this.isPaused = true;
+    clearTimeout(this.timer);
+    this.updateControls();
+    this.setTyping(false);
+  }
+
+  resume() {
+    this.isPaused = false;
+    this.updateControls();
+    this.processNext();
+  }
+
+  updateControls() {
+    if (this.btnPlay) {
+      this.btnPlay.disabled = this.isPlaying && !this.isPaused;
+      this.btnPlay.innerHTML = this.isPaused ? '▶ Continuar' : '▶ Simular';
+    }
+    if (this.btnPause) this.btnPause.disabled = !this.isPlaying || this.isPaused;
+  }
+  
+  setTyping(isTyping) {
+    if(!this.typingIndicator) return;
+    if(isTyping) {
+      this.typingIndicator.textContent = 'digitando...';
+      this.typingIndicator.classList.add('typing');
+    } else {
+      this.typingIndicator.textContent = 'online';
+      this.typingIndicator.classList.remove('typing');
+    }
+  }
+
+  processNext() {
+    if (!this.isPlaying || this.isPaused) return;
+
+    if (this.currentIndex >= this.simulationSequence.length) {
+      this.isPlaying = false;
+      this.updateControls();
+      if (this.progressBar) this.progressBar.style.width = '100%';
+      this.setTyping(false);
+      return;
+    }
+
+    const node = this.simulationSequence[this.currentIndex];
+    
+    // update progress
+    if (this.progressBar) {
+      const pct = (this.currentIndex / this.simulationSequence.length) * 100;
+      this.progressBar.style.width = pct + '%';
+    }
+
+    // highlight node
+    Object.values(this.engine.nodes).forEach(n => n.el.classList.remove('selected'));
+    node.el.classList.add('selected');
+
+    let delay = 1000; // default delay between actions
+
+    if (node.type === 'trigger' || node.type === 'keyword') {
+       // just pass
+       delay = 500;
+    } else if (node.type === 'delay') {
+       let sec = parseInt(node.data.seconds) || 5;
+       // Simulate delay visually faster
+       delay = Math.max(sec * 100, 500); // 1s = 100ms in simulation
+    } else if (node.type === 'message') {
+       this.setTyping(true);
+       delay = 1200; // time to "type"
+       
+       this.timer = setTimeout(() => {
+         this.appendMessage(node.data.text || 'Mensagem Vazia');
+         this.setTyping(false);
+         this.currentIndex++;
+         this.timer = setTimeout(() => this.processNext(), 500);
+       }, delay);
+       return;
+    } else if (node.type === 'audio') {
+       this.setTyping(true);
+       if(this.typingIndicator) this.typingIndicator.textContent = 'gravando áudio...';
+       delay = 1800;
+       
+       this.timer = setTimeout(() => {
+         this.appendMessage('🎵 ' + (node.data.audioName || 'Áudio'));
+         this.setTyping(false);
+         this.currentIndex++;
+         this.timer = setTimeout(() => this.processNext(), 500);
+       }, delay);
+       return;
+    }
+
+    this.timer = setTimeout(() => {
+      this.currentIndex++;
+      this.processNext();
+    }, delay);
+  }
+
+  appendMessage(text) {
+    if (!this.container) return;
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const msg = document.createElement('div');
+    msg.className = 'wa-msg sent';
+    msg.innerHTML = `
+      <div class="wa-msg-text">${text}</div>
+      <div class="wa-msg-time">${time} <span style="margin-left:2px;color:#53bdeb;font-size:12px;">✓✓</span></div>
+    `;
+    this.container.appendChild(msg);
+    this.container.scrollTop = this.container.scrollHeight;
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('module-flow')) {
     window.flowEngine = new FlowEngine();
+    window.flowSimulator = new FlowSimulator(window.flowEngine);
   }
 });
+

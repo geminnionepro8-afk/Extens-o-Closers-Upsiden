@@ -1,0 +1,61 @@
+{
+"update_url": "https://clients2.google.com/service/update2/crx",
+
+  "manifest_version": 3,
+  "name": "WaSpeed: Superpoderes para o seu WhatsApp, CRM e muito mais.",
+  "version": "7.4.3.26",
+  "description": "WaSpeed é um CRM para WhatsApp Web. Organize seus chats e otimize seus negócios no WhatsApp Web.",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_icon": "label/icons/plugin/icon.png"
+  },
+  "icons": {
+    "128": "label/icons/plugin/icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "js": [
+        "content/index.js"
+      ],
+      "css": [
+        "label/css/waspeed.css",
+        "content/assets/css/style.css",
+        "content.css"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "resources": [
+        "*.js",
+        "*.css",
+        "*.png",
+        "*.mp3",
+        ".ttf",
+        "label/*.json",
+        "label/*.png"
+      ]
+    }
+  ],
+  "permissions": [
+    "unlimitedStorage",
+    "storage",
+    "alarms",
+    "tabs"
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://app.wascript.com.br/*",
+      "https://dev.watools.com.br/*"
+    ]
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjXG4s7Xwa4UKy5YWZ0UjYbniUeJN5VJBpSUlQVIvfhtvf+0k0RFilD9Tmsn/ecK/yGridv1jD/c/+B+SxUOrw1qY6KPrfqcPziERZ7DvQdZpnhNogKQO3MiCG8q3aGKfXajvhgd2MxbHhCAfZW5TL55++RrkaJM+SwbsFBxGvontl5n2Ge68TCHniy4PwqfB1dbCwqxCguRz1a1xrtedYI8t50E4aXYjQpKSuwI+D78+5Ug9KwWFVk4gNHWlji0vSlG7+fIHk6/YTggLjGR+3FZNvZ/PtmYJNEXVaM2fBN+lyc41p7BZvY4lb+SwqOzZbpavKHGIuByuJDluWXDNOQIDAQAB"
+}

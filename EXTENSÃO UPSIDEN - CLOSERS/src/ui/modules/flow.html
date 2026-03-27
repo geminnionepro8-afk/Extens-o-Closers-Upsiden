@@ -78,14 +78,52 @@
       </div>
     </div>
 
-    <!-- Properties Panel (Right Sidebar) -->
-    <aside class="flow-properties-panel" id="flow-properties-panel">
-      <div class="fp-empty">
-        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <p>Selecione um no para editar suas propriedades.</p>
+    <!-- Right Sidebar (Properties / Simulator) -->
+    <aside class="flow-right-sidebar" id="flow-right-sidebar">
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" data-target="panel-properties">Propriedades</button>
+        <button class="tab-btn" data-target="panel-simulator">Simulador</button>
       </div>
-      <div class="fp-content" style="display: none;">
-        <!-- Config forms injected here -->
+
+      <!-- Tab: Properties -->
+      <div class="sidebar-pane active" id="panel-properties">
+        <div class="fp-empty">
+          <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <p>Selecione um no para editar suas propriedades.</p>
+        </div>
+        <div class="fp-content" style="display: none;">
+          <!-- Config forms injected here -->
+        </div>
+      </div>
+
+      <!-- Tab: Simulator -->
+      <div class="sidebar-pane" id="panel-simulator" style="display: none;">
+        <div class="whatsapp-simulator">
+          <div class="wa-sim-header">
+            <div class="wa-avatar">👤</div>
+            <div class="wa-info">
+              <div class="wa-name">Cliente Teste</div>
+              <div class="wa-status" id="wa-sim-typing-indicator">online</div>
+            </div>
+          </div>
+          <div class="wa-sim-body" id="wa-sim-messages">
+            <div class="wa-msg received">
+              <div class="wa-msg-text">Olá! Tenho interesse.</div>
+              <div class="wa-msg-time">10:00</div>
+            </div>
+            <!-- Dynamic Messages Go Here -->
+          </div>
+          <div class="wa-sim-controls">
+            <div class="wa-sim-progress" id="wa-sim-progress-bar">
+              <div class="wa-sim-progress-inner" style="width: 0%"></div>
+            </div>
+            <div class="wa-sim-actions">
+              <button class="btn btn-icon sim-action-btn" id="sim-btn-play" title="Iniciar Simulação">▶</button>
+              <button class="btn btn-icon sim-action-btn" id="sim-btn-pause" title="Pausar" disabled>⏸</button>
+              <button class="btn btn-icon sim-action-btn" id="sim-btn-reset" title="Reiniciar">🔄</button>
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
   </div>

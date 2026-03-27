@@ -28,8 +28,7 @@ function navigate(section) {
   if (active) active.classList.add('active');
 
   const titles = {
-    perfil: 'Meu Perfil', dashboard: 'Dashboard', audios: 'Biblioteca de Áudios', documentos: 'Documentos',
-    midias: 'Mídias', templates: 'Templates de Texto', crm: 'CRM / Funil',
+    perfil: 'Meu Perfil', dashboard: 'Dashboard', biblioteca: 'Biblioteca Central', templates: 'Templates de Texto', crm: 'CRM / Funil',
     agendamentos: 'Calendário de Envios', automacoes: 'Automações Clássicas', flow: 'Automação Visual (Flow)', campanhas: 'Campanhas de Envio', contatos: 'Gestão de Contatos', admin: 'Gestão da Equipe', config: 'Configurações',
     privacidade: 'Privacidade & Segurança'
   };
@@ -37,6 +36,11 @@ function navigate(section) {
   document.getElementById('page-title').textContent = title;
   const bc = document.getElementById('breadcrumb-section');
   if (bc) bc.textContent = title;
+  
+  // Limpiar sub-nav por padrão
+  const subNav = document.getElementById('header-sub-nav');
+  if (subNav) subNav.innerHTML = '';
+
   document.getElementById('header-actions').innerHTML = '';
   renderSection(section);
 }
@@ -46,9 +50,7 @@ function renderSection(section) {
   c.scrollTop = 0;
   switch(section) {
     case 'dashboard': return renderDashboard(c);
-    case 'audios': return renderAudios(c);
-    case 'documentos': return renderDocumentos(c);
-    case 'midias': return renderMidias(c);
+    case 'biblioteca': return renderBiblioteca(c);
     case 'templates': return renderTemplates(c);
     case 'crm': return renderCRM(c);
     case 'automacoes': return renderAutomacoes(c);
@@ -61,6 +63,71 @@ function renderSection(section) {
     case 'perfil': return renderPerfil(c);
     default: c.innerHTML = `<div class="empty-state"><div class="empty-icon">🚧</div><h3>Em desenvolvimento</h3><p>Esta seção estará disponível em breve.</p></div>`;
   }
+}
+
+// ═══ BIBLIOTECA HEADER NAVIGATION ════════════════════════════
+function renderBibliotecaHeader() {
+  const subNav = document.getElementById('header-sub-nav');
+  if (!subNav) return;
+
+  const tabs = [
+    { id: 'audios', label: 'Áudios', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' },
+    { id: 'documentos', label: 'Documentos', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' },
+    { id: 'midias', label: 'Mídias', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>' }
+  ];
+
+  const activeTab = window.bibliotecaTabAtiva || 'audios';
+
+  subNav.innerHTML = tabs.map(t => `
+    <button class="sub-nav-btn ${activeTab === t.id ? 'active' : ''}" data-click="switchBibliotecaTab('${t.id}')">
+      ${t.icon}
+      <span>${t.label}</span>
+      <span class="badge" id="badge-${t.id}">0</span>
+    </button>
+  `).join('');
+  
+  atualizarBadgesBiblioteca();
+}
+
+window.switchBibliotecaTab = function(tab) {
+  console.log('[Painel] Biblioteca Switch ->', tab);
+  window.bibliotecaTabAtiva = tab;
+  localStorage.setItem('upsiden_last_lib_tab', tab);
+  
+  // Re-render header to update active state
+  renderBibliotecaHeader();
+
+  const c = document.getElementById('main-content');
+  if (!c) return;
+
+  // Render the specific module directly as an iframe (Simplified Hub)
+  const moduleUrls = {
+    'audios': '../modules/audios.html',
+    'documentos': '../modules/documentos.html',
+    'midias': '../modules/midias.html'
+  };
+
+  const url = moduleUrls[tab] || moduleUrls['audios'];
+  
+  c.innerHTML = `
+    <div class="animate-in" style="height: 100%; width: 100%; overflow: hidden;">
+      <iframe src="${url}" frameborder="0" style="width: 100%; height: 100%; display: block; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-primary);"></iframe>
+    </div>
+  `;
+};
+
+async function atualizarBadgesBiblioteca() {
+  try {
+    const [a, d, m] = await Promise.all([
+      UpsidenDB.from('audios').select('id', { count: 'exact' }).execute(),
+      UpsidenDB.from('documentos').select('id', { count: 'exact' }).execute(),
+      UpsidenDB.from('midias').select('id', { count: 'exact' }).execute()
+    ]);
+    
+    const ba = document.getElementById('badge-audios'); if(ba) ba.textContent = a?.length || 0;
+    const bd = document.getElementById('badge-documentos'); if(bd) bd.textContent = d?.length || 0;
+    const bm = document.getElementById('badge-midias'); if(bm) bm.textContent = m?.length || 0;
+  } catch(e) { /* ignore */ }
 }
 
 // ═══ ACTIONS ═════════════════════════════════════════════════

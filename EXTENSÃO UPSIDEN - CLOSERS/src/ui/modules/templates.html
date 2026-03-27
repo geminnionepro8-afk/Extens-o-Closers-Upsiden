@@ -9,41 +9,69 @@
 <body>
   <div class="mod-app">
     <header class="mod-header">
-      <h2>x Templates</h2>
-      <button class="btn-primary" id="tmpl-novo">+ Novo Template</button>
+      <h2>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Templates
+      </h2>
+      <button class="btn-primary" id="tmpl-novo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Novo
+      </button>
     </header>
+
+    <div class="categories" id="chips-categoria"></div>
+
     <div class="mod-search">
-      <input type="text" id="tmpl-busca" placeholder="Buscar template...">
+      <input type="text" id="tmpl-busca" placeholder="Buscar template por nome ou conteúdo...">
     </div>
+
     <div class="mod-list" id="tmpl-lista"></div>
+
     <div class="mod-empty" id="tmpl-vazio">
-      <p>Nenhum template criado</p>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1" opacity="0.3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <p style="margin-top:16px;">Nenhum template criado</p>
       <p class="sub">Crie templates de texto com variáveis como <code>{{nome}}</code></p>
     </div>
-    <div class="mod-footer" id="tmpl-footer">
+
+    <footer class="mod-footer">
       <span id="tmpl-count">0 templates</span>
-    </div>
+    </footer>
   </div>
 
   <!-- Modal de edição -->
   <div class="modal-overlay" id="tmpl-modal" style="display:none">
-    <div class="modal-box">
-      <h3 id="tmpl-modal-titulo">Novo Template</h3>
-      <input type="text" id="tmpl-nome" placeholder="Nome do template" class="modal-input">
-      <textarea id="tmpl-texto" placeholder="Texto da mensagem... use {{nome}} para variáveis" class="modal-textarea" rows="6"></textarea>
-      <div class="modal-preview" id="tmpl-preview"></div>
-      <div class="modal-actions">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="tmpl-modal-titulo">Novo Template</h3>
+        <button class="btn-close-modal" id="tmpl-fechar-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label">Nome do Template</label>
+        <input type="text" id="tmpl-nome" placeholder="Ex: Boas-vindas Premium" class="modal-input">
+        <label class="field-label">Categoria</label>
+        <select id="tmpl-categoria" class="modal-input" style="cursor:pointer;">
+          <option value="geral">Geral</option>
+          <option value="boas-vindas">Boas-vindas</option>
+          <option value="propostas">Propostas</option>
+          <option value="quebra-objecao">Quebra de Objeção</option>
+          <option value="follow-up">Follow-up</option>
+          <option value="fechamento">Fechamento</option>
+        </select>
+        <label class="field-label">Mensagem</label>
+        <textarea id="tmpl-texto" placeholder="Texto da mensagem... use {{nome}} para variáveis" class="modal-textarea" rows="5"></textarea>
+        <label class="field-label" style="margin-top:8px;">Pré-visualização</label>
+        <div class="modal-preview" id="tmpl-preview"></div>
+      </div>
+      <div class="modal-footer">
         <button class="btn-secondary" id="tmpl-cancelar">Cancelar</button>
-        <button class="btn-primary" id="tmpl-salvar">Salvar</button>
+        <button class="btn-primary" id="tmpl-salvar">Salvar Template</button>
       </div>
     </div>
   </div>
+
   <script src="../../libs/supabase.min.js"></script>
   <script src="../../libs/supabase-config.js"></script>
   <script src="../../services/auth.service.js"></script><script src="../../services/db.service.js"></script><script src="../../services/storage.service.js"></script><script src="../../services/metrics.service.js"></script>
   <script src="templates.js"></script>
 </body>
 </html>
-
-
-

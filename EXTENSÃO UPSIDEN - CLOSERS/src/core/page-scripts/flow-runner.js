@@ -1,22 +1,25 @@
 /**
  * @file flow-runner.js
  * @description Roteador/Executor de Fluxos Visuais injetado no WPP Web.
- * Navega pelos Nodes e Edges para disparar ações, agendar delays e checar condições.
+ * Navega pelos Nodes e Edges para disparar ações, agendar delays, checar condições e aguardar respostas.
  */
 
 window.FlowRunner = {
   
+  // Mapa de sessões: { '5511999999999@c.us': { waitingForReply: true, resolveWait: func, lastMessageObj: msg } }
+  activeSessions: {},
+
   /**
    * Inicia a execução do fluxo para um dado contato (chatId).
-   * @param {Object} flow - Objeto do fluxo salvo (com .nodes_json e .edges_json)
-   * @param {String} chatId - '5511999999999@c.us'
-   * @param {String} triggerKeyword - Caso tenha sido acionado por palavra-chave
    */
   async startFlow(flow, chatId, triggerKeyword = null) {
     if (!flow || !flow.nodes_json || !flow.edges_json) {
-      console.error('[FlowRunner] Fluxo invalido.', flow);
+      console.error('[FlowRunner] Fluxo inválido.', flow);
       return;
     }
+    
+    // Inicia a sessão se não existir
+    if (!this.activeSessions[chatId]) this.activeSessions[chatId] = {};
     
     // 1. Encontrar o nó inicial (Trigger Manual ou Keyword)
     let startNodes = flow.nodes_json.filter(n => n.type === 'trigger' || n.type === 'keyword');
@@ -28,117 +31,160 @@ window.FlowRunner = {
     // Se há gatilho correspondente
     for (const node of startNodes) {
       console.log(`[FlowRunner] Iniciando fluxo '${flow.name}' pelo nó id: ${node.id}`);
-      await this.executeNode(node, flow, chatId);
+      this.executeNode(node, flow, chatId);
     }
   },
 
   /**
-   * Avalia e executa um único nó, e prossegue nas arestas conectadas
+   * Avalia e executa um único nó, e prossegue nas arestas conectadas baseadas em handles (true/false, etc).
    */
   async executeNode(node, flow, chatId) {
     console.log(`[FlowRunner] Executando Nó: [${node.type}] (id: ${node.id}) para ${chatId}`);
     
+    let sourceHandleId = null; // Para onde devo seguir depois desse nó? null = segue o default.
+
     try {
+      // 1. Mensagem de Texto (Integra o motor de Follow-ups nativo)
       if (node.type === 'message') {
         const text = node.data?.text || '';
         if (text) {
-          await this._simulateTyping(chatId, text.length * 30); // 30ms por caractere
-          await window.InjetorWPP.enviarMensagemTexto(chatId, text);
+          await window.AutomationController.executeSequentialFollowup(chatId, [{ tipo: 'texto', conteudo: text, simular_digitacao: true }], '');
         }
       } 
+      // 2. Mensagem de Áudio Nativo Modulado
       else if (node.type === 'audio') {
         const audioId = node.data?.audioId;
         if (audioId) {
-          await this._simulateRecording(chatId, 3000); // Finge gravar por 3s
-          // OBS: Enviar áudio requer buscar a Blob do Supabase. O Injetor tem api para isso?
-          // Supondo que InjetorWPP tem um método genérico ou disparar postMessage
-          window.postMessage({ origem: 'FLOW_RUNNER', ev: 'dispatch_audio', chatId, audioId }, '*');
+           // Posta para a extensão a requisição de injeção de base64 pelo Supabase (A API precisa buscar).
+           // Idealmente InjetorWPP já sabe como pegar o arquivo do banco, ou o painel postMessage.
+           window.postMessage({ origem: 'FLOW_RUNNER', ev: 'dispatch_audio', chatId, audioId }, '*');
         }
       }
+      // 3. Delay Simples
       else if (node.type === 'delay') {
-        let secs = parseInt(node.data?.delay) || 5;
+        let secs = parseInt(node.data?.seconds) || 5;
         let delayMs = secs * 1000;
         
         const outgoingEdges = flow.edges_json.filter(e => e.source === node.id);
         
+        // Suporte a Alarmes Background para delays gigantes (> 5 minutos)
         if (delayMs > 300000 && outgoingEdges.length > 0) {
-            console.log(`[FlowRunner] Delay muito longo (${secs}s), agendando tarefa no Background...`);
+            console.log(`[FlowRunner] Delay longo (${secs}s), transferindo carga para Background Worker...`);
             window.postMessage({
                origem: 'INJETOR_PAGINA',
                ev: 'schedule_bg_flow',
-               task: {
-                  flow: flow,
-                  chatId: chatId,
-                  nextNodeId: outgoingEdges[0].target,
-                  targetTime: Date.now() + delayMs
-               }
+               task: { flow: flow, chatId: chatId, nextNodeId: outgoingEdges[0].target, targetTime: Date.now() + delayMs }
             }, '*');
-            return; // Interrompe arvore de execução local
+            return; // Morre aqui na thread da página, renasce no background
         } else {
-            console.log(`[FlowRunner] Node Timeout/Delay - Aguardando ${secs}s...`);
+            console.log(`[FlowRunner] Node Delay - Aguardando ${secs}s...`);
             await new Promise(r => setTimeout(r, delayMs));
         }
       }
+      // 4. Aguardar Resposta (O Coração Multi-Steps / Timeouts do Fluxo)
+      else if (node.type === 'wait_reply') {
+         let timeoutSecs = parseInt(node.data?.timeout) || 3600; // 1 hr default
+         console.log(`[FlowRunner] Agendando espera (Timeout: ${timeoutSecs}s)`);
+         
+         const msgRcvd = await this.waitForMessage(chatId, timeoutSecs * 1000);
+         
+         if (msgRcvd === null) {
+            console.log(`[FlowRunner] Timeout atingido! Indo para handle de timeout.`);
+            sourceHandleId = 'timeout'; // Siga aresta amarrada na bola vermelha
+         } else {
+            console.log(`[FlowRunner] Mensagem recebida ('${msgRcvd.body}'). Indo para handle de response.`);
+            // Cache da resposta no state para o nó condição!
+            if (!this.activeSessions[chatId]) this.activeSessions[chatId] = {};
+            this.activeSessions[chatId].lastMessageObj = msgRcvd;
+            
+            sourceHandleId = 'response'; // Siga aresta amarrada na bola verde
+         }
+      }
+      // 5. Bloco de Ramificação Condicional (If/Else Visual)
       else if (node.type === 'condition') {
-        // Ex: Checar se o contato tem uma tag no CRM local.
-        const requiredTag = node.data?.tag;
-        // Se a tag não for 'VIP' e precisarmos de 'VIP', nós paramos o fluxo (ou ramificamos).
-        // Por simplificação (MVP do flow), apenas continua a edge se a condição for metida.
-        // Simularemos validado:
-        console.log(`[FlowRunner] Condição avaliada: ${requiredTag}`);
+         const lastMsg = this.activeSessions[chatId]?.lastMessageObj?.body || this.activeSessions[chatId]?.lastMessageObj?.text || '';
+         const op = node.data?.operator || 'equals';
+         const val = node.data?.value || '';
+         
+         let match = false;
+         if (op === 'equals') match = (lastMsg.toLowerCase() === val.toLowerCase());
+         if (op === 'contains') match = lastMsg.toLowerCase().includes(val.toLowerCase());
+         if (op === 'regex') match = new RegExp(val, 'i').test(lastMsg);
+         
+         console.log(`[FlowRunner] Avaliação de Condição ('${lastMsg}' ${op} '${val}') -> Resultado: ${match}`);
+         sourceHandleId = match ? 'true' : 'false';
       }
-      
+
       // Procura próximos passos (Arestas que saem deste nó)
-      const outgoingEdges = flow.edges_json.filter(e => e.source === node.id);
-      
-      for (const edge of outgoingEdges) {
-        const nextNode = flow.nodes_json.find(n => n.id === edge.target);
-        if (nextNode) {
-          // Executa em cadeia
-          // Atenção: para evitar CallStack issues em grafos muito longos, usar setTimeout
-          setTimeout(() => {
-            this.executeNode(nextNode, flow, chatId);
-          }, 50);
-        }
-      }
+      this.followOutgoingEdges(node, flow, chatId, sourceHandleId);
+
     } catch (err) {
       console.error(`[FlowRunner] Erro ao executar nó ${node.id}:`, err);
     }
   },
+
+  /**
+   * Traça as Rotas baseado nas Edges SVG que o construtor conectou.
+   */
+  followOutgoingEdges(node, flow, chatId, filteredSourceHandle) {
+     let outgoingEdges = flow.edges_json.filter(e => e.source === node.id);
+      
+     // Multi-Handle Filter: Se a execução gerou uma escolha (True/False ou Resposta/Timeout)
+     if (filteredSourceHandle) {
+         // Importante: No front-end do Flow Builder, os portos de saída terão "id" como handle-out-true
+         outgoingEdges = outgoingEdges.filter(e => String(e.sourceHandle || '').includes(filteredSourceHandle));
+     }
+
+     for (const edge of outgoingEdges) {
+         const nextNode = flow.nodes_json.find(n => n.id === edge.target);
+         if (nextNode) {
+             // Deixa o event loop respirar antes do próximo pulo
+             setTimeout(() => {
+                 this.executeNode(nextNode, flow, chatId);
+             }, 50);
+         }
+     }
+  },
+
+  /**
+   * Promessa assíncrona que interliga com a Injeção de AutomationController.
+   */
+  async waitForMessage(chatId, timeoutMs) {
+      if (!this.activeSessions[chatId]) this.activeSessions[chatId] = {};
+
+      return new Promise(resolve => {
+          // Timer de morte
+          let timerId = setTimeout(() => {
+              if (this.activeSessions[chatId]) {
+                  this.activeSessions[chatId].waitingForReply = false;
+                  this.activeSessions[chatId].resolveWait = null;
+              }
+              resolve(null);
+          }, timeoutMs);
+
+          // Armadilha pendente
+          this.activeSessions[chatId].waitingForReply = true;
+          this.activeSessions[chatId].resolveWait = (msg) => {
+              clearTimeout(timerId); // Desarma a bomba
+              this.activeSessions[chatId].waitingForReply = false;
+              this.activeSessions[chatId].resolveWait = null;
+              resolve(msg); // Devolve quem disparou
+          };
+      });
+  },
   
   /**
-   * Ponto de entrada chamado pelo WPP Engine/Background 
-   * quando um cronjob desperta esta aba do WhatsApp Web.
+   * Desperta fluxos que dormiram no background (Delays de muitas horas).
    */
   async resumeBgFlow(task) {
     if (!task || !task.flow || !task.chatId || !task.nextNodeId) return;
     
-    console.log(`[FlowRunner] ⏰ CRON DESPERTADO: Retomando fluxo '${task.flow.name}' a partir do nó ${task.nextNodeId} para o lead ${task.chatId}`);
+    console.log(`[FlowRunner] ⏰ DESPERTADOR: Retomando fluxo '${task.flow.name}' nó ${task.nextNodeId} do lead ${task.chatId}`);
     
     const nextNode = task.flow.nodes_json.find(n => n.id === task.nextNodeId);
     if (nextNode) {
       this.executeNode(nextNode, task.flow, task.chatId);
     }
-  },
-  
-  // -- Auxiliary -- //
-  
-  async _simulateTyping(chatId, ms) {
-    console.log('[FlowRunner] Simulando digitando...');
-    if (window.WPP && window.WPP.chat && window.WPP.chat.markIsRead) {
-      window.WPP.chat.markIsRead(chatId);
-      window.WPP.chat.markIsComposing(chatId, ms);
-    }
-    return new Promise(r => setTimeout(r, ms));
-  },
-  
-  async _simulateRecording(chatId, ms) {
-    console.log('[FlowRunner] Simulando gravando áudio...');
-    if (window.WPP && window.WPP.chat && window.WPP.chat.markIsRecording) {
-      window.WPP.chat.markIsRead(chatId);
-      window.WPP.chat.markIsRecording(chatId, ms);
-    }
-    return new Promise(r => setTimeout(r, ms));
   }
 
 };

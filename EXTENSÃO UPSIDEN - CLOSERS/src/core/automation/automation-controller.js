@@ -15,8 +15,8 @@ class AutomationController {
     saudacao: null,
     triggers: [],
     followups: [],
-    horario: null,
-    regras_globais: null,
+    availability_matrix: null, /* Version B New */
+    global_rules: null,       /* Version B New */
     flows: []
   };
   
@@ -31,9 +31,9 @@ class AutomationController {
     if (payload.saudacao !== undefined) this.config.saudacao = payload.saudacao;
     if (payload.triggers !== undefined) this.config.triggers = payload.triggers;
     if (payload.followups !== undefined) this.config.followups = payload.followups;
-    if (payload.horario !== undefined) this.config.horario = payload.horario;
-    if (payload.regras_globais !== undefined) this.config.regras_globais = payload.regras_globais;
-    if (payload.flows !== undefined) this.config.flows = payload.flows;
+    if (payload.availability_matrix !== undefined) this.config.availability_matrix = payload.availability_matrix;
+    if (payload.global_rules !== undefined) this.config.global_rules = payload.global_rules;
+    if (payload.flow !== undefined) this.config.flows = payload.flow; // Used by flow builder LocalStorage sync
   }
 
   /**
@@ -51,29 +51,29 @@ class AutomationController {
    * Verifica expediente ativo. Regra #7.
    */
   static checkSchedule(confSaudacao) {
+    // Legacy fallback
     const globalConf = this.config.horario || {};
-    const usar = globalConf.ativo !== undefined ? globalConf.ativo : (confSaudacao && confSaudacao.usarHorario);
+    const usar = confSaudacao && confSaudacao.usar_horario;
     
     if (!usar) return { ativo: true, msgFora: false };
     
-    const agora = new Date();
-    const minAtual = (agora.getHours() * 60) + agora.getMinutes();
-    const diaSemana = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'][agora.getDay()];
-
-    const diasAtivos = globalConf.diasSemana || (confSaudacao && confSaudacao.diasSemana) || ['seg', 'ter', 'qua', 'qui', 'sex'];
-    if (!diasAtivos.includes(diaSemana)) return { ativo: false, msgFora: true, msg: globalConf.msg || confSaudacao.msgForaHorario };
-
-    const inicio = globalConf.ini || (confSaudacao && confSaudacao.horaInicio) || '09:00';
-    const fim = globalConf.fim || (confSaudacao && confSaudacao.horaFim) || '18:00';
-
-    const [hin, minIn] = inicio.split(':').map(Number);
-    const startMin = (hin * 60) + minIn;
+    // Versão B - Avaliador de Matriz
+    if (this.config.availability_matrix && this.config.availability_matrix.length === 7) {
+        const agora = new Date();
+        const jDay = agora.getDay(); // 0(Sun) - 6(Sat)
+        // Mapear JS Day pra Matriz (Seg=0, Ter=1... Dom=6)
+        const matrixDay = jDay === 0 ? 6 : jDay - 1;
+        const slot = (agora.getHours() * 2) + Math.floor(agora.getMinutes() / 30);
+        
+        const isOnline = this.config.availability_matrix[matrixDay][slot];
+        return { 
+            ativo: isOnline, 
+            msgFora: !isOnline, 
+            msg: confSaudacao.msg_fora_horario 
+        };
+    }
     
-    const [hfi, minFi] = fim.split(':').map(Number);
-    const endMin = (hfi * 60) + minFi;
-
-    const dentro = minAtual >= startMin && minAtual <= endMin;
-    return { ativo: dentro, msgFora: !dentro, msg: globalConf.msg || confSaudacao.msgForaHorario };
+    return { ativo: true, msgFora: false };
   }
 
   /**
@@ -93,6 +93,22 @@ class AutomationController {
     }
   }
 
+  static evaluateGlobalRules(tags, textoRecebido) {
+      if (!this.config.global_rules || this.config.global_rules.length === 0) return { blocked: false };
+      
+      let finalBlock = false;
+      const tks = tags || [];
+      
+      for(const rule of this.config.global_rules) {
+          const match = rule.tagsCond.some(rc => tks.includes(rc));
+          if(match && rule.blockFlow) {
+              finalBlock = true;
+              break;
+          }
+      }
+      return { blocked: finalBlock };
+  }
+
   /**
    * Recebe mensagens DO WPP Engine e delega lógica de Triggers ou Saudação.
    */
@@ -103,25 +119,43 @@ class AutomationController {
     const chatId = (msg.id && msg.id.remote) || msg.from || (msg.chatId && msg.chatId._serialized) || msg.chatId;
     const textoRecebido = (msg.body || msg.text || msg.content || '').trim().toLowerCase();
 
-    // 0. Processar Fluxos Visuais (Flow Builder)
-    if (this.config.flows && this.config.flows.length > 0 && textoRecebido.length > 0) {
-       for (const flow of this.config.flows) {
-           if (flow.is_active === false) continue;
-           const startNodes = (flow.nodes_json || []).filter(n => n.type === 'trigger' || n.type === 'keyword');
-           for (const node of startNodes) {
-               if ((node.type === 'keyword' || node.type === 'trigger') && node.data?.keyword && textoRecebido.includes(node.data.keyword.toLowerCase())) {
-                   if (window.FlowRunner) {
-                       console.log(`[AutomationController] Encaminhando mensagem para o FlowRunner (Fluxo: ${flow.name})`);
-                       window.FlowRunner.startFlow(flow, chatId, node.data.keyword);
-                       return; // Para tudo e deixa o FlowRunner assumir a conversa
-                   }
-               }
-           }
-       }
+    // 0. Interceptar Mensagens de Sessões Ativas (Flow Builder Wait For Reply)
+    if (window.FlowRunner && window.FlowRunner.activeSessions && window.FlowRunner.activeSessions[chatId]) {
+        const session = window.FlowRunner.activeSessions[chatId];
+        if (session.waitingForReply && session.resolveWait) {
+            console.log(`[AutomationController] Interceptando resposta para resolver Flow Node (Aguardar Resposta)`);
+            session.resolveWait(msg);
+            return; // Bloqueia propagação! O Fluxo Mestre toma conta daqui.
+        }
     }
 
-    // 1. Processar Triggers de Palavra-chave (Clássicos)
-    if (this.config.triggers.length > 0 && textoRecebido.length > 0) {
+    // 1. REGRAS GLOBAIS (Top-Down Priority Sandbox)
+    const mockTags = msg.contactTags || []; 
+    const ruleEvaluation = this.evaluateGlobalRules(mockTags, textoRecebido);
+    if(ruleEvaluation.blocked) {
+        console.log(`[AutomationController] Fluxo cancelado por Regra Global`);
+        return; // BLOCK COMPLETO
+    }
+
+    // 2. Processar Fluxos Visuais da Versão B 
+    const flowTriggers = this.config.flows && this.config.flows.nodes ? this.config.flows.nodes : [];
+    if (flowTriggers && flowTriggers.length > 0 && textoRecebido.length > 0) {
+        const triggerNode = flowTriggers.find(n => n.type === 'trigger' && textoRecebido.includes((n.data.palavra || '').toLowerCase()));
+        if(triggerNode) {
+            console.log('[Automation] Gatilho Visual Match:', triggerNode.title);
+            const edge = (this.config.flows.edges || []).find(e => e.source === triggerNode.id);
+            if(edge) {
+                const actNode = flowTriggers.find(n => n.id === edge.target);
+                if(actNode && actNode.data.resposta) {
+                    await this.executeSequentialFollowup(chatId, [{ tipo: 'texto', delay_segundos: actNode.data.delay, conteudo: actNode.data.resposta }], chatName);
+                }
+            }
+            return; // Para tudo e deixa o FlowRunner assumir a conversa
+        }
+    }
+
+    // 3. Processar Triggers de Palavra-chave (Clássicos)
+    if (this.config.triggers && this.config.triggers.length > 0 && textoRecebido.length > 0) {
       for (const trig of this.config.triggers) {
         if (!trig.palavra) continue;
         if (!this.checkAllowedTarget(isGroup, trig.apenas_privado, trig.apenas_grupo)) continue;
@@ -152,11 +186,10 @@ class AutomationController {
       }
     }
 
-    // 2. Processar Saudação (Apenas se não disparou gatilho)
+    // 4. Processar Saudação (Modular Drag and Drop)
     const conf = this.config.saudacao;
-    if (!conf || !conf.ativo || !conf.mensagem) return;
-
-    if (!this.checkAllowedTarget(isGroup, conf.apenasPrivado, conf.apenasGrupo)) return;
+    if (!conf || !conf.saudacao_ativa) return;
+    if (!this.checkAllowedTarget(isGroup, conf.apenas_privado, conf.apenas_grupo)) return;
 
     const chatKey = chatId._serialized || chatId;
     if (this.chatsSaudados.has(chatKey)) return;
@@ -170,18 +203,22 @@ class AutomationController {
     }
 
     if (schedule.ativo) {
-       await window.InjetorWPP.enviarTexto({ texto: this.parseTemplate(conf.mensagem, chatName) }, chatId);
        this.chatsSaudados.add(chatKey);
 
-       // 3. Processar Follow-ups Sequenciais
-       if (conf.followupSteps && conf.followupSteps.length > 0) {
-          await this.executeSequentialFollowup(chatId, conf.followupSteps, chatName);
+       const steps = [];
+       if(conf.saudacao_mensagem) steps.push({ tipo: 'texto', delay_segundos: 2, conteudo: conf.saudacao_mensagem });
+       if(conf.followup_steps && conf.followup_steps.length > 0){
+           conf.followup_steps.forEach(f => steps.push(f));
+       }
+
+       if (steps.length > 0) {
+          await this.executeSequentialFollowup(chatId, steps, chatName);
        }
     }
   }
 
   /**
-   * Executa pipeline de envio sequencial (Regra #6 e Fase 2 Multimedia)
+   * Executa pipeline de envio sequencial
    */
   static async executeSequentialFollowup(chatId, steps, chatName) {
     if (this.DEBUG_MODE) console.log(`[Automation] Pipeline: ${steps.length} steps`);

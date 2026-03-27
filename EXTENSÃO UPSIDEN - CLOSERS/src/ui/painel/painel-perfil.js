@@ -27,7 +27,7 @@ function renderPerfil(c) {
         </div>
         
         <div class="perfil-title-area">
-          <h2>Meu Perfil</h2>
+          <h2>Meu Perfil ${userData.isAdmin ? '<svg class="role-badge" viewBox="0 0 24 24" style="width: 18px; height: 18px; margin-left: 6px; fill: var(--sb-accent); vertical-align: -2px;"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>' : ''}</h2>
           <p>Gerencie as informacoes e a logomarca da sua conta.</p>
         </div>
       </div>
@@ -85,8 +85,7 @@ window.handlePerfilAvatar = async function(e) {
     if (!publicUrl) throw new Error("Falha ao resolver URL do Storage");
 
     // Persist to user's profile table
-    const { error } = await UpsidenDB.from('profiles').update({ avatar_url: publicUrl }).eq('id', userData.userId);
-    if (error) throw error;
+    await UpsidenDB.from('profiles').update({ avatar_url: publicUrl }).eq('id', userData.userId);
     
     // Overwrite local memory
     userData.avatar_url = publicUrl;
@@ -141,15 +140,15 @@ window.salvarPerfil = async function() {
     btn.disabled = true;
     btn.innerHTML = 'Salvando...';
     
-    const { error } = await UpsidenDB.from('profiles').update({ nome: novoNome }).eq('id', userData.userId);
-    if (error) throw error;
+    await UpsidenDB.from('profiles').update({ nome: novoNome }).eq('id', userData.userId);
     
     userData.nome = novoNome;
     
     // Atualizar UI reflexiva (Topbar e Painel do Usuario)
     document.getElementById('user-display-name').textContent = userData.nome;
     const umpName = document.getElementById('ump-name');
-    if (umpName) umpName.textContent = userData.nome;
+    const nameVerifiedIcon = userData.isAdmin ? `<svg class="role-badge" viewBox="0 0 24 24" style="margin-left: 6px;"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>` : '';
+    if (umpName) umpName.innerHTML = userData.nome + nameVerifiedIcon;
     
     toast('Nome atualizado e salvo com sucesso!', 'success');
   } catch (err) {

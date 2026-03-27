@@ -1,5 +1,5 @@
 /* =========================================
-   Upsiden — Templates de Texto (Supabase)
+   Upsiden — Templates de Texto (Red Sun)
    ========================================= */
 
 let templates = [];
@@ -11,8 +11,18 @@ let isAdmin = false;
 
 const CATEGORIAS_TEMPLATE = ['geral', 'boas-vindas', 'propostas', 'quebra-objecao', 'follow-up', 'fechamento'];
 
+const CAT_EMOJI = {
+  'geral': '💬',
+  'boas-vindas': '👋',
+  'propostas': '💰',
+  'quebra-objecao': '🛡️',
+  'follow-up': '🔄',
+  'fechamento': '🎯'
+};
+
 function renderizarPreview(texto) {
-  return texto.replace(/\{\{(\w+)\}\}/g, '<span style="color:#00a884;font-weight:600;">[$1]</span>');
+  if (!texto) return '<span style="opacity:0.5">Preview aparece aqui...</span>';
+  return texto.replace(/\{\{(\w+)\}\}/g, '<span style="color:var(--accent);font-weight:600;">[$1]</span>');
 }
 
 async function carregar() {
@@ -22,12 +32,38 @@ async function carregar() {
   templates = data || [];
 }
 
-function renderizar() {
-  const lista = document.getElementById('tmpl-lista');
-  const vazio = document.getElementById('tmpl-vazio');
-  const count = document.getElementById('tmpl-count');
+function renderizarChipsCategoria() {
+  const root = window.$upsRoot || document;
+  const container = root.getElementById('chips-categoria');
+  if (!container) return;
+  container.innerHTML = '';
 
-  // Renderizar chips de categoria
+  const mkChip = (label, value, active) => {
+    const chip = document.createElement('button');
+    chip.className = `cat-chip${active ? ' active' : ''}`;
+    chip.dataset.cat = value;
+    chip.textContent = label;
+    chip.addEventListener('click', () => {
+      categoriaAtual = value === 'todos' ? '' : value;
+      renderizarChipsCategoria();
+      renderizar();
+    });
+    return chip;
+  };
+
+  container.appendChild(mkChip('Todos', 'todos', !categoriaAtual));
+  CATEGORIAS_TEMPLATE.forEach(cat => {
+    const emoji = CAT_EMOJI[cat] || '📌';
+    container.appendChild(mkChip(`${emoji} ${cat}`, cat, categoriaAtual === cat));
+  });
+}
+
+function renderizar() {
+  const root = window.$upsRoot || document;
+  const lista = root.getElementById('tmpl-lista');
+  const vazio = root.getElementById('tmpl-vazio');
+  const count = root.getElementById('tmpl-count');
+
   renderizarChipsCategoria();
 
   const filtrados = templates.filter(t => {
@@ -42,23 +78,29 @@ function renderizar() {
     lista.style.display = 'none'; vazio.style.display = 'flex';
   } else {
     lista.style.display = 'flex'; vazio.style.display = 'none';
-    filtrados.forEach(tmpl => {
+    filtrados.forEach((tmpl, i) => {
       const card = document.createElement('div');
-      card.className = 'mod-card';
-      const preview = tmpl.texto.length > 60 ? tmpl.texto.slice(0, 60) + '...' : tmpl.texto;
+      card.className = 'mod-card card-enter';
+      card.style.animationDelay = `${i * 0.04}s`;
+      const preview = tmpl.texto.length > 55 ? tmpl.texto.slice(0, 55) + '...' : tmpl.texto;
       const catLabel = tmpl.categoria || 'geral';
-      const catBadge = `<span style="font-size:8px;background:rgba(0,168,132,0.2);color:#00a884;padding:1px 5px;border-radius:8px;margin-left:4px;">${catLabel}</span>`;
-      const compartilhadoBadge = tmpl.compartilhado ? ' <span style="font-size:8px;background:#FF6200;color:white;padding:1px 3px;border-radius:2px;">TIME</span>' : '';
+      const catBadge = `<span class="badge-cat">${CAT_EMOJI[catLabel] || '📌'} ${catLabel}</span>`;
+      const teamBadge = tmpl.compartilhado ? '<span class="badge-team">TIME</span>' : '';
+
       card.innerHTML = `
-        <div class="mod-card-icon">💬</div>
+        <div class="mod-card-icon">${CAT_EMOJI[catLabel] || '💬'}</div>
         <div class="mod-card-info">
-          <div class="mod-card-title">${tmpl.nome}${catBadge}${compartilhadoBadge}</div>
-          <div class="mod-card-meta">${preview}</div>
+          <div class="mod-card-title">${tmpl.nome} ${catBadge} ${teamBadge}</div>
+          <div class="mod-card-meta" title="${tmpl.texto}">${preview}</div>
         </div>
         <div class="mod-card-actions">
-          <button class="btn-send" data-send="${tmpl.id}" title="Enviar">Enviar</button>
-          <button class="btn-secondary" data-edit="${tmpl.id}" title="Editar" style="padding:4px 8px;font-size:12px;">✏️</button>
-          <button class="btn-danger" data-del="${tmpl.id}" title="Excluir">✕</button>
+          <button class="btn-send" data-send="${tmpl.id}" title="Enviar para o chat">Enviar</button>
+          <button class="btn-icon" data-edit="${tmpl.id}" title="Editar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          </button>
+          <button class="btn-icon btn-delete" data-del="${tmpl.id}" title="Excluir">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          </button>
         </div>
       `;
       lista.appendChild(card);
@@ -69,89 +111,93 @@ function renderizar() {
 }
 
 function abrirModal(tmpl = null) {
+  const root = window.$upsRoot || document;
   editandoId = tmpl ? tmpl.id : null;
-  document.getElementById('tmpl-modal-titulo').textContent = tmpl ? 'Editar Template' : 'Novo Template';
-  document.getElementById('tmpl-nome').value = tmpl ? tmpl.nome : '';
-  document.getElementById('tmpl-texto').value = tmpl ? tmpl.texto : '';
-  // Categoria
-  let catSelect = document.getElementById('tmpl-categoria');
-  if (!catSelect) {
-    const grupo = document.createElement('div');
-    grupo.className = 'mod-form-group';
-    grupo.style.cssText = 'margin-bottom:10px;';
-    grupo.innerHTML = '<label style="font-size:11px;color:#8696a0;margin-bottom:4px;display:block;">Categoria</label><select id="tmpl-categoria" class="mod-input" style="width:100%;padding:6px;background:#202c33;border:1px solid #374045;color:#e9edef;border-radius:6px;">' + CATEGORIAS_TEMPLATE.map(c => `<option value="${c}">${c}</option>`).join('') + '</select>';
-    const nomeInput = document.getElementById('tmpl-nome');
-    nomeInput.parentElement.after(grupo);
-    catSelect = document.getElementById('tmpl-categoria');
-  }
-  catSelect.value = tmpl?.categoria || 'geral';
+  root.getElementById('tmpl-modal-titulo').textContent = tmpl ? 'Editar Template' : 'Novo Template';
+  root.getElementById('tmpl-nome').value = tmpl ? tmpl.nome : '';
+  root.getElementById('tmpl-texto').value = tmpl ? tmpl.texto : '';
+  root.getElementById('tmpl-categoria').value = tmpl?.categoria || 'geral';
   atualizarPreview();
-  document.getElementById('tmpl-modal').style.display = 'flex';
+  root.getElementById('tmpl-modal').style.display = 'flex';
 }
 
 function fecharModal() {
-  document.getElementById('tmpl-modal').style.display = 'none';
+  const root = window.$upsRoot || document;
+  root.getElementById('tmpl-modal').style.display = 'none';
   editandoId = null;
 }
 
 function atualizarPreview() {
-  const texto = document.getElementById('tmpl-texto').value;
-  document.getElementById('tmpl-preview').innerHTML = renderizarPreview(texto) || '<span style="opacity:0.5">Preview aparece aqui...</span>';
+  const root = window.$upsRoot || document;
+  const texto = root.getElementById('tmpl-texto').value;
+  root.getElementById('tmpl-preview').innerHTML = renderizarPreview(texto);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  const root = window.$upsRoot || document;
+
   if (!(await verificarAuth())) {
-    document.querySelector('.mod-app').innerHTML = '<p style="padding:20px;color:#8696a0;text-align:center;">Faça login para acessar os templates.</p>';
+    root.querySelector('.mod-app').innerHTML = '<p style="padding:20px;color:var(--text-muted);text-align:center;">Faça login para acessar os templates.</p>';
     return;
   }
 
   await carregar();
   renderizar();
 
-  document.getElementById('tmpl-novo').addEventListener('click', () => abrirModal());
-  document.getElementById('tmpl-texto').addEventListener('input', atualizarPreview);
-  document.getElementById('tmpl-cancelar').addEventListener('click', fecharModal);
+  root.getElementById('tmpl-novo').addEventListener('click', () => abrirModal());
+  root.getElementById('tmpl-texto').addEventListener('input', atualizarPreview);
+  root.getElementById('tmpl-cancelar').addEventListener('click', fecharModal);
+  root.getElementById('tmpl-fechar-modal').addEventListener('click', fecharModal);
 
-  document.getElementById('tmpl-salvar').addEventListener('click', async () => {
-    const nome = document.getElementById('tmpl-nome').value.trim();
-    const texto = document.getElementById('tmpl-texto').value.trim();
-    const categoria = document.getElementById('tmpl-categoria')?.value || 'geral';
+  root.getElementById('tmpl-salvar').addEventListener('click', async () => {
+    const nome = root.getElementById('tmpl-nome').value.trim();
+    const texto = root.getElementById('tmpl-texto').value.trim();
+    const categoria = root.getElementById('tmpl-categoria').value || 'geral';
     if (!nome || !texto) return;
 
-    if (editandoId) {
-      await UpsidenDB.from('templates').eq('id', editandoId).update({ nome, texto, categoria }).execute();
-      const t = templates.find(x => x.id === editandoId);
-      if (t) { t.nome = nome; t.texto = texto; t.categoria = categoria; }
-    } else {
-      const result = await UpsidenDB.from('templates').insert({
-        nome, texto, categoria, criado_por: userId, compartilhado: isAdmin
-      }).execute();
-      if (result && result.length) templates.unshift(result[0]);
-    }
+    const btn = root.getElementById('tmpl-salvar');
+    btn.textContent = 'Salvando...'; btn.disabled = true;
+
+    try {
+      if (editandoId) {
+        await UpsidenDB.from('templates').eq('id', editandoId).update({ nome, texto, categoria }).execute();
+        const t = templates.find(x => x.id === editandoId);
+        if (t) { t.nome = nome; t.texto = texto; t.categoria = categoria; }
+      } else {
+        const result = await UpsidenDB.from('templates').insert({
+          nome, texto, categoria, criado_por: userId, compartilhado: isAdmin
+        }).execute();
+        if (result && result.length) templates.unshift(result[0]);
+      }
+    } catch(e) { console.error('Erro ao salvar template:', e); }
+
+    btn.textContent = 'Salvar Template'; btn.disabled = false;
     renderizar();
     fecharModal();
   });
 
-  document.getElementById('tmpl-busca').addEventListener('input', (e) => { buscaAtual = e.target.value; renderizar(); });
+  root.getElementById('tmpl-busca').addEventListener('input', (e) => { buscaAtual = e.target.value; renderizar(); });
 
-  document.getElementById('tmpl-lista').addEventListener('click', async (e) => {
+  root.getElementById('tmpl-lista').addEventListener('click', async (e) => {
     const btnSend = e.target.closest('[data-send]');
     const btnEdit = e.target.closest('[data-edit]');
     const btnDel = e.target.closest('[data-del]');
 
     if (btnDel) {
+      e.stopPropagation();
       await UpsidenDB.from('templates').eq('id', btnDel.dataset.del).delete().execute();
       templates = templates.filter(t => t.id !== btnDel.dataset.del);
       renderizar();
+      return;
     }
     if (btnEdit) {
       const tmpl = templates.find(t => t.id === btnEdit.dataset.edit);
       if (tmpl) abrirModal(tmpl);
+      return;
     }
     if (btnSend) {
       const tmpl = templates.find(t => t.id === btnSend.dataset.send);
       if (tmpl) {
-        // Template Engine: processa variáveis em tempo real
         const textoProcessado = typeof TemplateEngine !== 'undefined'
           ? TemplateEngine.process(tmpl.texto, {})
           : tmpl.texto;
@@ -161,29 +207,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 });
-
-// ═══ CHIPS DE CATEGORIA (iOS-style) ══════════════
-function renderizarChipsCategoria() {
-  let container = document.getElementById('chips-categoria');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'chips-categoria';
-    container.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:0 12px;';
-    const lista = document.getElementById('tmpl-lista');
-    if (lista) lista.parentElement.insertBefore(container, lista);
-  }
-  container.innerHTML = '';
-
-  const mkChip = (label, active, onClick) => {
-    const chip = document.createElement('button');
-    chip.textContent = label;
-    chip.style.cssText = `padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;border:1px solid ${active ? '#00a884' : '#374045'};background:${active ? 'rgba(0,168,132,0.2)' : 'transparent'};color:${active ? '#00a884' : '#8696a0'};cursor:pointer;transition:all 0.3s;`;
-    chip.addEventListener('click', onClick);
-    return chip;
-  };
-
-  container.appendChild(mkChip('Todos', !categoriaAtual, () => { categoriaAtual = ''; renderizar(); }));
-  CATEGORIAS_TEMPLATE.forEach(cat => {
-    container.appendChild(mkChip(cat, categoriaAtual === cat, () => { categoriaAtual = cat; renderizar(); }));
-  });
-}

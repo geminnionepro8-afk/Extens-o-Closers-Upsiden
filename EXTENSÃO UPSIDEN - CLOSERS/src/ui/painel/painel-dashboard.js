@@ -33,22 +33,22 @@ async function renderDashboard(c) {
 
     const statsCards = `
       <div class="stat-card animate-in" style="animation-delay:0ms">
-        <div class="stat-card-top"><div class="stat-icon" style="color:#00e676">${iconMsg}</div></div>
+        <div class="stat-card-top"><div class="stat-icon" style="background-color:var(--accent); color:#fff;">${iconMsg}</div></div>
         <div class="stat-value">${data.summary.msgs}</div>
         <div class="stat-label">Mensagens Enviadas</div>
       </div>
       <div class="stat-card animate-in" style="animation-delay:50ms">
-        <div class="stat-card-top"><div class="stat-icon" style="color:#ff9100">${iconAudio}</div></div>
+        <div class="stat-card-top"><div class="stat-icon" style="background-color:var(--accent); color:#fff;">${iconAudio}</div></div>
         <div class="stat-value">${data.summary.audios}</div>
         <div class="stat-label">Áudios & Docs</div>
       </div>
       <div class="stat-card animate-in" style="animation-delay:100ms">
-        <div class="stat-card-top"><div class="stat-icon" style="color:#2196f3">${iconLead}</div></div>
+        <div class="stat-card-top"><div class="stat-icon" style="background-color:var(--accent); color:#fff;">${iconLead}</div></div>
         <div class="stat-value">${data.summary.leads}</div>
         <div class="stat-label">Novos Leads (7d)</div>
       </div>
       <div class="stat-card animate-in" style="animation-delay:150ms">
-        <div class="stat-card-top"><div class="stat-icon" style="color:#e91e63">${iconRate}</div></div>
+        <div class="stat-card-top"><div class="stat-icon" style="background-color:var(--accent); color:#fff;">${iconRate}</div></div>
         <div class="stat-value">${data.conversionRate}%</div>
         <div class="stat-label">Taxa de Conversão</div>
       </div>
@@ -104,9 +104,11 @@ async function renderDashboard(c) {
       <div class="stat-grid" style="margin-bottom:24px;">${statsCards}</div>
 
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
-        <div class="chart-box animate-in" style="animation-delay: 200ms">
+        <div class="chart-box animate-in" style="animation-delay: 200ms; display: flex; flex-direction: column;">
           <h3 style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Atividade (Últimos Dias)</h3>
-          <canvas id="activityChart" style="width:100%; height:250px;"></canvas>
+          <div style="position: relative; flex-grow: 1; min-height: 250px; width: 100%;">
+            <canvas id="activityChart"></canvas>
+          </div>
         </div>
 
         <div class="chart-box animate-in" style="animation-delay: 250ms">
@@ -114,7 +116,7 @@ async function renderDashboard(c) {
           <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:250px;">
             <div style="position:relative; width: 120px; height: 120px;">
               <canvas id="conversionChart"></canvas>
-              <div style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold; color:var(--text-primary);">
+              <div style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold; color:var(--text-primary); pointer-events:none;">
                 ${data.conversionRate}%
               </div>
             </div>
@@ -202,6 +204,7 @@ async function renderDashboard(c) {
             },
             options: {
               responsive: true,
+              maintainAspectRatio: false,
               cutout: '80%',
               plugins: { legend: { display: false }, tooltip: { enabled: false } }
             }

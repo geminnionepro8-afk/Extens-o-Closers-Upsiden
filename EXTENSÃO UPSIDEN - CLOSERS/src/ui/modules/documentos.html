@@ -1,40 +1,51 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Documentos</title>
   <link rel="stylesheet" href="../styles/modulo.css">
+  <link rel="stylesheet" href="documentos.css">
 </head>
 <body>
   <div class="mod-app">
-    <header class="mod-header">
-      <h2>ðŸ“„ Documentos</h2>
-      <label class="btn-primary" for="doc-upload" style="background:#FF6200; color:#fff; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600;">+ Importar</label>
-      <input type="file" id="doc-upload" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" multiple hidden>
-    </header>
-    <div class="categories" id="container-categorias-doc" style="display:flex; gap:8px; padding:0 24px 16px; border-bottom:1px solid rgba(42,57,66,0.8);">
-      <button class="cat-chip active" data-categoria="todos" style="background:#FF6200; color:#fff; border-radius:12px; padding:6px 14px; border:none; cursor:pointer; font-size:12px; font-weight:600;">Todos</button>
-      <button class="cat-chip" data-categoria="equipe" style="background:transparent; color:#FF6200; border:1px solid #FF6200; border-radius:12px; padding:6px 14px; cursor:pointer; font-size:12px; font-weight:600;">ðŸ¤ Time</button>
+    <!-- Filters & Search -->
+    <div class="module-controls">
+      <div class="mod-search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" id="doc-busca" placeholder="Buscar documentos...">
+      </div>
+
+      <label class="btn-import-main" for="doc-upload">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        <span>Importar</span>
+      </label>
+      <input type="file" id="doc-upload" multiple style="display:none">
     </div>
-    <div class="mod-search" style="padding:16px 24px 0;">
-      <input type="text" id="doc-busca" placeholder="Buscar documento...">
+
+    <!-- Table Header -->
+    <div class="mod-table-header">
+      <div class="col-main">Documento</div>
+      <div class="col-stats">Propriedades</div>
+      <div class="col-meta">Data</div>
+      <div class="col-actions">Controles</div>
     </div>
-    <div class="mod-list" id="doc-lista"></div>
-    <div class="mod-empty" id="doc-vazio">
-      <p>Nenhum documento na biblioteca</p>
-      <p class="sub">Clique em <strong>+ Importar</strong> para adicionar seus arquivos</p>
+
+    <div class="mod-list module-structured-list" id="doc-lista"></div>
+
+    <div class="mod-empty" id="doc-vazio" style="display:none;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1" opacity="0.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <p style="margin-top:16px;">Nenhum documento encontrado</p>
     </div>
-    <div class="mod-footer" id="doc-footer">
+
+    <footer class="mod-footer">
       <span id="doc-count">0 documentos</span>
-    </div>
+    </footer>
   </div>
+
   <script src="../../libs/supabase.min.js"></script>
   <script src="../../libs/supabase-config.js"></script>
   <script src="../../services/auth.service.js"></script><script src="../../services/db.service.js"></script><script src="../../services/storage.service.js"></script><script src="../../services/metrics.service.js"></script>
   <script src="documentos.js"></script>
 </body>
 </html>
-
-
-

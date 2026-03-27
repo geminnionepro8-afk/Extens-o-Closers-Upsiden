@@ -3,105 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRM Upsiden — Funil de Vendas</title>
+  <title>Upsiden CRM — KANBAN</title>
+  <link rel="icon" href="../../../public/icons/icone48.png" type="image/png">
   <link rel="stylesheet" href="crm.css">
 </head>
 <body>
-  <div class="crm-app">
-    <header class="crm-header">
-      <h2>Funil de Vendas</h2>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <select id="filtro-tag" class="filtro-select">
-          <option value="">Todas as Tags</option>
-        </select>
-        <button id="btn-add-lead" class="btn-primary">+ Novo Lead</button>
+  
+  <div class="ws-layout">
+    <!-- BARRA LATERAL (CLONE WASPEED) -->
+    <aside class="ws-sidebar">
+      <div class="ws-sidebar-header">
+        <div class="ws-logo-container">
+          <img src="../../../public/icons/up_logo_branca.png" alt="Logo" class="ws-logo-icon">
+        </div>
+        <span class="ws-brand-title">CRM KANBAN</span>
+        <button class="ws-btn-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
       </div>
-    </header>
+      
+      <nav class="ws-nav">
+        <button class="ws-nav-item" id="btn-config-abas">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span>Configuração de abas</span>
+        </button>
+        <button class="ws-nav-item" id="btn-theme-toggle">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <span id="theme-text">Modo claro</span>
+        </button>
+        <button class="ws-nav-item">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span>Menu</span>
+        </button>
+        <button class="ws-nav-item">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <span>Criar CRM</span>
+        </button>
+        <button class="ws-nav-item" id="btn-add-col">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Adicionar Aba</span>
+        </button>
+        <button class="ws-nav-item" id="btn-shortcuts">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+          <span>Atalhos do teclado</span>
+        </button>
+      </nav>
 
-    <div class="kanban-board" id="kanban">
-      <div class="kanban-column" data-etapa="prospeccao">
-        <div class="kanban-col-header">
-          <div class="col-title"><span class="col-dot" style="background:#FFD666;"></span> Prospecção <span class="badge" id="badge-prospeccao">0</span></div>
-          <div class="col-valor" id="valor-prospeccao">R$ 0</div>
+      <div class="ws-sidebar-footer">
+        <div class="ws-user-profile">
+          <div class="ws-user-avatar" id="ws-user-avatar">?</div>
+          <span class="ws-user-name" id="ws-user-name">Carregando...</span>
         </div>
-        <div class="kanban-cards" id="coluna-prospeccao"></div>
+        <button class="ws-nav-item active" style="margin-top:10px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ws-folder-icon"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span>Abas</span>
+        </button>
       </div>
-      <div class="kanban-column" data-etapa="negociacao">
-        <div class="kanban-col-header">
-          <div class="col-title"><span class="col-dot" style="background:#66B2FF;"></span> Negociação <span class="badge" id="badge-negociacao">0</span></div>
-          <div class="col-valor" id="valor-negociacao">R$ 0</div>
-        </div>
-        <div class="kanban-cards" id="coluna-negociacao"></div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="ws-main">
+      <div class="ws-top-banner">
+        <span>Alternância de Modos habilitada. Aperte <kbd>Ctrl</kbd> + <kbd>E</kbd> para alternar entre Abas e Etiquetas ou use o painel lateral.</span>
       </div>
-      <div class="kanban-column" data-etapa="fechado">
-        <div class="kanban-col-header">
-          <div class="col-title"><span class="col-dot" style="background:#66FFB2;"></span> Fechado <span class="badge" id="badge-fechado">0</span></div>
-          <div class="col-valor" id="valor-fechado">R$ 0</div>
-        </div>
-        <div class="kanban-cards" id="coluna-fechado"></div>
+      
+      <!-- KANBAN BOARD -->
+      <div class="ws-board" id="ws-board">
+        <!-- Renderizado dinamicamente -->
       </div>
-    </div>
+    </main>
+
   </div>
 
-  <!-- MODAL: Detalhes do Lead -->
-  <div class="modal-overlay" id="modal-lead" style="display:none;">
+  <!-- Modal Global -->
+  <div class="modal-overlay" id="modal-global" style="display:none;">
     <div class="modal-glass">
       <div class="modal-header">
-        <h3 id="modal-titulo">Novo Lead</h3>
+        <h3 id="modal-titulo">Ação</h3>
         <button class="btn-close" id="modal-fechar">&times;</button>
       </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group"><label>Nome</label><input type="text" id="lead-nome" class="form-input" placeholder="Nome do lead"></div>
-          <div class="form-group"><label>Telefone</label><input type="text" id="lead-tel" class="form-input" placeholder="5531999999999"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Valor do Negócio (R$)</label>
-            <input type="number" id="lead-valor" class="form-input" placeholder="0.00" min="0" step="0.01">
-          </div>
-          <div class="form-group">
-            <label>Tag</label>
-            <select id="lead-tag" class="form-input tag-select">
-              <option value="">Sem tag</option>
-              <option value="quente">🔥 Quente</option>
-              <option value="morno">☀️ Morno</option>
-              <option value="frio">❄️ Frio</option>
-              <option value="vip">⭐ VIP</option>
-              <option value="urgente">🚨 Urgente</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Notas Rápidas</label>
-          <textarea id="lead-notas" class="form-input form-textarea" placeholder="Anotações sobre este lead..." rows="3"></textarea>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Lembrete</label>
-            <input type="datetime-local" id="lead-lembrete" class="form-input">
-          </div>
-          <div class="form-group">
-            <label>Texto do Lembrete</label>
-            <input type="text" id="lead-lembrete-texto" class="form-input" placeholder="Ex: Ligar para fechar">
-          </div>
-        </div>
-        <!-- Histórico -->
-        <div class="historico-section" id="historico-container" style="display:none;">
-          <label style="font-size:12px;color:#8696a0;font-weight:600;">Histórico de Interações</label>
-          <div id="historico-lista" class="historico-lista"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" id="modal-cancelar">Cancelar</button>
-        <button class="btn-primary" id="modal-salvar">Salvar</button>
-      </div>
+      <div class="modal-body" id="modal-corpo"></div>
+      <div class="modal-footer" id="modal-rodape"></div>
     </div>
   </div>
+
+  <!-- SortableJS for Drag and Drop -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
   <script src="../../libs/supabase.min.js"></script>
   <script src="../../libs/supabase-config.js"></script>
-  <script src="../../services/auth.service.js"></script><script src="../../services/db.service.js"></script><script src="../../services/storage.service.js"></script><script src="../../services/metrics.service.js"></script>
+  <script src="../../services/auth.service.js"></script>
+  <script src="../../services/db.service.js"></script>
   <script src="crm.js"></script>
 </body>
 </html>

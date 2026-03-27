@@ -67,8 +67,8 @@ function abrirPainel(tela, titulo, iframeSrc) {
     // Reset base do Shadow DOM
     const resetStyle = document.createElement('style');
     resetStyle.textContent = `
-      :host { all: initial; display: block; width: 100%; height: 100%; background: #111b21; }
-      * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      :host { all: initial; display: block; width: 100%; height: 100%; background: #0a0a0a; }
+      * { box-sizing: border-box; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
     `;
     shadowRoot.appendChild(resetStyle);
 

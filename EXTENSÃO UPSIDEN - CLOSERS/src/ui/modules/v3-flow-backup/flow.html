@@ -1,0 +1,235 @@
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║   FLOW BUILDER v3 — Upsiden RedSun DNA                      ║
+     ║   Layout: Reference-grade node canvas                        ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="module-wrapper module-flow fv3-root" id="module-flow" style="display:none; width:100%; height:100%;">
+
+  <!-- ══════════ ZONE 2: MAIN LAYOUT ══════════ -->
+  <div class="fv3-main">
+
+    <!-- Left Minibar (Icon Rail) -->
+    <div class="fv3-minibar">
+      <div class="fv3-minibar-top">
+        <!-- Search toggle -->
+        <button class="fv3-rail-btn active" id="fv3-rail-nodes" title="Nós e Paleta">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </button>
+        <button class="fv3-rail-btn" id="fv3-rail-runs" title="Histórico de Execuções">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </button>
+        <button class="fv3-rail-btn" id="fv3-rail-vars" title="Variáveis">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </button>
+        <button class="fv3-rail-btn" id="fv3-rail-config" title="Configurações do Fluxo">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+      <div class="fv3-minibar-bot">
+        <div class="fv3-zoom-display" id="fv3-zoom-display">100%</div>
+        <button class="fv3-rail-btn" id="fv3-fit-screen" title="Ajustar à Tela">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Collapsible Left Drawer -->
+    <div class="fv3-drawer" id="fv3-drawer">
+      <!-- Search + Edit toggle -->
+      <div class="fv3-drawer-header">
+        <div class="fv3-search-box">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar nós..." id="fv3-node-search">
+        </div>
+        <label class="fv3-edit-toggle" title="Modo Edição">
+          <input type="checkbox" id="fv3-edit-mode" checked>
+          <span class="fv3-toggle-pill"></span>
+          <span style="font-size:11px;font-weight:600;">Editar</span>
+        </label>
+      </div>
+
+      <!-- Metric Selector -->
+      <div class="fv3-drawer-row">
+        <select class="fv3-select full-w">
+          <option>Métrica: Mensagens Enviadas</option>
+          <option>Métrica: Taxa de Resposta</option>
+          <option>Métrica: Leads Gerados</option>
+        </select>
+      </div>
+      <div class="fv3-drawer-row" style="gap:6px;">
+        <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 17 17 7"/><polyline points="7 7 17 7 17 17"/></svg>
+          Entrada
+        </div>
+        <button class="fv3-icon-btn" title="Resetar Visualização">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Resetar
+        </button>
+      </div>
+
+      <!-- Node Palette -->
+      <div class="fv3-palette-title">Gatilhos</div>
+      <div class="fv3-palette-node" draggable="true" data-type="trigger">
+        <div class="fv3-pn-icon" style="background:linear-gradient(135deg,#FF4D00,#FF8C00);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg></div>
+        <div class="fv3-pn-info"><span class="fv3-pn-name">Disparo Manual</span><span class="fv3-pn-desc">Inicia o fluxo</span></div>
+      </div>
+      <div class="fv3-palette-node" draggable="true" data-type="keyword">
+        <div class="fv3-pn-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <div class="fv3-pn-info"><span class="fv3-pn-name">Palavra-chave</span><span class="fv3-pn-desc">Detecta triggers</span></div>
+      </div>
+      <div class="fv3-palette-node" draggable="true" data-type="schedule">
+        <div class="fv3-pn-icon" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="fv3-pn-info"><span class="fv3-pn-name">Agendamento</span><span class="fv3-pn-desc">Horários fixos</span></div>
+      </div>
+
+      <div class="fv3-palette-title">Ações</div>
+      <div class="fv3-palette-node" draggable="true" data-type="message">
+        <div class="fv3-pn-icon" style="background:linear-gradient(135deg,#10b981,#34d399);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="fv3-pn-info"><span class="fv3-pn-name">Enviar Texto</span><span class="fv3-pn-desc">Mensagem de texto</span></div>
+      </div>
+      <div class="fv3-palette-node" draggable="true" data-type="audio">
+        <div class="fv3-pn-icon" style="background:linear-gradient(135deg,#ec4899,#f43f5e);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div>
+        <div class="fv3-pn-info"><span class="fv3-pn-name">Enviar Áudio</span><span class="fv3-pn-desc">PTT gerado por IA</span></div>
+      </div>
+      <div class="fv3-palette-node" draggable="true" data-type="media">
+        <div class="fv3-pn-icon" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+        <div class="fv3-pn-info"><span class="fv3-pn-name">Enviar Mídia</span><span class="fv3-pn-desc">Imagem / arquivo</span></div>
+      </div>
+
+      <div class="fv3-palette-title">Lógica</div>
+      <div class="fv3-palette-node" draggable="true" data-type="delay">
+        <div class="fv3-pn-icon" style="background:linear-gradient(135deg,#64748b,#94a3b8);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="fv3-pn-info"><span class="fv3-pn-name">Atraso</span><span class="fv3-pn-desc">Esperar X segundos</span></div>
+      </div>
+      <div class="fv3-palette-node" draggable="true" data-type="condition">
+        <div class="fv3-pn-icon" style="background:linear-gradient(135deg,#FF4D00,#FF8C00);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></div>
+        <div class="fv3-pn-info"><span class="fv3-pn-name">Condição (Se)</span><span class="fv3-pn-desc">Bifurcar fluxo</span></div>
+      </div>
+      <div class="fv3-palette-node" draggable="true" data-type="wait_reply">
+        <div class="fv3-pn-icon" style="background:linear-gradient(135deg,#0891b2,#06b6d4);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div>
+        <div class="fv3-pn-info"><span class="fv3-pn-name">Aguardar Resposta</span><span class="fv3-pn-desc">Capturar input</span></div>
+      </div>
+    </div>
+
+    <!-- ══ CANVAS ZONE ══ -->
+    <div class="fv3-workspace" id="flow-workspace">
+      <div class="fv3-canvas" id="flow-canvas" style="transform: translate(0px, 0px) scale(1);">
+        <!-- SVG Edge Layer -->
+        <svg class="fv3-svg-layer" id="flow-svg-layer">
+          <defs>
+            <!-- Gradient definitions for colored edges -->
+            <linearGradient id="grad-orange" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#FF4D00"/>
+              <stop offset="100%" stop-color="#FF8C00"/>
+            </linearGradient>
+            <linearGradient id="grad-blue" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#60a5fa"/>
+            </linearGradient>
+            <linearGradient id="grad-green" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#10b981"/>
+              <stop offset="100%" stop-color="#34d399"/>
+            </linearGradient>
+            <linearGradient id="grad-purple" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#8b5cf6"/>
+              <stop offset="100%" stop-color="#a78bfa"/>
+            </linearGradient>
+            <linearGradient id="grad-red" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ef4444"/>
+              <stop offset="100%" stop-color="#f87171"/>
+            </linearGradient>
+          </defs>
+          <g id="flow-edges-group"></g>
+          <path id="flow-drag-line" class="fv3-drag-edge" d="" style="display:none;"></path>
+        </svg>
+        <!-- Nodes Container -->
+        <div class="fv3-nodes-layer" id="flow-nodes-container"></div>
+      </div>
+      <!-- Canvas overlay buttons (bottom-left) -->
+      <div class="fv3-canvas-btns">
+        <button class="fv3-icon-btn" id="fv3-canvas-minus">-</button>
+        <span class="fv3-canvas-zoom" id="flow-zoom-level">100%</span>
+        <button class="fv3-icon-btn" id="fv3-canvas-plus">+</button>
+      </div>
+      <!-- Empty state hint -->
+      <div class="fv3-empty-hint" id="fv3-empty-hint">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M12 5v14M5 12h14"/></svg>
+        <p>Arraste nós da paleta para construir seu fluxo</p>
+      </div>
+    </div>
+
+    <!-- Right Properties Panel -->
+    <aside class="fv3-props-panel" id="flow-properties-panel">
+      <div class="fv3-props-empty" id="fv3-props-empty">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p>Selecione um nó para editar suas propriedades</p>
+      </div>
+      <div class="fv3-props-content" id="fv3-props-content" style="display:none;"></div>
+    </aside>
+  </div>
+
+  <!-- ══════════ ZONE 3: BOTTOM ANALYTICS PANEL ══════════ -->
+  <div class="fv3-analytics" id="fv3-analytics">
+    <!-- Collapse toggle -->
+    <div class="fv3-analytics-toggle" id="fv3-analytics-toggle">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+    </div>
+
+    <!-- Left: Execution Metrics -->
+    <div class="fv3-analytics-left">
+      <div class="fv3-analytics-header">
+        <div class="fv3-analytics-icon">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <span class="fv3-analytics-title">TCP Throughput</span>
+        <div class="fv3-metrics-legend">
+          <span class="fv3-leg-dot" style="background:#FF4D00;"></span><span>High</span>
+          <span class="fv3-leg-dot" style="background:#f59e0b;"></span><span>Medium</span>
+          <span class="fv3-leg-dot" style="background:#3b82f6;"></span><span>Low</span>
+        </div>
+        <button class="fv3-link-btn" id="fv3-analytics-expand">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        </button>
+      </div>
+      <div class="fv3-metrics-chart">
+        <div class="fv3-chart-area" id="fv3-chart-area">
+          <!-- Bars generated by JS -->
+        </div>
+        <div class="fv3-metric-big">
+          <div class="fv3-metric-num" id="fv3-stat-executions">0</div>
+          <div class="fv3-metric-lbl">Flow Runs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Execution Log (Service Overview) -->
+    <div class="fv3-analytics-right">
+      <div class="fv3-analytics-header">
+        <div class="fv3-analytics-icon">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+        <span class="fv3-analytics-title">Service Overview</span>
+        <div style="display:flex;gap:4px;margin-left:auto;">
+          <button class="fv3-link-btn" title="Export CSV">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="fv3-link-btn" id="fv3-log-expand">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="fv3-exec-table">
+        <div class="fv3-exec-header">
+          <span>Nó</span>
+          <span>De</span>
+          <span>Para</span>
+          <span>Status</span>
+          <span>Disparos</span>
+        </div>
+        <div class="fv3-exec-body" id="fv3-exec-body">
+          <!-- Rows generated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -4,136 +4,223 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" href="../styles/modulo.css">
   <style>
-    body { margin: 0; padding: 16px; display: flex; flex-direction: column; height: 100vh; background: #111b21; color: #e9edef; font-family: -apple-system, system-ui, sans-serif; box-sizing: border-box; }
-    h2 { color: #d1d7db; margin-top: 0; font-weight: 500; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+    body { margin: 0; display: flex; flex-direction: column; height: 100vh; background: var(--bg-primary); color: var(--text-primary); font-family: 'Segoe UI', -apple-system, system-ui, sans-serif; box-sizing: border-box; overflow: hidden; }
     
-    .card-config { background: #202c33; border: 1px solid #2a3942; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    /* Header (Top Bar) */
+    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-secondary); z-index: 10; position: relative; }
+    .top-bar::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent-gradient); opacity: 0.6; }
+    h2 { color: var(--text-primary); margin: 0; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.3px; }
+    .top-actions { display: flex; gap: 12px; align-items: center; }
     
-    .toggle-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .toggle-label { font-size: 15px; font-weight: 500; }
+    /* Layout Colunas */
+    .main-layout { display: flex; flex: 1; overflow: hidden; }
+    .left-panel { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .right-panel { width: 340px; background: var(--bg-primary); border-left: 1px solid var(--border); display: flex; flex-direction: column; }
     
-    /* Toggle Switch Switcher */
-    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    /* Cards Genéricos */
+    .card-config { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; }
+    
+    /* Timeline / Drag and Drop */
+    .timeline-container { display: flex; flex-direction: column; gap: 10px; }
+    .timeline-item { background: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 12px; padding: 12px; cursor: grab; transition: all var(--transition); position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent-gradient); border-radius: var(--radius-md) 0 0 var(--radius-md); opacity: 0; transition: opacity var(--transition); }
+    .timeline-item:hover::before { opacity: 1; }
+    .timeline-item:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+    .timeline-item.dragging { opacity: 0.5; cursor: grabbing; box-shadow: var(--shadow-lg); transform: scale(1.02); z-index: 100; }
+    .timeline-item.drag-over { border-top: 3px solid var(--accent); }
+    .drag-handle { color: var(--text-muted); cursor: grab; padding-top: 4px; display: flex; align-items: center; justify-content: center; }
+    
+    .item-content { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .item-header { display: flex; justify-content: space-between; align-items: center; }
+    .item-type { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-remove-step { background: transparent; border: none; color: var(--danger); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: var(--transition-fast); }
+    .btn-remove-step:hover { background: rgba(239,68,68,0.1); }
+    
+    /* Inputs */
+    .textarea-msg { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; color: var(--text-primary); width: 100%; box-sizing: border-box; min-height: 80px; resize: vertical; font-family: inherit; font-size: 13px; outline: none; transition: border-color var(--transition); }
+    .textarea-msg:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .input-time { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); padding: 6px 10px; border-radius: var(--radius-sm); outline: none; font-size: 13px; transition: border-color var(--transition); }
+    .input-time:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    
+    .row-inputs { display: flex; gap: 12px; align-items: center; }
+    .input-group { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .input-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+    
+    /* Buttons */
+    .btn-salvar { background: var(--accent-gradient); color: #fff; border: none; padding: 10px 20px; border-radius: var(--radius-md); font-weight: 600; font-size: 13px; cursor: pointer; transition: all var(--transition); }
+    .btn-salvar:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+    
+    .btn-add-module { background: transparent; border: 1px dashed var(--border-light); color: var(--accent); width: 100%; padding: 12px; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; font-size: 12px; outline: none; transition: all var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-add-module:hover { border-color: var(--accent); background: rgba(255,98,0,0.05); box-shadow: var(--shadow-glow); }
+    
+    .btn-toolbar { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 8px; color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: all var(--transition-fast); }
+    .btn-toolbar:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border-light); }
+    
+    /* Toggles */
+    .toggle-container { display: flex; justify-content: space-between; align-items: center; }
+    .toggle-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
     .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374045; transition: .4s; border-radius: 24px; }
-    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: #00a884; }
-    input:checked + .slider:before { transform: translateX(20px); }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-light); transition: .3s; border-radius: 22px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+    input:checked + .slider:before { transform: translateX(18px); }
 
-    .textarea-msg { background: #2a3942; border: 1px solid #374045; border-radius: 8px; padding: 12px; color: #d1d7db; width: 100%; box-sizing: border-box; min-height: 120px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.5; outline: none; margin-bottom: 12px; }
-    .textarea-msg:focus { border-color: #00a884; }
+    /* Whatsapp Preview */
+    .wp-header { background: var(--bg-secondary); padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+    .wp-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px; border: 1px solid var(--border); }
+    .wp-contact-name { font-weight: 600; font-size: 14px; color: var(--text-primary); }
+    .wp-status { font-size: 11px; color: var(--text-muted); }
+    .wp-chat-bg { background-color: var(--bg-primary); flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
     
-    .row-horarios { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
-    .input-time { background: #2a3942; color: #d1d7db; border: 1px solid #374045; padding: 8px 12px; border-radius: 6px; outline: none; font-size: 14px; }
+    .bubble { max-width: 85%; padding: 6px 8px 8px 10px; border-radius: 8px; font-size: 13.5px; line-height: 19px; position: relative; word-wrap: break-word; color: var(--text-primary); white-space: pre-wrap; }
+    .bubble.out { background: rgba(255,98,0,0.15); border: 1px solid rgba(255,98,0,0.2); align-self: flex-end; border-top-right-radius: 0; }
+    .bubble.in { background: var(--bg-card); border: 1px solid var(--border); align-self: flex-start; border-top-left-radius: 0; }
     
-    .dica { font-size: 12px; color: #8696a0; margin-top: 0; }
+    .bubble-meta { font-size: 10px; color: var(--text-muted); float: right; margin: 8px 0 -4px 12px; display: flex; align-items: center; gap: 4px; }
+    .bubble svg.tick { width: 16px; height: 16px; fill: var(--accent); }
     
-    .btn-salvar { background: #00a884; color: #111b21; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; width: 100%; margin-top: auto; }
-    .btn-salvar:hover { background: #02c098; }
+    .bubble-audio { display: flex; align-items: center; gap: 12px; width: 200px; }
+    .play-btn { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; }
+    .play-btn svg { fill: #fff; margin-left: 2px; }
+    .audio-waveform { flex: 1; height: 16px; display: flex; align-items: center; gap: 2px; }
+    .audio-bar { width: 3px; height: 100%; background: var(--accent); border-radius: 2px; opacity: 0.7; }
+    
+    .typing-indicator { color: var(--text-muted); font-style: italic; font-size: 12px; align-self: flex-end; margin-right: 4px; display: none; }
+    
+    /* Toolbar Rich Text */
+    .rt-toolbar { display: flex; gap: 6px; margin-bottom: 6px; }
+
+    /* Checkbox accent */
+    input[type="checkbox"] { accent-color: var(--accent); }
   </style>
 </head>
 <body>
 
-  <h2>
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="#00a884"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-    Saudação Automática
-  </h2>
-  <p class="dica">Envie uma mensagem automaticamente quando um novo lead falar com você pela primeira vez no dia.</p>
-
-  <div class="card-config">
-    <div class="toggle-container">
-      <span class="toggle-label">Ativar Saudação</span>
-      <label class="switch">
-        <input type="checkbox" id="chk-ativo">
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <label style="font-size: 13px; color: #8696a0; display: block; margin-bottom: 6px;">Mensagem de Saudação</label>
-    <textarea id="txt-msg" class="textarea-msg" placeholder="Olá! Tudo bem? Como posso te ajudar hoje?"></textarea>
-    <p class="dica">Variáveis suportadas: {{nome}}</p>
-  </div>
-
-  <div class="card-config">
-    <div style="font-size: 14px; font-weight: 600; color: #d1d7db; margin-bottom: 12px;">Mensagens Sequenciais (Follow-up)</div>
-    <p class="dica" style="margin-bottom: 12px;">Dispare múltiplos áudios ou textos em sequência após a Saudação principal.</p>
-    
-    <div id="lista-followup" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-      <!-- Itens do funil injetados via JS -->
-    </div>
-    
-    <button id="btn-add-followup" style="background: transparent; border: 1px dashed #374045; color: #00a884; width: 100%; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; outline: none;">
-      + Adicionar Passo na Sequência
-    </button>
-  </div>
-
-  <div class="card-config">
-    <div style="font-size: 14px; font-weight: 600; color: #d1d7db; margin-bottom: 12px;">Comportamento Humano</div>
-    
-    <div class="toggle-container" style="margin-bottom: 12px;">
-      <span class="toggle-label" style="font-size: 13px; color: #8696a0;">Simular "digitando..."</span>
-      <label class="switch" style="transform: scale(0.8);">
-        <input type="checkbox" id="chk-simular-dig" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="toggle-container" style="margin-bottom: 12px;">
-      <span class="toggle-label" style="font-size: 13px; color: #8696a0;">Simular "gravando áudio..."</span>
-      <label class="switch" style="transform: scale(0.8);">
-        <input type="checkbox" id="chk-simular-grav" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="row-horarios">
-      <div style="flex:1;">
-        <label style="font-size: 12px; color: #8696a0;">Delay Mín. (s)</label>
-        <input type="number" id="inp-delay-min" class="input-time" style="width: 100%; box-sizing: border-box;" value="2" min="1" max="10">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <h2>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Mesa de Saudação & Cadência
+    </h2>
+    <div class="top-actions">
+      <div class="toggle-container" style="margin-right: 16px; gap: 10px;">
+        <span class="toggle-label" style="font-size: 12px;">Motor Ativo</span>
+        <label class="switch">
+          <input type="checkbox" id="chk-ativo">
+          <span class="slider"></span>
+        </label>
       </div>
-      <div style="flex:1;">
-        <label style="font-size: 12px; color: #8696a0;">Delay Máx. (s)</label>
-        <input type="number" id="inp-delay-max" class="input-time" style="width: 100%; box-sizing: border-box;" value="5" min="2" max="15">
-      </div>
+      <button class="btn-salvar" id="btn-salvar">Salvar Fluxo (Deploy)</button>
     </div>
   </div>
 
-  <div class="card-config">
-    <div style="font-size: 14px; font-weight: 600; color: #d1d7db; margin-bottom: 12px;">Público Alvo</div>
-    <div style="display: flex; gap: 16px;">
-      <label style="color: #8696a0; font-size: 13px; display: flex; align-items: center; gap: 4px;">
-        <input type="checkbox" id="chk-apenas-privado" style="accent-color: #00a884;"> Privado (Individuais)
-      </label>
-      <label style="color: #8696a0; font-size: 13px; display: flex; align-items: center; gap: 4px;">
-        <input type="checkbox" id="chk-apenas-grupo" style="accent-color: #00a884;"> Grupos
-      </label>
-    </div>
-  </div>
-
-  <div class="card-config">
-    <div class="toggle-container">
-      <span class="toggle-label">Fora do Expediente</span>
-      <label class="switch">
-        <input type="checkbox" id="chk-horario">
-        <span class="slider"></span>
-      </label>
-    </div>
-    
-    <div id="container-horarios" style="display: none;">
-      <p class="dica" style="margin-bottom: 8px;">Defina seu horário de atendimento e deixe uma mensagem de ausência.</p>
-      <div class="row-horarios">
-        <label style="font-size: 13px; color: #d1d7db;">Início:</label>
-        <input type="time" id="inp-hora-inicio" class="input-time" value="09:00">
+  <div class="main-layout">
+    <!-- Left Panel: Builder -->
+    <div class="left-panel" id="builder-panel">
+      
+      <!-- Timeline (Drag and Drop Container) -->
+      <div class="card-config">
+        <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; display:flex; align-items:center; gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+          Timeline de Execução
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 16px 0;">A sequência de mensagens será disparada de cima para baixo. Arraste os blocos para reordenar.</p>
         
-        <label style="font-size: 13px; color: #d1d7db; margin-left: 8px;">Fim:</label>
-        <input type="time" id="inp-hora-fim" class="input-time" value="18:00">
+        <div class="timeline-container" id="timeline-container">
+          <!-- Timeline items injected via JS -->
+        </div>
+        
+        <div style="margin-top: 16px; display: flex; gap: 8px;">
+          <button class="btn-add-module" id="btn-add-text">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h12v2H6zm0 4h8v2H6z"/></svg>
+            Adicionar Texto
+          </button>
+          <button class="btn-add-module" id="btn-add-audio">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+            Adicionar Áudio
+          </button>
+        </div>
       </div>
-      <label style="font-size: 13px; color: #8696a0; display: block; margin-top: 12px; margin-bottom: 6px;">Mensagem Ausência (Opcional)</label>
-      <textarea id="txt-msg-fora" class="textarea-msg" style="min-height: 60px;" placeholder="Estamos fechados agora, voltamos logo!"></textarea>
+
+      <!-- Configurações Avançadas -->
+      <div class="card-config">
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display:flex; align-items:center; gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.44.17-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          Comportamento e Gatilhos da Saudação
+        </div>
+        
+        <div class="row-inputs" style="margin-bottom: 16px;">
+          <div class="input-group">
+            <label class="input-label">Público Alvo</label>
+            <div style="display: flex; gap: 12px; margin-top: 4px;">
+              <label style="color: var(--text-secondary); font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                <input type="checkbox" id="chk-apenas-privado" checked> Contatos (1 a 1)
+              </label>
+              <label style="color: var(--text-secondary); font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                <input type="checkbox" id="chk-apenas-grupo"> Grupos
+              </label>
+            </div>
+          </div>
+          
+          <div class="input-group">
+            <label class="input-label">Simular Digitação/Gravação</label>
+            <div style="display: flex; gap: 12px; margin-top: 4px;">
+              <label class="switch" style="transform: scale(0.85); transform-origin: left;">
+                <input type="checkbox" id="chk-simular-dig" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
+
+        <div class="toggle-container" style="margin-bottom: 12px;">
+          <span class="toggle-label" style="font-size: 12px;">Regras de Fora do Expediente</span>
+          <label class="switch" style="transform: scale(0.85);">
+            <input type="checkbox" id="chk-horario">
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div id="container-horarios" style="display: none;">
+          <div class="row-inputs" style="margin-bottom: 12px;">
+            <div class="input-group">
+              <label class="input-label">Horário de Início</label>
+              <input type="time" id="inp-hora-inicio" class="input-time" value="09:00">
+            </div>
+            <div class="input-group">
+              <label class="input-label">Horário de Fim</label>
+              <input type="time" id="inp-hora-fim" class="input-time" value="18:00">
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Mensagem de Ausência</label>
+            <textarea id="txt-msg-fora" class="textarea-msg" style="min-height: 60px;" placeholder="Estamos fechados agora, voltamos assim que possível!"></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right Panel: Live Preview -->
+    <div class="right-panel">
+      <div class="wp-header">
+        <div class="wp-avatar">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <div>
+          <div class="wp-contact-name">Cliente / Lead (Simulação)</div>
+          <div class="wp-status">visto por último hoje às 14:00</div>
+        </div>
+      </div>
+      
+      <div class="wp-chat-bg" id="wp-preview-container">
+        <!-- Bolhas renderizadas via JS -->
+      </div>
     </div>
   </div>
-
-  <button class="btn-salvar" id="btn-salvar" style="margin-bottom: 24px;">Salvar Configurações</button>
 
   <script src="../../libs/supabase.min.js"></script>
   <script src="../../libs/supabase-config.js"></script>

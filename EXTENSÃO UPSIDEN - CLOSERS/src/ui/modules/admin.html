@@ -3,42 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão da Equipe</title>
+  <title>Painel Maestro (Configurações Avançadas)</title>
   <link rel="stylesheet" href="admin.css">
+  <style>
+    body { background: #111b21; color: #e9edef; font-family: -apple-system, system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    
+    /* Global Rules Drag & Drop List */
+    .rules-container { display: flex; gap: 24px; height: 100%; }
+    .rules-list-pane { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .rules-sandbox-pane { width: 380px; background: #0b141a; border-left: 1px solid #2a3942; display: flex; flex-direction: column; }
+    
+    .rule-item { background: #202c33; border: 1px solid #2a3942; border-radius: 10px; display: flex; padding: 12px; gap: 12px; cursor: grab; position: relative; transition: 0.2s; }
+    .rule-item.dragging { opacity: 0.5; box-shadow: 0 8px 24px rgba(0,0,0,0.5); transform: scale(1.02); z-index: 100; cursor: grabbing; border-color: #00a884; }
+    .rule-item.drag-over { border-top: 3px solid #00a884; }
+    .rule-handle { color: #8696a0; display: flex; align-items: center; justify-content: center; width: 24px; }
+    
+    .rule-content { flex: 1; }
+    .rule-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .rule-priority { font-size: 11px; font-weight: 700; background: #53bdeb; color: #111b21; padding: 2px 6px; border-radius: 4px; }
+    .rule-title { font-size: 14px; font-weight: 600; color: #d1d7db; }
+    
+    .rule-logic { background: #111b21; padding: 8px; border-radius: 6px; font-family: monospace; font-size: 12px; color: #8696a0; }
+    .logic-pill { display: inline-block; padding: 2px 6px; border-radius: 4px; margin: 2px; }
+    .logic-if { background: rgba(255, 167, 38, 0.1); color: #ffa726; }
+    .logic-then { background: rgba(83, 189, 235, 0.1); color: #53bdeb; }
+
+    /* Sandbox Console */
+    .sb-header { padding: 16px; background: #202c33; border-bottom: 1px solid #2a3942; font-weight: 600; font-size: 14px; }
+    .sb-console { flex: 1; background: #000; padding: 16px; font-family: monospace; font-size: 12px; overflow-y: auto; color: #0f0; display: flex; flex-direction: column; gap: 4px; }
+    .sb-input-area { padding: 16px; background: #202c33; border-top: 1px solid #2a3942; display: flex; flex-direction: column; gap: 8px; }
+    .sb-input { background: #111b21; border: 1px solid #374045; border-radius: 6px; padding: 8px; color: #fff; font-size: 13px; outline: none; }
+    .btn-run { background: #00a884; color: #111b21; border: none; padding: 8px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+
+    /* Availability Matrix */
+    .matrix-container { padding: 20px; flex: 1; overflow: auto; display: flex; justify-content: center; }
+    .time-matrix { display: grid; grid-template-columns: 60px repeat(7, 1fr); gap: 2px; background: #2a3942; border: 1px solid #374045; border-radius: 8px; overflow: hidden; user-select: none; }
+    .matrix-header { background: #202c33; color: #8696a0; font-size: 12px; font-weight: 600; text-align: center; padding: 8px 0; border-bottom: 1px solid #374045; }
+    .time-label { background: #202c33; color: #8696a0; font-size: 11px; text-align: right; padding: 4px 8px; border-right: 1px solid #374045; display: flex; align-items: center; justify-content: flex-end; }
+    
+    .time-cell { background: #111b21; height: 24px; cursor: crosshair; transition: background 0.1s; border-bottom: 1px solid rgba(255,255,255,0.02); }
+    .time-cell.active { background: rgba(0, 168, 132, 0.4); border-bottom-color: rgba(0, 168, 132, 0.5); }
+    .time-cell.exception { background: rgba(241, 92, 109, 0.4); border-bottom-color: rgba(241, 92, 109, 0.5); background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.2) 5px, rgba(0,0,0,0.2) 10px); }
+  </style>
 </head>
 <body>
   <div class="mod-app">
     <header class="mod-header">
       <div class="header-title">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--primary-color)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-        <h2>Gestão da Equipe</h2>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="#00a884"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+        <h2>Painel Maestro</h2>
       </div>
       <div class="tabs-header">
-        <button class="tab-btn active" data-tab="equipe">Equipe</button>
+        <button class="tab-btn" data-tab="equipe">Equipe & Auth</button>
         <button class="tab-btn" data-tab="arquivos">Arquivos Globais</button>
+        <button class="tab-btn active" data-tab="matrix">Matriz de Horários</button>
+        <button class="tab-btn" data-tab="regras">Regras Globais</button>
       </div>
     </header>
 
     <div id="restrito-view" class="mod-empty" style="display:none;">
-      <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="var(--danger-color)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-      <p style="color:var(--danger-color); font-size: 18px; margin-top:16px;">Acesso Restrito</p>
+      <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="#f15c6d" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+      <p style="color:#f15c6d; font-size: 18px; margin-top:16px;">Acesso Restrito</p>
       <p class="sub">Apenas administradores podem acessar a gestão.</p>
     </div>
 
     <!-- Tabela de Equipe -->
-    <div id="tab-equipe" class="tab-content">
-      <div class="team-list" id="lista-equipe">
-        <div class="loading-spinner"></div>
-      </div>
+    <div id="tab-equipe" class="tab-content" style="display:none;">
+      <div class="team-list" id="lista-equipe"><div class="loading-spinner"></div></div>
     </div>
 
     <!-- Tabela de Arquivos Globais -->
     <div id="tab-arquivos" class="tab-content" style="display:none;">
-      <div class="mod-search">
-        <input type="text" id="admin-busca" placeholder="Buscar por arquivo ou closer...">
+      <div class="mod-search"><input type="text" id="admin-busca" placeholder="Buscar por arquivo ou closer..."></div>
+      <div class="file-list" id="lista-arquivos"><div class="loading-spinner"></div></div>
+    </div>
+
+    <!-- Matriz de Horarios -->
+    <div id="tab-matrix" class="tab-content" style="display:flex; flex-direction:column; height: 100%;">
+      <div style="padding: 16px 20px; background: #202c33; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="margin:0; font-size:15px; color:#e9edef;">Matriz de Disponibilidade (Pinte para ativar)</h3>
+          <p style="margin:4px 0 0 0; font-size:12px; color:#8696a0;">Arraste o cursor pelas células para definir horários de funcionamento. Verde = Atendimento Online.</p>
+        </div>
+        <button class="btn-run" id="btn-save-matrix" style="padding: 10px 24px;">Salvar Matriz</button>
       </div>
-      <div class="file-list" id="lista-arquivos">
-        <div class="loading-spinner"></div>
+      <div class="matrix-container">
+        <div class="time-matrix" id="time-matrix">
+           <!-- Renderizado via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Regras Globais e Sandbox -->
+    <div id="tab-regras" class="tab-content" style="display:none; height:100%;">
+      <div class="rules-container">
+        <!-- Lista Drag and Drop -->
+        <div class="rules-list-pane">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h3 style="margin:0; font-size:15px; color:#e9edef;">Pilha de Regras Globais (Prioridade Top-Down)</h3>
+              <p style="margin:4px 0 0 0; font-size:12px; color:#8696a0;">Arraste os cards para reorganizar a prioridade. As regras do topo interceptam as de baixo.</p>
+            </div>
+            <button class="btn-run" id="btn-add-rule">+ Criar Regra Suprema</button>
+          </div>
+          
+          <div id="rules-dnd-list" style="display:flex; flex-direction:column; gap:12px; margin-top: 16px;">
+            <!-- Renderizado via JS -->
+          </div>
+        </div>
+
+        <!-- Sandbox Simulator -->
+        <div class="rules-sandbox-pane">
+          <div class="sb-header">🧪 Simulador (Sandbox Emulation)</div>
+          <div class="sb-console" id="sb-console">
+            <span style="color:#8696a0;">> Engine Sandbox inicializada v2.0...</span>
+            <span style="color:#8696a0;">> Digite um contexto abaixo para testar o roteamento de regras sem enviar mensagens reais.</span>
+          </div>
+          <div class="sb-input-area">
+            <input type="text" id="sb-msg" class="sb-input" placeholder="Mensagem recebida do Cliente...">
+            <input type="text" id="sb-tags" class="sb-input" placeholder="Tags do Cliente (ex: VIP, Devedor)...">
+            <button class="btn-run" id="btn-run-sim" style="width:100%;">Rodar Simulação</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -46,10 +132,7 @@
 
   <script src="../../libs/supabase.min.js"></script>
   <script src="../../libs/supabase-config.js"></script>
-  <script src="../../services/auth.service.js"></script><script src="../../services/db.service.js"></script><script src="../../services/storage.service.js"></script><script src="../../services/metrics.service.js"></script>
+  <script src="../../services/auth.service.js"></script><script src="../../services/db.service.js"></script><script src="../../services/storage.service.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>
-
-
-

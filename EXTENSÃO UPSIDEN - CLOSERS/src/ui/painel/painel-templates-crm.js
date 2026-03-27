@@ -8,6 +8,46 @@
  */
 
 // === TEMPLATES ===
+// CSS Centralizado Red Sun para Kanban (Compartilhado entre Modos)
+const KANBAN_CORE_STYLE = `
+  <style id="kanban-premium-styles">
+     .ws-board-redsun { 
+        flex: 1; display: flex; gap: 24px; padding: 12px 24px 24px; 
+        overflow-x: auto; height: 100%; width: 100%; 
+        background: var(--bg-primary); font-family: 'Inter', sans-serif; 
+        box-sizing: border-box;
+     }
+     .ws-board-redsun::-webkit-scrollbar { height: 8px; }
+     .ws-board-redsun::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+     
+     .ws-col-rs { width: 340px; min-width: 340px; display: flex; flex-direction: column; max-height: 100%; border-radius: 0; background: transparent; border: none; }
+     .ws-col-header-rs { padding: 4px 0 12px 0; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--col-color, var(--border)); }
+     .ws-col-title-rs { font-size: 14px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+     .ws-col-badge-rs { background: var(--bg-card); color: var(--text-muted); padding: 2px 10px; border-radius: 8px; font-size: 11px; border: 1px solid var(--border); font-weight: 700; }
+     .ws-cards-container-rs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 4px 4px 24px 4px; min-height: 100px; }
+     .ws-cards-container-rs::-webkit-scrollbar { width: 4px; }
+     .ws-cards-container-rs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+     
+     .ws-card-rs { background: var(--bg-card); border-radius: 12px; padding: 18px; cursor: grab; transition: all 0.2s cubic-bezier(0.2,0,0,1); position: relative; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--border); }
+     .ws-card-rs:hover { background: var(--bg-card-hover); transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--accent-glow); }
+     .card-header-rs { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+     .project-badge-rs { font-size: 12px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; letter-spacing: 0.1px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+     .project-badge-rs::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--col-color, var(--text-muted)); box-shadow: 0 0 8px var(--col-color); flex-shrink: 0; }
+     .ws-status-pill-rs { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.8px; }
+     .ws-status-pill-rs.pill-danger { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(241, 92, 109, 0.2); }
+     .ws-status-pill-rs.pill-success { background: var(--success-dim); color: var(--success); border: 1px solid rgba(0, 168, 132, 0.2); }
+     .card-tags-rs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+     .card-tag-rs { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); display: flex; align-items: center; gap: 4px; }
+     .avatar-sm-rs { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); background: var(--accent-dim); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+     .avatar-sm-rs.round { border-radius: 50%; }
+     .qa-btn-rs { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+     .qa-btn-rs:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-glow); }
+     .qa-btn-rs.wpp:hover { background: var(--success-dim); color: var(--success); border-color: var(--success); }
+     
+     .ws-cards-container-rs.drag-over { background: var(--accent-dim); border-radius: 8px; outline: 2px dashed var(--accent-glow); }
+  </style>
+`;
+
 function renderTemplates(c) {
   document.getElementById('header-actions').innerHTML = `<button class="btn btn-primary" data-click="showNewTemplateModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Template</button>`;
   if (painelData.templates.length === 0) {
@@ -65,6 +105,15 @@ async function salvarTemplate(id) {
 let dynamicStages = [];
 let dynamicTags = {};
 
+// Urgency Levels (configurable priority)
+const URGENCY_LEVELS_CRM = {
+  normal:      { label: 'Normal',      color: '#8A8A98', bg: 'rgba(138,138,152,0.15)', border: 'rgba(138,138,152,0.3)' },
+  importante:  { label: 'Importante',  color: '#3B82F6', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)' },
+  urgente:     { label: 'Urgente',     color: '#F59E0B', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)' },
+  critico:     { label: 'Cr\u00edtico',     color: '#EF4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.3)' },
+  vip:         { label: 'VIP',         color: '#A855F7', bg: 'rgba(168,85,247,0.15)', border: 'rgba(168,85,247,0.3)' }
+};
+
 async function loadCRMDynamics() {
   return new Promise(resolve => {
     chrome.storage.local.get(['ups_crm_colunas', 'ups_crm_tags'], (res) => {
@@ -113,142 +162,243 @@ async function renderCRM(c) {
    }
 }
 
-// === CRM PERSONALIZADO (ANTIGO) ===
+// === CRM PERSONALIZADO (NOVA INTEGRAÇÃO WASPEED) ===
+window.currentCRMViewMode = window.currentCRMViewMode || 'abas'; // 'abas' ou 'etiquetas'
+
+// Funções globais para o sistema data-click do Painel (CSP compliant)
+window.toggleCRMViewMode = function() {
+  // Abas = CRM Pipeline interno | Etiquetas = Labels REAIS do WhatsApp sincronizado
+  window.crmSyncModeActive = !window.crmSyncModeActive;
+  renderSection('crm');
+};
+
+window.activateSyncMode = function() {
+  window.crmSyncModeActive = true;
+  renderSection('crm');
+};
+
+window.openWppDirect = function(phone) {
+  if (!phone) { typeof toast === 'function' && toast('Sem número de WhatsApp salvo.', 'error'); return; }
+  window.open('https://web.whatsapp.com/send?phone=' + phone, '_blank');
+};
+
 async function renderCustomCRM(c) {
   await loadCRMDynamics();
   
+  // Load urgency from local storage
+  const urgMap = await new Promise(resolve => {
+    chrome.storage.local.get(['ups_crm_urgencias'], (res) => resolve(res.ups_crm_urgencias || {}));
+  });
+  // Merge into in-memory leads
+  painelData.leads.forEach(l => { if(urgMap[l.id]) l.urgencia = urgMap[l.id]; });
+
+  const modoAtual = window.crmSyncModeActive ? 'Etiquetas WPP' : 'Abas do Funil';
+  
   document.getElementById('header-actions').innerHTML = `
-    <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:bold; cursor:pointer;" title="Sincronizar Funil com Etiquetas do WhatsApp conectado">
-       <input type="checkbox" id="kb-sync-toggle" style="cursor:pointer;" ${window.crmSyncModeActive ? 'checked' : ''}> Sincronizar Etiquetas WPP
-    </label>
-    <button class="btn btn-secondary" data-click="showCRMManagerModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Board</button>
-    <button class="btn btn-secondary" data-click="navigate('contatos')" style="color: var(--accent); border-color: rgba(255, 98, 0, 0.3);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Importar</button>
-    <button class="btn btn-primary" data-click="showNewLeadModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Lead</button>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="btn btn-secondary" data-click="toggleCRMViewMode()" title="Alternar Base">
+         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+         Modo: ${modoAtual}
+      </button>
+      <button class="btn btn-secondary" data-click="showCRMManagerModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0v.09h-.09a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21h-2v-.09a1.65 1.65 0 0 0-1.51-1H9a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3v-2h.09a1.65 1.65 0 0 0 1.51-1H4.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3h2v.09a1.65 1.65 0 0 0 1.51 1H15a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21v2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <button class="btn btn-primary" data-click="showNewLeadModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Lead</button>
+    </div>
   `;
 
-  document.getElementById('kb-sync-toggle')?.addEventListener('change', (e) => toggleCRMSyncMode(e.target.checked));
+  let colunasParaRenderizar = [];
+  if (window.currentCRMViewMode === 'abas') {
+     colunasParaRenderizar = dynamicStages.map(s => ({ id: s.id, titulo: s.label, color: s.color || '#FFF', field: 'etapa', leads: painelData.leads.filter(l => (l.estagio || l.etapa) === s.id) }));
+  } else {
+     Object.keys(dynamicTags).forEach(k => {
+         const tg = dynamicTags[k];
+         colunasParaRenderizar.push({ id: k, titulo: tg.emoji ? (tg.emoji + ' ' + k) : k, color: tg.bg || '#FFF', field: 'tag', leads: painelData.leads.filter(l => Array.isArray(l.tag) ? l.tag.includes(k) : l.tag === k) });
+     });
+     colunasParaRenderizar.push({ id: 'sem_tag', titulo: 'Sem Etiqueta', color: '#888', field: 'tag', leads: painelData.leads.filter(l => !l.tag || (Array.isArray(l.tag) && l.tag.length === 0)) });
+  }
 
-  let html = '<div class="kanban-board">';
-  dynamicStages.forEach(stage => {
-    const stageLeads = painelData.leads.filter(l => (l.estagio||l.etapa) === stage.id);
-    const somaValor = stageLeads.reduce((a,l) => a + (parseFloat(l.valor)||0), 0);
-    html += `<div class="kanban-column">
-      <div class="kanban-column-header">
-        <span style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:${stage.color}"></span>${stage.label}</span>
-        <span style="display:flex;flex-direction:column;align-items:flex-end;"><span class="count">${stageLeads.length}</span><span style="font-size:10px;color:#00a884;font-weight:700;">${fmtMoeda(somaValor)}</span></span>
+  let html = KANBAN_CORE_STYLE + '<div class="ws-board-redsun">';
+  colunasParaRenderizar.forEach(col => {
+    html += `<div class="ws-col ws-col-rs">
+      <div class="ws-col-header-rs" style="--col-color: ${col.color};">
+        <div class="ws-col-title-rs">${col.titulo}</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+           <div class="ws-col-badge-rs">${col.leads.length}</div>
+           <svg viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" width="16" height="16" style="cursor:pointer;" data-click="showCRMManagerModal()"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </div>
       </div>
-      <div class="kanban-cards" data-stage="${stage.id}">`;
-    stageLeads.forEach(lead => {
+      <div class="kanban-cards ws-cards-container-rs" data-stage="${col.id}" data-field="${col.field}">`;
+    
+    col.leads.forEach(lead => {
       let tagHtml = '';
       if (lead.tag) {
-        // Multi-tags compatibility or solid single-tag 
-        // Lead.tag might be string or array
         let tagsArray = Array.isArray(lead.tag) ? lead.tag : [lead.tag];
-        
-        tagHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:2px;">`;
+        tagHtml = `<div class="card-tags-rs">`;
         tagsArray.forEach(tgKey => {
            if (dynamicTags[tgKey]) {
              const t = dynamicTags[tgKey];
-             tagHtml += `<span style="font-size:9px;padding:2px 6px;border-radius:12px;background:${t.bg};color:${t.cor};font-weight:700;">${t.emoji} ${tgKey}</span>`;
+             tagHtml += `<span class="card-tag-rs">${t.emoji} ${tgKey}</span>`;
            }
         });
         tagHtml += `</div>`;
       }
       
-      html += `<div class="kanban-card" draggable="true" data-lead-id="${lead.id}" data-click="editLeadModal('${lead.id}')" style="border-left: 3px solid ${stage.color};">
-        <div style="display:flex;flex-direction:column;align-items:flex-start;">
-          <div class="card-name" style="font-size:14px;font-weight:bold;">${lead.nome}</div>
-          ${tagHtml}
+      let avatarChar = lead.nome ? lead.nome[0].toUpperCase() : '?';
+      let clearPhone = (lead.telefone || '').replace(/\D/g, '');
+      
+      // Configurable urgency
+      let urg = URGENCY_LEVELS_CRM[lead.urgencia] || URGENCY_LEVELS_CRM.normal;
+      let urgPillClass = urg.pillClass ? ` ${urg.pillClass}` : '';
+      let urgPillStyle = urg.pillClass ? '' : `background:${urg.bg};color:${urg.color};border:1px solid ${urg.border};`;
+      
+      let dateStr = lead.lembrete_data ? new Date(lead.lembrete_data).toLocaleDateString('pt-BR') : 'Hoje';
+
+      // Avatar: photo or letter
+      let avatarHtml;
+      if (lead.foto_url) {
+        avatarHtml = `<img class="avatar-sm-rs round" src="${lead.foto_url}" alt="${lead.nome || ''}" style="object-fit:cover;background:none;">`;
+      } else {
+        avatarHtml = `<div class="avatar-sm-rs round" style="background:${col.color};" data-click="editLeadModal('${lead.id}')">${avatarChar}</div>`;
+      }
+
+      html += `
+        <div class="kanban-card ws-card-rs" draggable="true" data-lead-id="${lead.id}">
+           <div class="card-header-rs">
+             <div class="project-badge-rs" style="--col-color: ${col.color};">${lead.nome || 'Lead s/ Nome'}</div>
+             <div style="color:var(--text-muted); cursor:pointer;" data-click="editLeadModal('${lead.id}')">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+             </div>
+           </div>
+           
+           <div style="display:flex; justify-content:space-between; align-items:center;">
+             <span class="ws-status-pill-rs${urgPillClass}" style="${urgPillStyle}">${urg.label}</span>
+             <span style="font-size:11px; color:var(--text-muted); font-family:monospace;">${lead.telefone||'S/Tel'}</span>
+           </div>
+           
+           <div style="font-size:12px; color:var(--text-secondary); line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; cursor:pointer;" data-click="editLeadModal('${lead.id}')">
+             ${lead.notas || 'Sem anotações no CRM.'}
+           </div>
+
+           ${tagHtml}
+           
+           <div style="display:flex; align-items:center; justify-content:space-between; padding-top:14px; border-top:1px solid var(--border);">
+             <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-muted); font-weight:500;">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+               <span>${dateStr}</span>
+             </div>
+             <div style="display:flex; align-items:center; gap:8px;">
+                <button title="Abrir Chat" class="qa-btn-rs wpp" data-click="openWppDirect('${clearPhone}')"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg></button>
+                ${avatarHtml}
+             </div>
+           </div>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:4px;">
-          <span>${lead.telefone || ''}</span>
-          <span style="color:var(--success);font-weight:bold;">${fmtMoeda(lead.valor)}</span>
-        </div>
-        ${lead.notas ? `<div style="font-size:10px;color:#667781;margin-top:4px;border-top:1px solid #222e35;padding-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📝 ${lead.notas}</div>` : ''}
-      </div>`;
+      `;
     });
-    if (stageLeads.length === 0) html += `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px;">Nenhum lead</div>`;
+    
+    if (col.leads.length === 0) html += `<div style="padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px;">Quadro Vazio</div>`;
     html += `</div></div>`;
   });
   html += '</div>';
   c.innerHTML = html;
   
-  // Attach Native Drag & Drop Listeners
-  setTimeout(assignKanbanDragDrop, 100);
+  setTimeout(assignKanbanDragDrop, 150);
 }
 
 // === CRM SINCRONIZADO (ETIQUETAS DO WPP) ===
 async function renderSyncLabelsCRM(c) {
    document.getElementById('header-actions').innerHTML = `
-     <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:bold; cursor:pointer; color:var(--accent);">
-       <input type="checkbox" id="kb-sync-toggle-wpp" checked style="cursor:pointer;"> 🔄 Etiquetas WPP
-     </label>
+     <div style="display:flex; align-items:center; gap:8px;">
+       <button class="btn btn-secondary" data-click="toggleCRMViewMode()" title="Voltar para Funil Interno">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+          Modo: Etiquetas WPP
+       </button>
+       <span style="font-size:12px; color:var(--accent); font-weight:bold;">🔄 Sincronizado</span>
+     </div>
    `;
-   
-   document.getElementById('kb-sync-toggle-wpp')?.addEventListener('change', (e) => toggleCRMSyncMode(e.target.checked));
 
-   c.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted); width:100%;"><div class="loading-spinner"></div><br><br>Sincronizando com o celular conectado...<br>Pode levar alguns segundos se houver muitos contatos nas etiquetas.</div>';
+   c.innerHTML = `<div class="empty-state"><div class="loading-spinner"></div><h3>Sincronizando Etiquetas...</h3><p>Isso pode levar alguns segundos dependendo do volume de contatos.</p></div>`;
    
    chrome.runtime.sendMessage({ tipo: 'get_wpp_labels' }, (res) => {
       if (!res || !res.sucesso) {
-         const motivo = res ? (res.erro || 'Erro interno desconhecido.') : 'Sem Resposta (Timeout) do WhatsApp. F5 na aba do Zap!';
-         c.innerHTML = `<div style="padding:40px; text-align:center; color:var(--danger);">
-            <h4>Falha ao sincronizar Etiquetas</h4>
-            <p style="margin-top:10px; font-family:monospace; background:rgba(0,0,0,0.5); padding:10px; border-radius:8px;">LOG: ${motivo}</p>
-         </div>`;
+         c.innerHTML = `<div class="empty-state"><h3>Falha na Sincronização</h3><p>${res?.erro || 'O WhatsApp Web não respondeu ao comando.'}</p><button class="btn btn-primary" data-click="renderSection('crm')">Tentar Novamente</button></div>`;
          return;
       }
       
       const labels = res.labels || [];
       if (labels.length === 0) {
-         c.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted);">Você não tem nenhuma Etiqueta criada no seu WhatsApp Business ainda.</div>';
+         c.innerHTML = `<div class="empty-state"><h3>Nenhuma etiqueta</h3><p>Configure etiquetas no seu WhatsApp para usar este modo.</p></div>`;
          return;
       }
       
-      let html = '<div class="kanban-board">';
-      labels.forEach(lbl => {
-         const corHex = lbl.hexColor || '#8696a0';
-         html += `<div class="kanban-column">
-           <div class="kanban-column-header">
-             <span style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:${corHex}"></span>${lbl.name}</span>
-             <span style="display:flex;flex-direction:column;align-items:flex-end;"><span class="count">${lbl.items.length}</span></span>
-           </div>
-           <div class="kanban-cards wpp-sync-cards" data-label-id="${lbl.id}">`;
-         lbl.items.forEach(contato => {
-            const foneTratado = contato.id.replace('@c.us', '').replace('@g.us', '');
-            const nomeEscapado = (contato.nome || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
-            const fotoUrlEscapada = contato.foto ? contato.foto.replace(/'/g, "\\'") : '';
-            
-            const avatarHtml = contato.foto ? 
-               `<img src="${contato.foto}" style="width:24px;height:24px;border-radius:50%;margin-right:8px;object-fit:cover;">` : 
-               `<div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.1);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:10px;margin-right:8px;font-weight:bold;">${(contato.nome||'C').charAt(0).toUpperCase()}</div>`;
-               
-            html += `<div class="kanban-card wpp-sync-card" draggable="true" data-click="showWppContactModal('${contato.id}', '${nomeEscapado}', '${fotoUrlEscapada}')" data-contact-id="${contato.id}" data-old-label-id="${lbl.id}" style="border-left: 3px solid ${corHex}; cursor: grab;">
-              <div style="display:flex;align-items:center;margin-bottom:6px;">
-                ${avatarHtml}
-                <div class="card-name" style="font-size:14px;font-weight:bold;line-height:1.2;">${contato.nome}</div>
+      let html = KANBAN_CORE_STYLE + '<div class="ws-board-redsun">';
+        labels.forEach(lbl => {
+          const corHex = lbl.hexColor || '#8696a0';
+          let cardsHtml = '';
+          
+          lbl.items.forEach(contato => {
+             const foneTratado = contato.id.replace('@c.us', '').replace('@g.us', '').replace('@lid', '');
+             const nomeEscapado = (contato.nome || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+             const fotoUrlEscapada = contato.foto ? contato.foto.replace(/'/g, "\\'") : '';
+             
+             const avatarHtml = contato.foto ? 
+                `<img src="${contato.foto}" class="avatar-sm-rs round" style="margin:0;">` : 
+                `<div class="avatar-sm-rs round" style="background:${corHex}; margin:0; color:#FFF;">${(contato.nome || 'C').charAt(0).toUpperCase()}</div>`;
+                 
+             cardsHtml += `
+               <div class="kanban-card ws-card-rs wpp-sync-card" draggable="true" 
+                    data-click="showWppContactModal('${contato.id}', '${nomeEscapado}', '${fotoUrlEscapada}')" 
+                    data-contact-id="${contato.id}" data-old-label-id="${lbl.id}">
+                  
+                  <div class="card-header-rs">
+                     <div class="project-badge-rs" style="--col-color: ${corHex};">${contato.nome || 'Contato Zap'}</div>
+                     <div style="color:var(--text-muted); cursor:pointer;">
+                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                     </div>
+                  </div>
+
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                     <span class="ws-status-pill-rs pill-success">Sincronizado</span>
+                     <span style="font-size:11px; color:var(--text-muted); font-family:monospace;">${foneTratado}</span>
+                  </div>
+
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding-top:14px; border-top:1px solid var(--border);">
+                     <div style="font-size:11px; color:var(--text-muted); font-weight:500; display:flex; align-items:center; gap:4px;">
+                        <span style="color:var(--success);">●</span> Online
+                     </div>
+                     <div style="display:flex; align-items:center; gap:8px;">
+                        <button title="Abrir Chat" class="qa-btn-rs wpp" data-click="openWppChatSync('${foneTratado}')">
+                           <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
+                        </button>
+                        ${avatarHtml}
+                     </div>
+                  </div>
+               </div>`;
+          });
+
+          html += `
+            <div class="ws-col ws-col-rs sync-column" data-label-id="${lbl.id}">
+              <div class="ws-col-header-rs" style="--col-color: ${corHex};">
+                <div class="ws-col-title-rs">${lbl.name}</div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                   <div class="ws-col-badge-rs">${lbl.items.length}</div>
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" style="color:var(--text-muted); cursor:pointer;"><path d="M12 5v14M5 12h14"/></svg>
+                </div>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted);">
-                <span>${foneTratado}</span>
-                <span title="Integração Nativa">🟢</span>
+              <div class="ws-cards-container-rs wpp-sync-cards" data-label-id="${lbl.id}">
+                ${cardsHtml || '<div style="padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px;">Vazio</div>'}
               </div>
             </div>`;
-         });
-         
-         if (lbl.items.length === 0) html += `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px;">Vazio</div>`;
-         
-         html += `</div></div>`;
-      });
+       });
       html += '</div>';
       c.innerHTML = html;
       
-      setTimeout(assignSyncKanbanDragDrop, 100);
+      setTimeout(assignSyncKanbanDragDrop, 150);
    });
 }
 
+
 function assignSyncKanbanDragDrop() {
   const cards = document.querySelectorAll('.wpp-sync-card');
-  const cols = document.querySelectorAll('.kanban-column');
+  const cols = document.querySelectorAll('.sync-column');
 
   cards.forEach(card => {
     card.addEventListener('dragstart', e => {
@@ -256,7 +406,7 @@ function assignSyncKanbanDragDrop() {
          contactId: card.dataset.contactId,
          oldLabelId: card.dataset.oldLabelId
       }));
-      setTimeout(() => card.style.opacity = '0.5', 0);
+      setTimeout(() => card.style.opacity = '0.4', 0);
     });
     card.addEventListener('dragend', () => card.style.opacity = '1');
   });
@@ -267,12 +417,12 @@ function assignSyncKanbanDragDrop() {
 
     col.addEventListener('dragover', e => {
       e.preventDefault();
-      cardsContainer.style.background = 'rgba(255,100,0,0.05)';
+      cardsContainer.classList.add('drag-over');
     });
-    col.addEventListener('dragleave', () => cardsContainer.style.background = 'transparent');
+    col.addEventListener('dragleave', () => cardsContainer.classList.remove('drag-over'));
     col.addEventListener('drop', e => {
       e.preventDefault();
-      cardsContainer.style.background = 'transparent';
+      cardsContainer.classList.remove('drag-over');
       
       const payloadStr = e.dataTransfer.getData('text/plain');
       if (!payloadStr) return;
@@ -284,30 +434,48 @@ function assignSyncKanbanDragDrop() {
          const newLabelId = cardsContainer.dataset.labelId;
          
          if (contactId && newLabelId && oldLabelId !== newLabelId) {
-            typeof toast === 'function' && toast(`Mapeado ID: ${contactId.substring(0,25)}... Transferindo!`, 'info');
+            // UI FEEL: Mover card imediatamente (Otimismo)
+            const cardElement = document.querySelector(`.wpp-sync-card[data-contact-id="${contactId}"]`);
+            if (cardElement) {
+                cardsContainer.appendChild(cardElement);
+                // Atualizar contadores visuais
+                updateSyncBadges();
+            }
+
+            typeof toast === 'function' && toast(`Sincronizando...`, 'info');
             
             chrome.runtime.sendMessage({ 
                 tipo: 'wpp_update_label', 
                 dados: { contactId, oldLabelId, newLabelId } 
             }, res => {
-                const toast = document.querySelector('.toast-root') ? window.addToast || window.toast : console.log;
                 if (res && res.sucesso) {
-                    typeof toast === 'function' && toast('Sincronização na Meta Concluída!', 'success');
-                    
-                    // Modifica os IDs localmente para o frontend acompanhar a mudança
-                    card.dataset.oldLabelId = newLabelId;
+                    typeof toast === 'function' && toast('WhatsApp Atualizado!', 'success');
+                    if (cardElement) cardElement.dataset.oldLabelId = newLabelId;
                 } else {
-                    alert("🚨 CRASH FATAL NO WA-JS DETECTADO 🚨\n\nPor favor, tire um PRINT desta tela ou copie o texto abaixo e mande pro Arquiteto:\n\n" + (res.erro || 'Erro Desconhecido'));
-                    
-                    // Reverte o card pro local de origem em caso de erro extremo na API
-                    const origemContainer = document.querySelector(`.kanban-cards[data-label-id="${oldLabelId}"]`);
-                    if (origemContainer) origemContainer.appendChild(card);
+                    // Reversão em caso de erro
+                    alert("🚨 ERRO DE SINCRONIZAÇÃO 🚨\n\n" + (res.erro || 'Erro Desconhecido'));
+                    const origemContainer = document.querySelector(`.wpp-sync-cards[data-label-id="${oldLabelId}"]`);
+                    if (origemContainer && cardElement) {
+                        origemContainer.appendChild(cardElement);
+                        updateSyncBadges();
+                    }
                 }
             });
          }
       } catch(err) { console.error('Erro no parser do drag:', err); }
     });
   });
+}
+
+function updateSyncBadges() {
+    document.querySelectorAll('.sync-column').forEach(col => {
+        const badge = col.querySelector('.ws-col-badge-rs');
+        const container = col.querySelector('.wpp-sync-cards');
+        if (badge && container) {
+            const count = container.querySelectorAll('.wpp-sync-card').length;
+            badge.textContent = count;
+        }
+    });
 }
 
 // Modal Rápido do Modo Sync com Suporte a Foto Reais
@@ -349,7 +517,7 @@ window.openWppChatSync = function(fone) {
 
 function assignKanbanDragDrop() {
   const cards = document.querySelectorAll('.kanban-card');
-  const cols = document.querySelectorAll('.kanban-column');
+  const cols = document.querySelectorAll('.ws-col');
 
   cards.forEach(card => {
     card.addEventListener('dragstart', e => {
@@ -372,20 +540,38 @@ function assignKanbanDragDrop() {
       e.preventDefault();
       cardsContainer.style.background = 'transparent';
       const leadId = e.dataTransfer.getData('text/plain');
-      const newStage = cardsContainer.dataset.stage;
-      if (leadId && newStage) {
+      const newStageId = cardsContainer.dataset.stage;
+      const field = cardsContainer.dataset.field; // 'etapa' ou 'tag'
+      if (leadId && newStageId) {
         // Encontra lead
         const idx = painelData.leads.findIndex(l => l.id === leadId);
-        if (idx >= 0 && (painelData.leads[idx].estagio || painelData.leads[idx].etapa) !== newStage) {
-           painelData.leads[idx].etapa = newStage;
-           painelData.leads[idx].estagio = newStage; // fallback dual param
-           renderSection('crm'); // Re-desenha com nova posicao
+        if (idx >= 0) {
+           const lead = painelData.leads[idx];
+           let changed = false;
+           if (field === 'etapa' && lead.etapa !== newStageId) {
+              lead.etapa = newStageId; lead.estagio = newStageId;
+              changed = true;
+           } else if (field === 'tag') {
+              let tgs = Array.isArray(lead.tag) ? lead.tag : (lead.tag ? [lead.tag] : []);
+              if (!tgs.includes(newStageId)) {
+                 if (newStageId === 'sem_tag') tgs = []; else tgs = [newStageId]; // overwriting for D&D simplicity
+                 lead.tag = tgs; changed = true;
+              }
+           }
            
-           // Atualiza banco em background silencioso
-           try { 
-              await UpsidenDB.from('leads').update({ etapa: newStage, updated_at: new Date().toISOString() }).eq('id', leadId); 
-              await UpsidenDB.from('historico_interacoes').insert({ lead_id: leadId, tipo: 'edicao', descricao: `Movido no Funil para ${newStage.toUpperCase()}`, criado_por: userData?.userId||undefined });
-           } catch(err) { console.warn('Falha db drop:', err); }
+           if (changed) {
+               renderSection('crm'); // Re-desenha com nova posicao
+               
+               // Atualiza banco em background silencioso
+               try { 
+                  let payload = {};
+                  if (field === 'etapa') payload = { etapa: newStageId, updated_at: new Date().toISOString() };
+                  if (field === 'tag') payload = { tag: newStageId === 'sem_tag' ? [] : [newStageId], updated_at: new Date().toISOString() };
+                  
+                  await UpsidenDB.from('leads').update(payload).eq('id', leadId); 
+                  await UpsidenDB.from('historico_interacoes').insert({ lead_id: leadId, tipo: 'movimento', descricao: `Movido via Drag&Drop para [${newStageId.toUpperCase()}]`, criado_por: userData?.userId||undefined });
+               } catch(err) { console.warn('Falha db drop:', err); }
+           }
         }
       }
     });
@@ -408,17 +594,38 @@ function showLeadEditModal(lead) {
   const lembreteVal = lead?.lembrete_data ? new Date(lead.lembrete_data).toISOString().slice(0,16) : '';
   const leadId = lead?.id || '';
 
-  // Interação Histórico (Mock UI for now, logic below)
-  const historyLink = leadId ? `<button data-click="showLeadHistory('${leadId}')" class="btn btn-secondary" style="font-size:12px; padding:4px 8px; margin-left:auto;">📜 Ver Histórico de Interações</button>` : '';
+  // Urgency selector options
+  const urgOptions = Object.keys(URGENCY_LEVELS_CRM).map(k => {
+    const u = URGENCY_LEVELS_CRM[k];
+    const sel = (lead?.urgencia || 'normal') === k ? 'selected' : '';
+    return `<option value="${k}" ${sel}>${u.label}</option>`;
+  }).join('');
+
+  // Photo avatar
+  let avatarEl = lead?.foto_url
+    ? `<img src="${lead.foto_url}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);">`
+    : `<div style="width:48px;height:48px;border-radius:50%;background:rgba(255,98,0,0.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;">${(lead?.nome||'L').charAt(0).toUpperCase()}</div>`;
+
+  // Interacao Historico
+  const historyLink = leadId ? `<button data-click="showLeadHistory('${leadId}')" class="btn btn-secondary" style="font-size:12px; padding:4px 8px; margin-left:auto;">\ud83d\udcdc Ver Hist\u00f3rico</button>` : '';
 
   overlay.innerHTML = `<div class="modal" style="width:100%; max-width:540px; border-radius:16px; backdrop-filter:blur(20px); background:var(--bg-secondary); border: 1px solid var(--border);">
     <div class="modal-header" style="display:flex; align-items:center;">
-       <h3>${lead ? '📋 Informações do Negócio' : 'Novo Lead'}</h3>
+       <div style="display:flex;align-items:center;gap:12px;">
+         <div style="position:relative;cursor:pointer;" id="foto-avatar-wrap" title="Clique para alterar foto">
+           ${avatarEl}
+           <div style="position:absolute;bottom:-2px;right:-2px;background:var(--accent);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;">
+             <svg viewBox="0 0 24 24" fill="#fff" width="8" height="8"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+           </div>
+           <input type="file" id="crm-foto-upload" accept="image/*" style="display:none">
+         </div>
+         <h3>${lead ? '\ud83d\udccb Ficha do Lead' : 'Novo Lead'}</h3>
+       </div>
        ${historyLink}
        <button class="btn-ghost" data-click="closeModal()" style="margin-left:8px;"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
     </div>
     <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
-      <div style="display:flex;gap:10px;"><div class="form-group" style="flex:1;"><label class="form-label">Qual o Nome?</label><input class="form-input" id="lead-nome" placeholder="Ex: Maria" value="${lead?.nome||''}"></div><div class="form-group" style="flex:1;"><label class="form-label">Telefone Exact (WPP)</label><input class="form-input" id="lead-tel" placeholder="55119..." value="${lead?.telefone||''}"></div></div>
+      <div style="display:flex;gap:10px;"><div class="form-group" style="flex:1;"><label class="form-label">Qual o Nome?</label><input class="form-input" id="lead-nome" placeholder="Ex: Maria" value="${lead?.nome||''}"></div><div class="form-group" style="flex:1;"><label class="form-label">Telefone (WPP)</label><input class="form-input" id="lead-tel" placeholder="55119..." value="${lead?.telefone||''}"></div></div>
       
       <div style="display:flex;gap:10px; margin-top:6px;">
          <div class="form-group" style="flex:1;">
@@ -426,19 +633,28 @@ function showLeadEditModal(lead) {
             <input type="number" class="form-input" id="lead-valor" value="${lead?.valor||0.00}" min="0" step="0.01" style="border-color:var(--success-dim); font-weight:bold; color:var(--success);">
          </div>
          <div class="form-group" style="flex:1;">
-            <label class="form-label">Multi-Tags Form (Aperte CTRL)</label>
+            <label class="form-label">Prioridade / Urg\u00eancia</label>
+            <select class="form-input" id="lead-urgencia">
+               ${urgOptions}
+            </select>
+         </div>
+      </div>
+
+      <div style="display:flex;gap:10px; margin-top:6px;">
+         <div class="form-group" style="flex:1;">
+            <label class="form-label">Multi-Tags (Aperte CTRL)</label>
             <select class="form-input" id="lead-tag" multiple style="height:64px; font-size:12px; background:var(--bg-card); color:var(--text-primary);">
                ${tagOptions}
             </select>
          </div>
       </div>
 
-      <div class="form-group" style="margin-top:6px;"><label class="form-label">Anotações Fixadas</label><textarea class="form-textarea" id="lead-notas" rows="3" placeholder="Contexto da negociação...">${lead?.notas||''}</textarea></div>
+      <div class="form-group" style="margin-top:6px;"><label class="form-label">Anota\u00e7\u00f5es Fixadas</label><textarea class="form-textarea" id="lead-notas" rows="3" placeholder="Contexto da negocia\u00e7\u00e3o...">${lead?.notas||''}</textarea></div>
       
       <div style="padding:12px; background:var(--bg-card); border-radius:8px; border:1px solid var(--border); margin-top:12px;">
          <div style="display:flex;gap:10px;">
-           <div class="form-group" style="flex:1; margin:0;"><label class="form-label" style="color:var(--accent);">🔔 Agendar Alarme de Ligação</label><input type="datetime-local" class="form-input" id="lead-lembrete" value="${lembreteVal}"></div>
-           <div class="form-group" style="flex:1; margin:0;"><label class="form-label">Motivo (Despertador)</label><input class="form-input" id="lead-lembrete-txt" placeholder="Ex: Ligar pra fechar doc" value="${lead?.lembrete_texto||''}"></div>
+           <div class="form-group" style="flex:1; margin:0;"><label class="form-label" style="color:var(--accent);">\ud83d\udd14 Alarme</label><input type="datetime-local" class="form-input" id="lead-lembrete" value="${lembreteVal}"></div>
+           <div class="form-group" style="flex:1; margin:0;"><label class="form-label">Motivo</label><input class="form-input" id="lead-lembrete-txt" placeholder="Ex: Ligar pra fechar doc" value="${lead?.lembrete_texto||''}"></div>
          </div>
       </div>
     </div>
@@ -446,12 +662,39 @@ function showLeadEditModal(lead) {
   </div>`;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+  
+  // Photo upload handler
+  setTimeout(() => {
+    const fotoWrap = document.getElementById('foto-avatar-wrap');
+    const fotoInput = document.getElementById('crm-foto-upload');
+    if (fotoWrap && fotoInput) {
+      fotoWrap.addEventListener('click', () => fotoInput.click());
+      fotoInput.addEventListener('change', async () => {
+        const file = fotoInput.files?.[0];
+        if (!file || !leadId) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          try {
+            await UpsidenDB.from('leads').update({ foto_url: ev.target.result }).eq('id', leadId);
+            const idx = painelData.leads.findIndex(x => x.id === leadId);
+            if (idx >= 0) painelData.leads[idx].foto_url = ev.target.result;
+            overlay.remove();
+            renderSection('crm');
+            typeof toast === 'function' && toast('Foto atualizada!', 'success');
+            setTimeout(() => editLeadModal(leadId), 300);
+          } catch(err) { typeof toast === 'function' && toast('Erro ao salvar foto', 'error'); }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  }, 100);
 }
 
 async function salvarLeadCompleto(id) {
   const nome = document.getElementById('lead-nome').value.trim();
   const telefone = document.getElementById('lead-tel').value.trim();
   const valor = parseFloat(document.getElementById('lead-valor').value) || 0;
+  const urgencia = document.getElementById('lead-urgencia')?.value || 'normal';
   
   // Extract multiple selected tags
   const tagSelect = document.getElementById('lead-tag');
@@ -466,6 +709,15 @@ async function salvarLeadCompleto(id) {
 
   if (!nome) { typeof toast === 'function' && toast('Informe o nome primário do lead', 'error'); return; }
   try {
+    // Persistent urgency storage (Local because Supabase column is missing)
+    if (id) {
+       chrome.storage.local.get(['ups_crm_urgencias'], (res) => {
+         const map = res.ups_crm_urgencias || {};
+         map[id] = urgencia;
+         chrome.storage.local.set({ ups_crm_urgencias: map });
+       });
+    }
+
     if (id) {
       const upd = { nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, updated_at: new Date().toISOString() };
       await UpsidenDB.from('leads').update(upd).eq('id', id);
@@ -480,9 +732,19 @@ async function salvarLeadCompleto(id) {
       const estagioDefault = dynamicStages.length > 0 ? dynamicStages[0].id : 'prospeccao';
       const res = await UpsidenDB.from('leads').insert({ nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, etapa: estagioDefault }).select();
       if (res?.length) { 
+         const newId = res[0].id;
          res[0].tag = tagsElegidas;
+         res[0].urgencia = urgencia; // Attach locally
+         
+         // Save urgency to local storage map
+         chrome.storage.local.get(['ups_crm_urgencias'], (db) => {
+           const map = db.ups_crm_urgencias || {};
+           map[newId] = urgencia;
+           chrome.storage.local.set({ ups_crm_urgencias: map });
+         });
+
          painelData.leads.unshift(res[0]); 
-         try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: res[0].id, tipo: 'criacao', descricao: `Novo Lead Inserido Manualmente 🤝`, criado_por: userData?.userId||undefined, metadados: { valor_inicial: valor, tags_iniciais: tagsElegidas, telefone } }); } catch(e){} 
+         try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: newId, tipo: 'criacao', descricao: `Novo Lead Inserido Manualmente 🤝`, criado_por: userData?.userId||undefined, metadados: { valor_inicial: valor, tags_iniciais: tagsElegidas, telefone, urgencia_inicial: urgencia } }); } catch(e){} 
       }
     }
     if (lembreteData) { 
@@ -609,3 +871,10 @@ window.editLeadModal = editLeadModal;
 window.showLeadEditModal = showLeadEditModal;
 window.salvarLeadCompleto = salvarLeadCompleto;
 window.salvarLead = salvarLeadCompleto; // backward compat alias
+
+window.renderSyncLabelsCRM = renderSyncLabelsCRM;
+window.assignSyncKanbanDragDrop = assignSyncKanbanDragDrop;
+window.updateSyncBadges = updateSyncBadges;
+window.showWppContactModal = showWppContactModal;
+window.openWppChatSync = openWppChatSync;
+window.assignKanbanDragDrop = assignKanbanDragDrop; // For custom CRM
