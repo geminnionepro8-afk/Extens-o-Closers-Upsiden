@@ -1,0 +1,117 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+   UPSIDEN PAINEL Ã¢â‚¬â€ REDSUN DNA THEME
+   Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+
+:root {
+  /* RedSun Palette — Standardized via DNA Manual v2.0 */
+  --bg-primary:     #0a0a0a;     /* Camada 0 — Fundo absoluto do universo */
+  --bg-secondary:   #121212;     /* Camada 1 — Barras de ferramentas, headers */
+  --bg-tertiary:    #1a1a1a;     /* Camada 2 — Containers de controles, chips */
+  --bg-card:        #151515;     /* Camada 3 — Cards, linhas de dados */
+  --bg-card-hover:  #1e1e1e;     /* Camada 3+ — Estado hover */
+  --bg-input:       #1a1a1a;     /* Campos de formulário */
+  --bg-overlay:     rgba(0, 0, 0, 0.75);
+
+  --text-primary:   #f5f5f5;
+  --text-secondary: #a3a3a3;
+  --text-muted:     #737373;
+  --text-accent:    #ff7a29;
+
+  --accent:         #FF4D00;
+  --accent-hover:   #FF6B00;
+  --accent-dim:     rgba(255, 77, 0, 0.12);
+  --accent-glow:    rgba(255, 77, 0, 0.3);
+  --accent-gradient: linear-gradient(135deg, #ff7a29 0%, #ff6200 100%);
+  
+  /* Status Colors */
+  --success:        #10b981;
+  --success-dim:    rgba(16, 185, 129, 0.12);
+  --danger:         #ef4444;
+  --danger-dim:     rgba(239, 68, 68, 0.12);
+  --warning:        #f59e0b;
+  --warning-dim:    rgba(245, 158, 11, 0.12);
+  --info:           #3b82f6;
+  
+  /* Layout & Spacing */
+  --sidebar-width: 232px;
+  --header-height: 110px; /* Refined for a more compact triple-row design */
+  
+  /* Radii (RedSun DNA Tokens) */
+  --radius-xs:  6px;   /* --radius-sm no manual */
+  --radius-sm:  10px;  /* --radius-md no manual */
+  --radius-md:  14px;  /* --radius-lg no manual */
+  --radius-lg:  20px;  /* --radius-xl no manual */
+  --radius-pill: 9999px;
+  
+  /* Glows & Shadows */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:  0 4px 20px rgba(0,0,0,0.4);
+  --shadow-lg:  0 10px 40px rgba(0,0,0,0.6);
+  --shadow-glow: 0 0 20px var(--accent-glow);
+  --shadow-accent: 0 4px 30px rgba(255,77,0,0.5);
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  --transition-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â LIGHT MODE VARS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+:root[data-theme="light"] {
+  --bg-primary:    #F0F2F5; /* Cinza claro suave para o fundo principal */
+  --bg-secondary:  #FFFFFF; /* Branco para cartÃµes e Ã¡reas de destaque */
+  --bg-card:       #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  --bg-input:      #FFFFFF;
+  --border:        #E2E8F0;
+  --border-light:  #EDF2F7;
+  --text-primary:  #1A202C;
+  --text-secondary:#4A5568;
+  --text-muted:    #718096;
+  
+  --sb-bg:          #FFFFFF; /* Sidebar branca para contrastar com o fundo cinza */
+  --sb-surface:     #F7FAFC;
+  --sb-border:      #E2E8F0;
+  --sb-highlight:   #EDF2F7;
+  --sb-text:        #2D3748;
+  --sb-text-dim:    #718096;
+  --nav-hover-text: #1A202C;
+
+  /* Components tweaks */
+  --node-bg: #FFFFFF;
+  --node-border: #E2E8F0;
+  --node-header-bg: #F7FAFC;
+  --node-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  --modal-overlay-bg: rgba(0,0,0,0.3);
+  --shadow-md: 0 8px 20px rgba(0,0,0,0.06);
+  --shadow-lg: 0 15px 40px rgba(0,0,0,0.1);
+  --calendar-filter: none;
+
+  /* Charts & Dashboard (Light) */
+  --chart-bg: #FFFFFF;
+  --chart-border: #E2E8F0;
+  --chart-grid: #EDF2F7;
+  --chart-text: #4A5568;
+
+  /* Campaign Redesign Tweaks (Light Mode) */
+  --accent-dim:     rgba(255, 77, 0, 0.08);
+  --accent-glow:    rgba(255, 77, 0, 0.15);
+  --success-dim:    rgba(16, 185, 129, 0.10);
+  --danger-dim:     rgba(239, 68, 68, 0.10);
+  --warning-dim:    rgba(245, 158, 11, 0.10);
+}
+
+/* Base Light Theme fix for shadows */
+:root[data-theme="light"] .painel-sidebar {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08), 0 0 0 1px var(--sb-border);
+}
+:root[data-theme="light"] .stat-card:hover {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+:root[data-theme="light"] .user-menu-popup {
+  background: var(--bg-secondary);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 1px 0 rgba(0,0,0,0.06) inset;
+}
+

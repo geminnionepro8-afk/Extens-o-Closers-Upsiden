@@ -154,7 +154,7 @@
 
 .row-details { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
 .row-name-line { display: flex; align-items: center; gap: 8px; }
-.row-name { font-size: 15px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-name { font-size: 15px; }
 
 .audio-tag {
   font-size: 9px;
@@ -259,7 +259,8 @@
   animation: rowSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-@keyframes rowSlide {
-  from { opacity: 0; transform: translateX(-10px); }
-  to { opacity: 1; transform: translateX(0); }
+/* Light Theme Overrides */
+[data-theme="light"], .theme-light {
+  --row-bg-hover: rgba(0, 0, 0, 0.03);
+  --row-border: rgba(0, 0, 0, 0.05);
 }

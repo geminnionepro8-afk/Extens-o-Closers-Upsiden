@@ -26,10 +26,21 @@ function renderizarPreview(texto) {
 }
 
 async function carregar() {
-  userId = await UpsidenAuth.getUserId();
-  isAdmin = await UpsidenAuth.isAdmin();
-  const data = await UpsidenDB.from('templates').select('*').order('created_at', false).execute();
-  templates = data || [];
+  const profile = await UpsidenAuth.getProfile();
+  if (!profile) return;
+  
+  userId = profile.id;
+  isAdmin = (profile.role === 'admin');
+  const teamAdminId = isAdmin ? profile.id : profile.admin_id;
+
+  try {
+    let query = UpsidenDB.from('templates').select('*').eq('admin_id', teamAdminId);
+    if (!isAdmin) {
+      query = query.or(`criado_por.eq.${userId},compartilhado.eq.true`);
+    }
+    const data = await query.order('created_at', false).execute();
+    templates = data || [];
+  } catch(e) { console.error('Load error', e); }
 }
 
 function renderizarChipsCategoria() {
@@ -84,22 +95,30 @@ function renderizar() {
       card.style.animationDelay = `${i * 0.04}s`;
       const preview = tmpl.texto.length > 55 ? tmpl.texto.slice(0, 55) + '...' : tmpl.texto;
       const catLabel = tmpl.categoria || 'geral';
-      const catBadge = `<span class="badge-cat">${CAT_EMOJI[catLabel] || '📌'} ${catLabel}</span>`;
-      const teamBadge = tmpl.compartilhado ? '<span class="badge-team">TIME</span>' : '';
 
       card.innerHTML = `
         <div class="mod-card-icon">${CAT_EMOJI[catLabel] || '💬'}</div>
         <div class="mod-card-info">
-          <div class="mod-card-title">${tmpl.nome} ${catBadge} ${teamBadge}</div>
+          <div class="template-header">
+            <span class="template-name">${tmpl.nome}</span>
+            ${tmpl.compartilhado ? '<span class="tpl-tag">TIME</span>' : ''}
+            ${tmpl.acesso_individual && tmpl.acesso_individual.length > 0 ? '<span class="tpl-tag" style="background:var(--accent);color:white;">PRIVADO+</span>' : ''}
+          </div>
           <div class="mod-card-meta" title="${tmpl.texto}">${preview}</div>
         </div>
-        <div class="mod-card-actions">
-          <button class="btn-send" data-send="${tmpl.id}" title="Enviar para o chat">Enviar</button>
-          <button class="btn-icon" data-edit="${tmpl.id}" title="Editar">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        <div class="mod-card-actions" style="display: flex; align-items: center; gap: 8px; margin-top: 16px;">
+          <button class="btn-send" data-send="${tmpl.id}" title="Enviar para o chat" style="flex: 1; padding: 10px 16px; border-radius: 12px; font-weight: 700; background: var(--accent); color: white; border: none; cursor: pointer;">Enviar</button>
+          
+          <button class="btn-dim" data-edit="${tmpl.id}" title="Editar" style="padding: 10px; border-radius: 12px; flex: 0 0 38px; display: flex; align-items: center; justify-content: center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
           </button>
-          <button class="btn-icon btn-delete" data-del="${tmpl.id}" title="Excluir">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          
+          <button class="btn-dim" data-action="access" data-id="${tmpl.id}" title="Configurar Acesso" style="padding: 10px; border-radius: 12px; flex: 0 0 38px; display: flex; align-items: center; justify-content: center;">
+             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          </button>
+          
+          <button class="btn-dim" data-action="delete" data-id="${tmpl.id}" title="Remover" style="padding: 10px; border-radius: 12px; flex: 0 0 38px; display: flex; align-items: center; justify-content: center;">
+             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
           </button>
         </div>
       `;
@@ -164,8 +183,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const t = templates.find(x => x.id === editandoId);
         if (t) { t.nome = nome; t.texto = texto; t.categoria = categoria; }
       } else {
+        const profile = await UpsidenAuth.getProfile();
+        const teamAdminId = profile.role === 'admin' ? profile.id : profile.admin_id;
+
         const result = await UpsidenDB.from('templates').insert({
-          nome, texto, categoria, criado_por: userId, compartilhado: isAdmin
+          nome, texto, categoria, criado_por: userId, admin_id: teamAdminId, compartilhado: isAdmin
         }).execute();
         if (result && result.length) templates.unshift(result[0]);
       }
@@ -181,15 +203,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   root.getElementById('tmpl-lista').addEventListener('click', async (e) => {
     const btnSend = e.target.closest('[data-send]');
     const btnEdit = e.target.closest('[data-edit]');
-    const btnDel = e.target.closest('[data-del]');
+    const actionBtn = e.target.closest('[data-action]');
 
-    if (btnDel) {
-      e.stopPropagation();
-      await UpsidenDB.from('templates').eq('id', btnDel.dataset.del).delete().execute();
-      templates = templates.filter(t => t.id !== btnDel.dataset.del);
-      renderizar();
+    if (actionBtn) {
+      const id = actionBtn.dataset.id;
+      const action = actionBtn.dataset.action;
+      
+      if (action === 'delete') {
+        if (!confirm('Excluir este template?')) return;
+        await UpsidenDB.from('templates').eq('id', id).delete().execute();
+        templates = templates.filter(t => t.id !== id);
+        renderizar();
+      }
+      if (action === 'access') {
+        const tmpl = templates.find(t => t.id === id);
+        if(!tmpl) return;
+
+        if (tmpl.criado_por !== userId && !isAdmin) {
+          if (window.parent.toast) window.parent.toast('Apenas o autor pode configurar o acesso.', 'error');
+          return;
+        }
+
+        if (window.parent.abrirModalAcesso) {
+          window.parent.abrirModalAcesso('templates', tmpl, (novosDados) => {
+            Object.assign(tmpl, novosDados);
+            renderizar();
+          });
+        }
+      }
       return;
     }
+
     if (btnEdit) {
       const tmpl = templates.find(t => t.id === btnEdit.dataset.edit);
       if (tmpl) abrirModal(tmpl);

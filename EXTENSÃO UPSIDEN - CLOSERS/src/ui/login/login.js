@@ -60,6 +60,7 @@ formRegistro.addEventListener('submit', async (e) => {
   const nome = document.getElementById('reg-nome').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const senha = document.getElementById('reg-senha').value;
+  const convite = document.getElementById('reg-invite').value.trim();
   const btn = formRegistro.querySelector('button[type="submit"]');
 
   btn.disabled = true;
@@ -67,19 +68,32 @@ formRegistro.addEventListener('submit', async (e) => {
   limparStatus();
 
   try {
-    const result = await UpsidenAuth.signUp(email, senha, nome);
-    if (result.access_token) {
-      mostrarStatus('Conta criada com sucesso!', 'success');
-      setTimeout(() => {
-        if (window.opener) {
-          window.opener.postMessage({ type: 'upsiden_auth_success' }, '*');
-          window.close();
-        } else {
-          window.location.href = '../painel/painel.html';
+    const result = await UpsidenAuth.signUp(email, senha, nome, convite);
+    
+    // Se o email já estiver confirmado ou a sessão iniciada
+    if (result.session || result.user) {
+      mostrarStatus('Conta criada! Entrando...', 'success');
+      
+      // Pequeno pause para garantir que o trigger de profile terminou
+      setTimeout(async () => {
+        try {
+          // Tentativa de login automático caso não tenha retornado token direto
+          if (!result.access_token) {
+             await UpsidenAuth.signIn(email, senha);
+          }
+          
+          if (window.opener) {
+            window.opener.postMessage({ type: 'upsiden_auth_success' }, '*');
+            window.close();
+          } else {
+            window.location.href = '../painel/painel.html';
+          }
+        } catch(e) {
+          mostrarStatus('Conta criada! Faça login para continuar.', 'success');
+          // Switch to login form
+          btnToggle.click();
         }
-      }, 500);
-    } else {
-      mostrarStatus('Conta criada! Verifique seu email para confirmar.', 'info');
+      }, 1500);
     }
   } catch (err) {
     mostrarStatus(err.message || 'Erro ao criar conta');

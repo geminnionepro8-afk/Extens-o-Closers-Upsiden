@@ -61,15 +61,21 @@ async function carregarConfig() {
       timelineSteps = [];
       
       if(mainMsg || (data.followup_steps && data.followup_steps.length > 0)){
-        if(mainMsg) timelineSteps.push({ id: generateId(), tipo: 'texto', delay_segundos: 2, conteudo: mainMsg });
+        if(mainMsg) timelineSteps.push({ id: generateId(), tipo: 'texto', delay_segundos: 2, duracaoSimulacao: 2, conteudo: mainMsg });
         if(data.followup_steps) {
             data.followup_steps.forEach(f => {
-                timelineSteps.push({ id: generateId(), tipo: f.tipo, delay_segundos: f.delay_segundos || 3, conteudo: f.conteudo || f.base64 || '' });
+                timelineSteps.push({ 
+                    id: generateId(), 
+                    tipo: f.tipo, 
+                    delay_segundos: f.delay_segundos || 3, 
+                    duracaoSimulacao: f.duracaoSimulacao || 3,
+                    conteudo: f.conteudo || f.base64 || '' 
+                });
             });
         }
       } else {
         // Timeline base por padrão
-        timelineSteps.push({ id: generateId(), tipo: 'texto', delay_segundos: 2, conteudo: 'Olá! Tudo bem? Como posso ajudar?' });
+        timelineSteps.push({ id: generateId(), tipo: 'texto', delay_segundos: 2, duracaoSimulacao: 2, conteudo: 'Olá! Tudo bem? Como posso ajudar?' });
       }
     }
 
@@ -125,9 +131,15 @@ function renderTimeline() {
                     <button class="btn-remove-step" onclick="removeStep(${index})"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
                 </div>
                 ${contentHtml}
-                <div class="row-inputs" style="margin-top: 4px;">
-                    <label style="font-size: 11px; color: #8696a0;">Atraso antes de enviar (segundos):</label>
-                    <input type="number" class="input-time delay-val" style="width: 80px;" value="${step.delay_segundos}" min="0">
+                <div class="row-inputs" style="margin-top: 8px; display: flex; gap: 12px;">
+                    <div style="flex:1;">
+                        <label style="font-size: 11px; color: #8696a0; display:block; margin-bottom:2px;">Atraso antes de enviar (s):</label>
+                        <input type="number" class="input-time delay-val" style="width: 100%;" value="${step.delay_segundos}" min="0">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size: 11px; color: #8696a0; display:block; margin-bottom:2px;">Simular ${step.tipo === 'audio' ? 'Gravação' : 'Digitação'} (s):</label>
+                        <input type="number" class="input-time sim-val" style="width: 100%;" value="${step.duracaoSimulacao || 3}" min="0">
+                    </div>
                 </div>
             </div>
         `;
@@ -187,7 +199,11 @@ function renderTimeline() {
         
         delayInput.addEventListener('input', () => {
             timelineSteps[index].delay_segundos = parseInt(delayInput.value, 10) || 0;
-            // Opcional: Atualizar preview de tempo
+        });
+
+        const simInput = el.querySelector('.sim-val');
+        simInput.addEventListener('input', () => {
+            timelineSteps[index].duracaoSimulacao = parseInt(simInput.value, 10) || 0;
         });
 
         timelineContainer.appendChild(el);
@@ -199,6 +215,7 @@ function syncDOMtoState() {
     items.forEach((el, idx) => {
         timelineSteps[idx].conteudo = el.querySelector('.txt-val').value;
         timelineSteps[idx].delay_segundos = parseInt(el.querySelector('.delay-val').value, 10) || 0;
+        timelineSteps[idx].duracaoSimulacao = parseInt(el.querySelector('.sim-val').value, 10) || 0;
     });
 }
 
@@ -231,7 +248,7 @@ window.insertTag = function(index, type) {
 
 btnAddText.addEventListener('click', () => {
     syncDOMtoState();
-    timelineSteps.push({ id: generateId(), tipo: 'texto', delay_segundos: 2, conteudo: '' });
+    timelineSteps.push({ id: generateId(), tipo: 'texto', delay_segundos: 2, duracaoSimulacao: 2, conteudo: '' });
     renderTimeline();
     renderLivePreview();
     // Scroll para final
@@ -240,7 +257,7 @@ btnAddText.addEventListener('click', () => {
 
 btnAddAudio.addEventListener('click', () => {
     syncDOMtoState();
-    timelineSteps.push({ id: generateId(), tipo: 'audio', delay_segundos: 4, conteudo: '' });
+    timelineSteps.push({ id: generateId(), tipo: 'audio', delay_segundos: 4, duracaoSimulacao: 5, conteudo: '' });
     renderTimeline();
     renderLivePreview();
     timelineContainer.scrollTop = timelineContainer.scrollHeight;
@@ -320,16 +337,16 @@ function renderLivePreview() {
 // -- Salvar Fluxo --
 function sincronizarLocal(data) {
   const config = data ? {
-    ativo: data.saudacao_ativa,
-    usarHorario: data.usar_horario,
-    horaInicio: data.hora_inicio,
-    horaFim: data.hora_fim,
-    simularDigitacao: data.simular_digitacao !== false,
-    apenasPrivado: data.apenas_privado || false,
-    apenasGrupo: data.apenas_grupo || false,
-    msgForaHorario: data.msg_fora_horario || '',
-    mensagem: data.saudacao_mensagem,
-    followupSteps: data.followup_steps || []
+    saudacao_ativa: data.saudacao_ativa,
+    usar_horario: data.usar_horario,
+    hora_inicio: data.hora_inicio,
+    hora_fim: data.hora_fim,
+    simular_digitacao: data.simular_digitacao !== false,
+    apenas_privado: data.apenas_privado || false,
+    apenas_grupo: data.apenas_grupo || false,
+    msg_fora_horario: data.msg_fora_horario || '',
+    saudacao_mensagem: data.saudacao_mensagem,
+    followup_steps: data.followup_steps || []
   } : null;
   chrome.storage.local.set({ ups_config_saudacao: config });
   window.parent.postMessage({ type: 'upsiden_reload_automation' }, '*');
@@ -356,6 +373,7 @@ btnSalvar.addEventListener('click', async () => {
   const formatados = followups.map(s => ({
       tipo: s.tipo,
       delay_segundos: s.delay_segundos,
+      duracaoSimulacao: s.duracaoSimulacao,
       conteudo: s.tipo === 'texto' ? s.conteudo : '',
       base64: s.tipo !== 'texto' ? s.conteudo : ''
   }));

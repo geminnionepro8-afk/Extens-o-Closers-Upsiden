@@ -1,7 +1,7 @@
 const CONTEXTO = '[Upsiden-Background]';
 
 try {
-  importScripts('supabase.min.js', 'supabase_config.js');
+  importScripts('src/libs/supabase.min.js', 'src/libs/supabase-config.js');
 } catch (e) {
   console.error("Failed to load Supabase scripts.", e);
 }
@@ -83,6 +83,51 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
       } catch(e) { console.error('BG Metric Fail:', e); }
     });
     return false;
+  }
+
+  // ── CSP BYPASS: Fetch Media as Base64 ──
+  if (mensagem.tipo === 'fetch_media_base64_bg') {
+    const downloadTimeout = setTimeout(() => {
+        responder({ sucesso: false, erro: 'Timeout no Download (Background Local)' });
+    }, 25000);
+
+    chrome.storage.local.get(['ups_supabase_session'], (resStore) => {
+      let headers = {};
+      if (resStore.ups_supabase_session) {
+        try {
+          const session = JSON.parse(resStore.ups_supabase_session);
+          if (session && session.access_token) {
+            headers['Authorization'] = `Bearer ${session.access_token}`;
+          }
+        } catch(e) {}
+      }
+
+      fetch(mensagem.url, { headers })
+        .then(async (response) => {
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Supabase Bloqueou o Download (HTTP ${response.status}): ${errText}`);
+          }
+          const contentType = response.headers.get('content-type') || 'application/octet-stream';
+          const blob = await response.blob();
+          
+          // Conversão robusta usando FileReader (estável para arquivos grandes)
+          const base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+
+          clearTimeout(downloadTimeout);
+          responder({ sucesso: true, base64: base64 });
+        })
+        .catch(err => {
+          clearTimeout(downloadTimeout);
+          console.error('Fetch Media Fail:', err);
+          responder({ sucesso: false, erro: err.message });
+        });
+    });
+    return true; // Mantém o canal aberto para resposta assíncrona
   }
 });
 

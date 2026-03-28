@@ -1,10 +1,10 @@
-/**
+﻿/**
  * @file crm.js
  * @description Logic engine for the standalone WaSpeed Clone CRM (Red Visage / Kanban Edition).
  */
 
 const P = '[CRM Clone]';
-let currentMode = 'abas'; // 'abas' (estágios/pipelines) ou 'etiquetas' (tags)
+let currentMode = 'abas'; // 'abas' (estÃ¡gios/pipelines) ou 'etiquetas' (tags)
 let dbLeads = [];
 let dbMembros = [];
 
@@ -13,23 +13,23 @@ const URGENCY_LEVELS = {
   normal:      { label: 'Normal',      color: '#8A8A98', bg: 'rgba(138,138,152,0.15)', border: 'rgba(138,138,152,0.3)' },
   importante:  { label: 'Importante',  color: '#3B82F6', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)' },
   urgente:     { label: 'Urgente',     color: '#F59E0B', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)' },
-  critico:     { label: 'Crítico',     color: '#EF4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.3)' },
+  critico:     { label: 'CrÃ­tico',     color: '#EF4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.3)' },
   vip:         { label: 'VIP',         color: '#A855F7', bg: 'rgba(168,85,247,0.15)', border: 'rgba(168,85,247,0.3)' }
 };
 
 // Funil Modes
 let dynamicStages = [
-  { id: 'prospeccao', label: 'Prospecção', color: '#FFD666' },
-  { id: 'negociacao', label: 'Negociação', color: '#66B2FF' },
+  { id: 'prospeccao', label: 'ProspecÃ§Ã£o', color: '#FFD666' },
+  { id: 'negociacao', label: 'NegociaÃ§Ã£o', color: '#66B2FF' },
   { id: 'fechado', label: 'Fechado', color: '#66FFB2' }
 ];
 
 let dynamicTags = {
-  quente:  { bg: '#FFB4B4', label: '🔥 Quente' },
-  morno:   { bg: '#FFE5B4', label: '☀️ Morno' },
-  frio:    { bg: '#B4D7FF', label: '❄️ Frio' },
-  vip:     { bg: '#E5B4FF', label: '⭐ VIP' },
-  urgente: { bg: '#FFB4D7', label: '🚨 Urgente' }
+  quente:  { bg: '#FFB4B4', label: 'ðŸ”¥ Quente' },
+  morno:   { bg: '#FFE5B4', label: 'â˜€ï¸ Morno' },
+  frio:    { bg: '#B4D7FF', label: 'â„ï¸ Frio' },
+  vip:     { bg: '#E5B4FF', label: 'â­ VIP' },
+  urgente: { bg: '#FFB4D7', label: 'ðŸš¨ Urgente' }
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load User Profile
   try {
     const profile = await window.UpsidenAuth.getProfile();
-    const nome = profile?.nome || profile?.email?.split('@')[0] || 'Usuário';
+    const nome = profile?.nome || profile?.email?.split('@')[0] || 'UsuÃ¡rio';
     document.getElementById('ws-user-name').textContent = nome;
     document.getElementById('ws-user-avatar').textContent = nome[0].toUpperCase();
   } catch(e) {}
@@ -92,10 +92,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadData() {
   try {
-    const leads = await UpsidenDB.from('leads').select('*').order('created_at', false).execute();
+    const profile = await window.UpsidenAuth.getProfile();
+    const isAdmin = profile?.role === 'admin';
+    const teamAdminId = isAdmin ? profile.id : profile.admin_id;
+    const userId = profile.id;
+
+    let query = UpsidenDB.from('leads').select('*').eq('admin_id', teamAdminId);
+    
+    // Se for closer, sÃ³ vÃª o que criou OU o que o admin compartilhou
+    if (!isAdmin) {
+      query = query.or(`criado_por.eq.${userId},compartilhado.eq.true`);
+    }
+
+    const leads = await query.order('created_at', false).execute();
     dbLeads = leads || [];
   } catch(e) {
-    console.error(P, 'Erro ao carregar leads', e);
+    console.error(P, 'Erro ao carregar leads particionados', e);
   }
   
   chrome.storage.local.get(['ups_crm_colunas', 'ups_crm_tags'], (res) => {
@@ -148,7 +160,7 @@ function renderKanban() {
     
     c.leads.forEach(lead => {
        let avatarChar = lead.nome ? lead.nome[0].toUpperCase() : '?';
-       let preview = lead.notas || lead.last_message || 'Sem anotações no CRM. Clique aqui para registrar interações e detalhes negociais.';
+       let preview = lead.notas || lead.last_message || 'Sem anotaÃ§Ãµes no CRM. Clique aqui para registrar interaÃ§Ãµes e detalhes negociais.';
        
        let dateStr = "Hoje";
        if(lead.created_at) {
@@ -180,13 +192,13 @@ function renderKanban() {
 
        let actionsHtml = `
          <div class="ws-card-actions-hover">
-            <button class="ws-btn-quick-action" title="Anotação" onclick="abrirNota('${lead.id}')">
+            <button class="ws-btn-quick-action" title="AnotaÃ§Ã£o" onclick="abrirNota('${lead.id}')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             </button>
             <button class="ws-btn-quick-action wpp" title="Quick Chat" onclick="abrirWpp('${lead.telefone}')">
               <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
             </button>
-            <button class="ws-btn-quick-action" title="Orçamento Rápido" onclick="abrirCotacao('${lead.id}')">
+            <button class="ws-btn-quick-action" title="OrÃ§amento RÃ¡pido" onclick="abrirCotacao('${lead.id}')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             </button>
          </div>
@@ -217,7 +229,7 @@ function renderKanban() {
                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                ${dateStr}
              </div>
-             <div class="ws-card-avatars" onclick="abrirModalDetalhes('${lead.id}')" style="cursor:pointer" title="Ver Informações Completas">
+             <div class="ws-card-avatars" onclick="abrirModalDetalhes('${lead.id}')" style="cursor:pointer" title="Ver InformaÃ§Ãµes Completas">
                ${avatarHtml}
              </div>
            </div>
@@ -263,7 +275,7 @@ function renderKanban() {
  */
 function initDragAndDrop() {
    if(typeof Sortable === 'undefined') {
-       console.warn(P, 'SortableJS não encontrado. O Drag and Drop nativo visual não funcionará suavemente.');
+       console.warn(P, 'SortableJS nÃ£o encontrado. O Drag and Drop nativo visual nÃ£o funcionarÃ¡ suavemente.');
        return;
    }
    
@@ -364,53 +376,167 @@ window.abrirModalDetalhes = function(id) {
   }).join('');
   
   const body = `
-     <div class="modal-tabs">
-        <div class="modal-tab active">Dados do Contato</div>
-        <div class="modal-tab">Tags & Automações</div>
-        <div class="modal-tab">Histórico</div>
-        <div class="modal-tab">Arquivos</div>
-     </div>
-     <div style="padding-top: 20px;">
-         <div class="form-group">
-            <label>Nome Completo</label>
-            <input type="text" id="det-nome" value="${l.nome || ''}">
+      <div class="modal-tabs">
+         <div class="modal-tab active" data-tab="dados">Dados do Contato</div>
+         <div class="modal-tab" data-tab="lembretes">Lembretes & Agenda</div>
+         <div class="modal-tab" data-tab="tags">Tags & Automações</div>
+         <div class="modal-tab" data-tab="historico">Histórico</div>
+      </div>
+      <div id="modal-tab-content">
+         <div class="tab-pane active" id="tab-dados" style="padding-top: 20px;">
+             <div class="form-group">
+                <label>Nome Completo</label>
+                <input type="text" id="det-nome" value="${l.nome || ''}">
+             </div>
+             <div style="display:flex;gap:12px;">
+               <div class="form-group" style="flex:1;">
+                  <label>Estágio no Pipeline</label>
+                  <select id="det-estagio">
+                     ${dynamicStages.map(s => `<option value="${s.id}" ${s.id === l.etapa || s.id === l.estagio ? 'selected' : ''}>${s.label}</option>`).join('')}
+                  </select>
+               </div>
+               <div class="form-group" style="flex:1;">
+                  <label>Prioridade / Urgência</label>
+                  <select id="det-urgencia" style="border-color:${(URGENCY_LEVELS[l.urgencia] || URGENCY_LEVELS.normal).color};">
+                     ${urgOptions}
+                  </select>
+               </div>
+             </div>
+             <div class="form-group">
+                <label>Valor do Negócio (R$)</label>
+                <input type="number" id="det-valor" value="${l.valor || 0}">
+             </div>
          </div>
-         <div style="display:flex;gap:12px;">
-           <div class="form-group" style="flex:1;">
-              <label>Estágio no Pipeline</label>
-              <select id="det-estagio">
-                 ${dynamicStages.map(s => `<option value="${s.id}" ${s.id === l.etapa || s.id === l.estagio ? 'selected' : ''}>${s.label}</option>`).join('')}
-              </select>
-           </div>
-           <div class="form-group" style="flex:1;">
-              <label>Prioridade / Urgência</label>
-              <select id="det-urgencia" style="border-color:${(URGENCY_LEVELS[l.urgencia] || URGENCY_LEVELS.normal).color};">
-                 ${urgOptions}
-              </select>
-           </div>
-         </div>
-         <div class="form-group">
-            <label>Valor do Negócio (R$)</label>
-            <input type="number" id="det-valor" value="${l.valor || 0}">
-         </div>
-     </div>
+      </div>
   `;
   
-  openModal(titleHtml, body, 
-    `<button class="btn-secondary" onclick="closeModal()">Cancelar</button>
-     <button class="btn-primary" onclick="salvarDetalhes('${id}')">Salvar Alterações</button>`
-  );
+  openModal(titleHtml, body, <button class='btn-secondary' onclick='closeModal()'>Cancelar</button><button class='btn-primary' onclick='salvarDetalhes(${id})'>Salvar Alterações</button>);
+
+  // LÃ³gica de Troca de Tabs
+  const tabs = document.querySelectorAll('.modal-tab');
+  tabs.forEach(t => {
+    t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      const target = t.dataset.tab;
+      renderLeadTabContent(id, target);
+    });
+  });
 }
 
-// ACTION: ANOTAÇÕES / LOGS DE INTERAÇÃO RÁPIDOS
+window.renderLeadTabContent = async function(id, tab) {
+  const container = document.getElementById('modal-tab-content');
+  const l = dbLeads.find(x => x.id === id);
+  if(!container || !l) return;
+
+  if (tab === 'dados') {
+     // Re-render data tab if needed, or already there
+     container.innerHTML = `
+        <div class="tab-pane active" id="tab-dados" style="padding-top: 20px;">
+           <div class="form-group">
+              <label>Nome Completo</label>
+              <input type="text" id="det-nome" value="${l.nome || ''}">
+           </div>
+           <div class="form-group">
+              <label>Valor do Negócio (R$)</label>
+              <input type="number" id="det-valor" value="${l.valor || 0}">
+           </div>
+        </div>
+     `;
+  } else if (tab === 'lembretes') {
+     container.innerHTML = `<div style="text-align:center; padding:40px;"><div class="spinner"></div></div>`;
+     try {
+        const res = await UpsidenDB.from('crm_reminders').select('*').eq('lead_id', id).order('reminder_at', {ascending:true}).execute();
+        const lembretes = res || [];
+        
+        let listHtml = lembretes.length === 0 ? '<p style="text-align:center; color:var(--text-muted); font-size:12px; padding:20px;">Nenhum lembrete para este lead.</p>' : '';
+        lembretes.forEach(rm => {
+           const d = new Date(rm.reminder_at).toLocaleString();
+           listHtml += `
+              <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                 <div>
+                    <div style="font-weight:700; font-size:13px;">${rm.title}</div>
+                    <div style="font-size:11px; color:var(--accent);">${d}</div>
+                 </div>
+                 <button class="ws-btn-quick-action" onclick="deletarLembrete('${rm.id}', '${id}')">
+                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                 </button>
+              </div>
+           `;
+        });
+
+        container.innerHTML = `
+           <div class="tab-pane active" id="tab-lembretes" style="padding-top: 20px;">
+              <h4 style="font-size:14px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                Agendar Novo Lembrete
+              </h4>
+              <div class="rs-card" style="background:var(--bg-secondary); margin-bottom:24px;">
+                <div class="form-group">
+                   <label>TÃ­tulo do Lembrete</label>
+                   <input type="text" id="lem-titulo" placeholder="Ex: Retornar proposta, Enviar contrato...">
+                </div>
+                <div class="form-group">
+                   <label>Data e Hora</label>
+                   <input type="datetime-local" id="lem-at">
+                </div>
+                <button class="btn-primary" style="width:100%;" onclick="salvarLembrete('${id}')">Criar Lembrete</button>
+              </div>
+              <h4 style="font-size:13px; font-weight:800; margin-bottom:12px; color:var(--text-muted);">PrÃ³ximas Atividades</h4>
+              <div id="lembretes-lista-small">${listHtml}</div>
+           </div>
+        `;
+     } catch(e) {
+        container.innerHTML = `<div style="color:var(--danger); text-align:center; padding:20px;">Falha ao carregar lembretes (Supabase Table 'crm_reminders' nÃ£o encontrada).</div>`;
+     }
+  } else {
+     container.innerHTML = `<div style="text-align:center; padding:60px; color:var(--text-muted); opacity:0.5;">SeÃ§Ã£o em desenvolvimento...</div>`;
+  }
+}
+
+window.salvarLembrete = async function(leadId) {
+   const title = document.getElementById('lem-titulo').value;
+   const at = document.getElementById('lem-at').value;
+   if(!title || !at) return alert("Preencha tÃ­tulo e data.");
+
+   try {
+      const profile = await window.UpsidenAuth.getProfile();
+      const admin_id = profile.role === 'admin' ? profile.id : profile.admin_id;
+
+      await UpsidenDB.from('crm_reminders').insert({
+         lead_id: leadId,
+         user_id: profile.id,
+         admin_id: admin_id,
+         title: title,
+         reminder_at: new Date(at).toISOString(),
+         status: 'pending'
+      }).execute();
+      
+      toast('Lembrete salvo com sucesso!', 'success');
+      renderLeadTabContent(leadId, 'lembretes');
+      // Trigger update global notification
+      if(window.checkNotifications) window.checkNotifications();
+   } catch(e) {
+      alert("Erro ao salvar lembrete: Supabase table 'crm_reminders' pode estar faltando.");
+   }
+}
+
+window.deletarLembrete = async function(id, leadId) {
+   try {
+      await UpsidenDB.from('crm_reminders').delete().eq('id', id).execute();
+      renderLeadTabContent(leadId, 'lembretes');
+   } catch(e) { alert("Erro ao deletar."); }
+}
+
+// ACTION: ANOTAÃ‡Ã•ES / LOGS DE INTERAÃ‡ÃƒO RÃPIDOS
 window.abrirNota = function(id) {
   const l = dbLeads.find(x => x.id === id);
   if(!l) return;
   const oldNotes = l.notas || '';
   
-  openModal('📋 Contexto & Anotação Interna', 
-    `<div class="form-group"><p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Os dados anotados ficam disponíveis para todos da equipe e ajudam no histórico do CRM.</p>
-     <textarea id="wa-nota-textarea" rows="6" placeholder="Ex: O cliente pediu para retornar o contato amanhã à tarde..." style="height:140px;resize:none;">${oldNotes}</textarea></div>`,
+  openModal('ðŸ“‹ Contexto & AnotaÃ§Ã£o Interna', 
+    `<div class="form-group"><p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Os dados anotados ficam disponÃ­veis para todos da equipe e ajudam no histÃ³rico do CRM.</p>
+     <textarea id="wa-nota-textarea" rows="6" placeholder="Ex: O cliente pediu para retornar o contato amanhÃ£ Ã  tarde..." style="height:140px;resize:none;">${oldNotes}</textarea></div>`,
     `<button class="btn-secondary" onclick="closeModal()">Cancelar</button>
      <button class="btn-primary" onclick="salvarNota('${id}')">Salvar Nota</button>`
   );
@@ -431,19 +557,19 @@ window.salvarNota = async function(id) {
 
 // ACTION: ABRIR WPP
 window.abrirWpp = function(tel) {
-  if(!tel) { alert("Sem número de WhatsApp salvo."); return; }
+  if(!tel) { alert("Sem nÃºmero de WhatsApp salvo."); return; }
   let clear = tel.replace(/\D/g, '');
   window.open(`https://web.whatsapp.com/send?phone=${clear}`, '_blank');
 }
 
-// ACTION: ORÇAMENTO / MOVER ETAPA RAPIDA
+// ACTION: ORÃ‡AMENTO / MOVER ETAPA RAPIDA
 window.abrirCotacao = function(id) {
   const l = dbLeads.find(x => x.id === id);
   const baseValue = l?.valor || 0;
   
-  openModal('💸 Fechamento / Venda Direta', 
-    `<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Registre uma venda concluída rapidamente e envie o link de fechamento pelo WhatsApp.</p>
-     <div class="form-group"><label>Valor Concluído (R$)</label>
+  openModal('ðŸ’¸ Fechamento / Venda Direta', 
+    `<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Registre uma venda concluÃ­da rapidamente e envie o link de fechamento pelo WhatsApp.</p>
+     <div class="form-group"><label>Valor ConcluÃ­do (R$)</label>
      <input type="number" id="orc-val" value="${baseValue}"></div>
      <div class="form-group"><label>Novo Status</label>
      <select id="orc-stage">
@@ -475,9 +601,9 @@ window.finalizarOrcamento = async function(id) {
 
 // ACTION: ADD COLUMN
 window.abrirModalCriarColuna = function() {
-  openModal('➕ Nova Coluna (Pipeline)', 
+  openModal('âž• Nova Coluna (Pipeline)', 
     `<div class="form-group"><label>Nome do Novo Estágio</label>
-     <input type="text" id="novo-estagio-nome" placeholder="Ex: Qualificação, Reunião Agendada..."></div>
+     <input type="text" id="novo-estagio-nome" placeholder="Ex: QualificaÃ§Ã£o, ReuniÃ£o Agendada..."></div>
      <div class="form-group"><label>Cor da Coluna (Accent)</label>
      <input type="color" id="novo-estagio-cor" value="#A5B4FC" style="height:44px;padding:4px;"></div>`,
     `<button class="btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -503,9 +629,9 @@ window.salvarNovaColuna = function() {
 }
 
 window.opcoesColuna = function(colId) {
-   // Futuramente abrirá dropdown menu p/ apagar, renomear.
+   // Futuramente abrirÃ¡ dropdown menu p/ apagar, renomear.
    console.log('Opcoes para', colId);
-   openModal('⚙️ Opções da Coluna', `<p>Opções avançadas para a coluna <b>${colId}</b> em desenvolvimento.</p>`, `<button class="btn-secondary" onclick="closeModal()">Fechar</button>`);
+   openModal('âš™ï¸ OpÃ§Ãµes da Coluna', `<p>OpÃ§Ãµes avanÃ§adas para a coluna <b>${colId}</b> em desenvolvimento.</p>`, `<button class="btn-secondary" onclick="closeModal()">Fechar</button>`);
 }
 
 // ACTION: SAVE LEAD DETAILS FROM MODAL
@@ -532,7 +658,7 @@ window.salvarDetalhes = async function(id) {
     closeModal();
   } catch(e) {
     console.error('Erro ao salvar detalhes:', e);
-    alert('Erro ao salvar alterações.');
+    alert('Erro ao salvar alteraÃ§Ãµes.');
   }
 }
 

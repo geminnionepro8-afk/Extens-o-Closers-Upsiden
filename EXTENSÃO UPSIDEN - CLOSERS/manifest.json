@@ -37,15 +37,11 @@
       "js": [
         "src/libs/supabase.min.js",
         "src/libs/supabase-config.js",
-        "src/services/auth.service.js",
-        "src/services/db.service.js",
-        "src/services/storage.service.js",
+        "src/core/content-scripts/ipc-bridge.js",
         "src/core/content-scripts/nav-injector.js",
         "src/core/content-scripts/panel-drawer.js",
         "src/core/content-scripts/quick-actions.js",
         "src/core/content-scripts/chat-filters.js",
-        "src/core/content-scripts/ipc-bridge.js",
-        "src/ui/modules/audios.js",
         "src/core/content-scripts/content-script.js"
       ],
       "run_at": "document_idle"
@@ -79,6 +75,10 @@
         "src/ui/painel/painel-dashboard.js",
         "src/ui/painel/painel-biblioteca.js",
         "src/ui/painel/painel-templates-crm.js",
+        "src/ui/painel/painel-crm-core.js",
+        "src/ui/painel/painel-templates.js",
+        "src/ui/painel/painel-crm-kanban.js",
+        "src/ui/painel/painel-crm-modals.js",
         "src/ui/painel/painel-automacoes.js",
         "src/ui/painel/painel-campanhas.js",
         "src/ui/painel/painel-admin.js",

@@ -288,18 +288,29 @@ chrome.runtime.onMessage.addListener((msg, _, responder) => {
 
 // ── Helper: enviar toda a config de automação pro injetor ──
 function sincronizarConfigAutomacao() {
-  chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers'], (res) => {
+  chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers', 'ups_config_flow'], (res) => {
+    // 1. Saudação Modular
     window.postMessage({
       origem: 'CONTENT_SCRIPT',
-      msgId: Date.now().toString(),
+      msgId: Date.now().toString() + 'S',
       tipoMensagem: 'set_config_auto_reply',
       dados: res.ups_config_saudacao || null
     }, '*');
+
+    // 2. Gatilhos Clássicos
     window.postMessage({
       origem: 'CONTENT_SCRIPT',
       msgId: Date.now().toString() + 'T',
       tipoMensagem: 'set_config_triggers',
       dados: res.ups_config_triggers || []
+    }, '*');
+
+    // 3. Fluxos Visuais (Versão B)
+    window.postMessage({
+      origem: 'CONTENT_SCRIPT',
+      msgId: Date.now().toString() + 'F',
+      tipoMensagem: 'set_config_flows',
+      dados: res.ups_config_flow || null
     }, '*');
   });
 }

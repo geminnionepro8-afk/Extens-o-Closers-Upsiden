@@ -12,9 +12,11 @@ class UpsidenAuth {
     if (error) throw new Error(error.message);
     return data;
   }
-  static async signUp(email, password, nome) {
+  static async signUp(email, password, nome, invitation_code = null) {
     const { data, error } = await supabaseClient.auth.signUp({
-      email, password, options: { data: { nome } }
+      email, password, options: { 
+        data: { nome, invitation_code } 
+      }
     });
     if (error) throw new Error(error.message);
     return data;
@@ -50,7 +52,10 @@ class UpsidenAuth {
     return session && session.user ? session.user.id : null;
   }
   static async getProfile() {
-    const { data } = await supabaseClient.from('profiles').select('*').single();
+    const userId = await this.getUserId();
+    if (!userId) return null;
+    const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
+    if (error) console.error('[UpsidenAuth] Erro ao carregar perfil:', error);
     return data;
   }
   static async isAdmin() {

@@ -3,59 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upsiden  Login</title>
+  <title>Upsiden | Acesso Premium</title>
   <link rel="stylesheet" href="login.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="login-app">
     <div class="login-card">
       <div class="login-logo">
-        <img src="../../../public/icons/icone128.png" alt="Upsiden" style="width:56px;height:56px;">
+        <div class="text-logo">Upsiden</div>
       </div>
-      <h1>Upsiden</h1>
-      <p class="login-subtitle">Acesse sua conta para continuar</p>
+      <p class="login-subtitle">Acesso exclusivo ao ecossistema Upsiden</p>
 
       <form id="form-login" autocomplete="on">
         <div class="field">
-          <label for="login-email">Email</label>
+          <label for="login-email">Endereço de E-mail</label>
           <input type="email" id="login-email" placeholder="seu@email.com" required autocomplete="email">
         </div>
         <div class="field">
-          <label for="login-senha">Senha</label>
+          <label for="login-senha">Senha de Acesso</label>
           <input type="password" id="login-senha" placeholder="⬢⬢⬢⬢⬢⬢⬢⬢" required autocomplete="current-password">
         </div>
-        <button type="submit" class="btn-login" id="btn-entrar">Entrar</button>
+        <button type="submit" class="btn-login" id="btn-entrar">Acessar Painel</button>
       </form>
 
       <div class="login-divider"><span>ou</span></div>
 
       <form id="form-registro" style="display:none;">
         <div class="field">
-          <label for="reg-nome">Nome</label>
+          <label for="reg-nome">Nome Completo</label>
           <input type="text" id="reg-nome" placeholder="Seu nome" required>
         </div>
         <div class="field">
-          <label for="reg-email">Email</label>
+          <label for="reg-email">Endereço de E-mail</label>
           <input type="email" id="reg-email" placeholder="seu@email.com" required autocomplete="email">
         </div>
         <div class="field">
           <label for="reg-senha">Senha</label>
           <input type="password" id="reg-senha" placeholder="Mínimo 6 caracteres" required minlength="6">
         </div>
-        <button type="submit" class="btn-login btn-register">Criar Conta</button>
+        <div class="field">
+          <label for="reg-invite">ID de Convite da Equipe</label>
+          <input type="text" id="reg-invite" placeholder="INV-XXXX" required>
+        </div>
+        <button type="submit" class="btn-login btn-register">Finalizar Cadastro</button>
       </form>
 
-      <button class="btn-toggle" id="btn-toggle">Não tem conta? Criar uma</button>
+      <button class="btn-toggle" id="btn-toggle">Não possui conta? Começar agora</button>
 
       <div class="login-status" id="login-status"></div>
     </div>
   </div>
   <script src="../../libs/supabase.min.js"></script>
   <script src="../../libs/supabase-config.js"></script>
-  <script src="../../services/auth.service.js"></script><script src="../../services/db.service.js"></script><script src="../../services/storage.service.js"></script><script src="../../services/metrics.service.js"></script>
+  <script src="../../services/auth.service.js"></script>
+  <script src="../../services/db.service.js"></script>
+  <script src="../../services/storage.service.js"></script>
+  <script src="../../services/metrics.service.js"></script>
   <script src="login.js"></script>
 </body>
 </html>
-
-
-

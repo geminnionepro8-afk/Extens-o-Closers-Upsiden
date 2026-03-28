@@ -283,7 +283,9 @@ function importarLeadsCsv(evento) {
             novosLeads.push({
                nome: nome,
                telefone: telefoneStr,
-               etapa: typeof dynamicStages !== 'undefined' && dynamicStages.length > 0 ? dynamicStages[0].id : 'prospeccao'
+               etapa: typeof dynamicStages !== 'undefined' && dynamicStages.length > 0 ? dynamicStages[0].id : 'prospeccao',
+               criado_por: userData.userId,
+               admin_id: userData.teamAdminId
             });
             sucessos++;
         }

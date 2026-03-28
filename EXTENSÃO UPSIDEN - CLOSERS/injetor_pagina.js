@@ -113,11 +113,11 @@ class InjetorWPP {
     }
   }
 
-  // ── OUVINTES DE AUTOMAÇÃO ──────────────────────────────
+  // ── OUVINTES DE AUTOMAÇÃO (MODERNIZADO) ────────────────
   static iniciarOuvintes() {
-    console.log(`${CONTEXTO} Iniciando ouvintes de automação WPP v2...`);
+    console.log(`${CONTEXTO} Iniciando ouvintes de sincronização WPP...`);
     
-    // Polling a cada 5s para config atualizada
+    // Polling a cada 5s para config atualizada (vincular ao AutomationController no futuro)
     setInterval(() => {
       window.postMessage({ origem: 'INJETOR_PAGINA_INIT', ev: 'puxar_config_auto_reply' }, '*');
     }, 5000);
@@ -128,401 +128,256 @@ class InjetorWPP {
     // Limpar cache diariamente
     setInterval(() => InjetorWPP.limparCacheDiario(), 60000);
 
-    // ── LISTENER PRINCIPAL DE MENSAGENS ──
-    window.WPP.on('chat.msg_receive', async (msg) => {
-      console.log(`${CONTEXTO} [MSG] ID:`, msg.id._serialized, 'fromMe:', msg.id.fromMe, 'isGroup:', msg.isGroupMsg);
-      
-      // Ignorar: mensagens nossas, status, broadcast
-      if (msg.id.fromMe || msg.isStatusV3 || msg.id.id.startsWith('status@')) return;
-
-      // Ignorar mensagens antigas (> 5 min)
-      const tempoMsg = msg.t * 1000;
-      if (Date.now() - tempoMsg > 300000) {
-        console.log(`${CONTEXTO} Mensagem ignorada: Muito antiga.`);
-        return;
-      }
-
-      const isGroup = msg.isGroupMsg;
-      const chatId = msg.chatId;
-      let textoPuro = msg.body || msg.text || msg.content || '';
-      let chatName = '';
-
-      try {
-        const chat = await window.WPP.chat.get(chatId);
-        chatName = chat?.name || '';
-      } catch (e) { }
-
-      // ── GATILHOS (TRIGGERS) ──
-      const gatilhos = InjetorWPP.configTriggers || [];
-      
-      if (gatilhos.length > 0 && typeof textoPuro === 'string' && textoPuro.trim().length > 0) {
-        const textoRecebido = textoPuro.trim().toLowerCase();
-        
-        for (const trig of gatilhos) {
-          if (!trig.palavra) continue;
-
-          // Filtro contato/grupo (#8)
-          if (trig.apenas_privado && isGroup) continue;
-          if (trig.apenas_grupo && !isGroup) continue;
-
-          const palavra = trig.palavra.trim().toLowerCase();
-          let match = false;
-
-          if (trig.condicao === 'exata' && textoRecebido === palavra) match = true;
-          else if (trig.condicao === 'contem' && textoRecebido.includes(palavra)) match = true;
-
-          if (match) {
-            try {
-              console.log(`${CONTEXTO} Gatilho disparado: "${trig.palavra}"`);
-              
-              // Delay configurável (#5)
-              const delayMin = trig.delay_min || 1;
-              const delayMax = trig.delay_max || 3;
-              const delay = InjetorWPP.randomDelay(delayMin, delayMax);
-
-              // Simulação de digitação (#3)
-              if (trig.simular_digitacao !== false) {
-                await InjetorWPP.simularDigitacao(chatId, Math.min(delay, 3000));
-              }
-
-              await new Promise(r => setTimeout(r, delay));
-
-              let textoResp = InjetorWPP.substituirVariaveis(trig.resposta, chatName);
-
-              console.log(`${CONTEXTO} Enviando resposta gatilho: "${textoResp}"`);
-              await window.WPP.chat.sendTextMessage(chatId, textoResp);
-              console.log(`${CONTEXTO} Resposta gatilho enviada ✅`);
-              
-              return; // Impede saudação se gatilho disparou
-            } catch (e) {
-              console.error(`${CONTEXTO} Erro ao disparar gatilho:`, e);
+    // NOTA: O listener 'chat.msg_receive' legado foi removido.
+    // Agora a AutomationController (src/core/automation/automation-controller.js) 
+    // é quem escuta as mensagens e coordena os disparos via window.WPP.on direta ou via Background.
+    
+    // Escutar mensagens recebidas (Centralizado)
+    try {
+        window.WPP.on('chat.msg_receive', async (msg) => {
+            if (msg.id.fromMe || msg.isStatusV3) return;
+            
+            // Repassar para o AutomationController se disponível
+            if (window.AutomationController && window.AutomationController.handleIncomingMessage) {
+                const chat = await window.WPP.chat.get(msg.chatId);
+                window.AutomationController.handleIncomingMessage(msg, chat?.name || '');
             }
-          }
-        }
-      }
-
-      // ── SAUDAÇÃO AUTOMÁTICA ──
-      const conf = InjetorWPP.configSaudacao;
-      if (!conf || !conf.ativo || !conf.mensagem) return;
-
-      // Filtro contato/grupo (#8)
-      if (conf.apenasPrivado && isGroup) return;
-      if (conf.apenasGrupo && !isGroup) return;
-
-      // Evitar saudar o mesmo contato mais de uma vez por dia
-      if (InjetorWPP.chatsSaudados.has(chatId._serialized || chatId)) {
-        console.log(`${CONTEXTO} Saudação ignorada: já saudado hoje.`);
-        return;
-      }
-
-      // Verificar horário de funcionamento (#7)
-      const { dentroHorario, deveResponder } = InjetorWPP.verificarHorarioFuncionamento(conf);
-      
-      if (!deveResponder) {
-        console.log(`${CONTEXTO} Saudação ignorada: Dentro do horário comercial.`);
-        return;
-      }
-
-      // Se fora do horário e tem msg específica, enviar ela
-      if (!dentroHorario && conf.msgForaHorario && conf.msgForaHorario.trim()) {
-        try {
-          const delayMin = conf.delayMin || 2;
-          const delayMax = conf.delayMax || 5;
-          const delay = InjetorWPP.randomDelay(delayMin, delayMax);
-
-          if (conf.simularDigitacao !== false) {
-            await InjetorWPP.simularDigitacao(chatId, Math.min(delay, 3000));
-          }
-          await new Promise(r => setTimeout(r, delay));
-
-          const textoFora = InjetorWPP.substituirVariaveis(conf.msgForaHorario, chatName);
-          await window.WPP.chat.sendTextMessage(chatId, textoFora);
-          InjetorWPP.chatsSaudados.add(chatId._serialized || chatId);
-          console.log(`${CONTEXTO} Mensagem "fora do horário" enviada ✅`);
-        } catch (e) {
-          console.error(`${CONTEXTO} Erro msg fora horário:`, e);
-        }
-        return;
-      }
-
-      // Enviar saudação normal
-      try {
-        const delayMin = conf.delayMin || 2;
-        const delayMax = conf.delayMax || 5;
-        const delay = InjetorWPP.randomDelay(delayMin, delayMax);
-
-        // Simulação de digitação (#3)
-        if (conf.simularDigitacao !== false) {
-          await InjetorWPP.simularDigitacao(chatId, Math.min(delay, 3000));
-        }
-
-        await new Promise(r => setTimeout(r, delay));
-
-        let textoFinal = InjetorWPP.substituirVariaveis(conf.mensagem, chatName);
-
-        console.log(`${CONTEXTO} Enviando saudação: "${textoFinal}"`);
-        await window.WPP.chat.sendTextMessage(chatId, textoFinal);
-        InjetorWPP.chatsSaudados.add(chatId._serialized || chatId);
-        console.log(`${CONTEXTO} Saudação enviada ✅`);
-
-        // ── FOLLOW-UP SEQUENCIAL (#6) ──
-        if (conf.followupSteps && conf.followupSteps.length > 0) {
-          console.log(`${CONTEXTO} Iniciando follow-up com ${conf.followupSteps.length} passos...`);
-          await InjetorWPP.executarSequencia(chatId, conf.followupSteps, chatName);
-        }
-      } catch (e) {
-        console.error(`${CONTEXTO} Erro saudação:`, e);
-      }
-    });
+        });
+    } catch(e) { console.error(`${CONTEXTO} Falha ao vincular AutomationController`, e); }
 
     window.postMessage({ origem: 'INJETOR_PAGINA', ev: 'engine_pronto_para_automacao' }, '*');
   }
 
-  // ── FOLLOW-UP SEQUENCIAL (#6) ──────────────────────────
-  static async executarSequencia(chatId, steps, chatName) {
-    for (let i = 0; i < steps.length; i++) {
-      const step = steps[i];
-      const delay = (step.delay_segundos || 3) * 1000;
-
-      console.log(`${CONTEXTO} Follow-up passo ${i + 1}/${steps.length}: tipo=${step.tipo}, delay=${delay}ms`);
-      await new Promise(r => setTimeout(r, delay));
-
-      try {
-        if (step.tipo === 'texto') {
-          if (step.simular_digitacao !== false) {
-            await InjetorWPP.simularDigitacao(chatId, Math.min(delay, 2000));
-          }
-          const texto = InjetorWPP.substituirVariaveis(step.conteudo || '', chatName);
-          await window.WPP.chat.sendTextMessage(chatId, texto);
-        } else if (step.tipo === 'audio' && step.base64) {
-          if (step.simular_gravacao !== false) {
-            await InjetorWPP.simularGravacao(chatId, Math.min(delay, 3000));
-          }
-          const blob = InjetorWPP.base64ToBlob(step.base64.split(',')[1] || step.base64, 'audio/ogg');
-          const file = new File([blob], `follow_${Date.now()}.ogg`, { type: 'audio/ogg; codecs=opus' });
-          const waveform = new Uint8Array(64).map(() => Math.floor(Math.random() * 50) + 10);
-          await window.WPP.chat.sendFileMessage(chatId, file, { type: 'audio', isPtt: true, waveform: Array.from(waveform) });
-        } else if ((step.tipo === 'documento' || step.tipo === 'midia') && step.base64) {
-          const blob = InjetorWPP.base64ToBlob(step.base64.split(',')[1] || step.base64, step.mime || 'application/octet-stream');
-          const file = new File([blob], step.nome || `file_${Date.now()}`, { type: step.mime || 'application/octet-stream' });
-          await window.WPP.chat.sendFileMessage(chatId, file, { type: 'auto' });
-        }
-        console.log(`${CONTEXTO} Follow-up passo ${i + 1} enviado ✅`);
-      } catch (e) {
-        console.error(`${CONTEXTO} Erro follow-up passo ${i + 1}:`, e);
-      }
-    }
-    console.log(`${CONTEXTO} Sequência follow-up completa ✅`);
-  }
-
-  // ── ENVIO EM MASSA (BULK) (#9-#14) ─────────────────────
-  static async iniciarBulkSend(dados) {
-    if (InjetorWPP.bulkEmAndamento) {
-      return { sucesso: false, erro: 'Já existe um envio em massa em andamento.' };
-    }
-
-    InjetorWPP.bulkEmAndamento = true;
-    InjetorWPP.bulkPausado = false;
-
-    const { contatos, tipo, conteudo, recurso, delayMin, delayMax, campanhaId } = dados;
-    const total = contatos.length;
-    let enviados = 0;
-    let falhas = 0;
-    const log = [];
-
-    console.log(`${CONTEXTO} [BULK] Iniciando envio para ${total} contatos. Tipo: ${tipo}`);
-
-    for (let i = 0; i < contatos.length; i++) {
-      // Verificar pausa/cancelamento
-      if (!InjetorWPP.bulkEmAndamento) {
-        console.log(`${CONTEXTO} [BULK] Envio cancelado.`);
-        break;
-      }
-
-      while (InjetorWPP.bulkPausado) {
-        await new Promise(r => setTimeout(r, 500));
-        if (!InjetorWPP.bulkEmAndamento) break;
-      }
-
-      const contato = contatos[i];
-      const telefone = contato.telefone.replace(/\D/g, '');
-      const chatId = `${telefone}@c.us`;
-
-      try {
-        // Delay anti-ban (#13)
-        if (i > 0) {
-          const delay = InjetorWPP.randomDelay(delayMin || 3, delayMax || 8);
-          console.log(`${CONTEXTO} [BULK] Aguardando ${Math.round(delay / 1000)}s (anti-ban)...`);
-          await new Promise(r => setTimeout(r, delay));
-        }
-
-        // Simular digitação
-        await InjetorWPP.simularDigitacao(chatId, 2000);
-
-        // Substituir variáveis personalizadas
-        let textoFinal = conteudo || '';
-        textoFinal = textoFinal
-          .replace(/\{nome\}/gi, contato.nome || '')
-          .replace(/\{\{nome\}\}/gi, contato.nome || '')
-          .replace(/\{telefone\}/gi, contato.telefone || '')
-          .replace(/\{\{telefone\}\}/gi, contato.telefone || '');
-
-        // Enviar conforme tipo
-        if (tipo === 'texto') {
-          await window.WPP.chat.sendTextMessage(chatId, textoFinal);
-        } else if (tipo === 'audio' && recurso?.base64) {
-          await InjetorWPP.simularGravacao(chatId, 3000);
-          const blob = InjetorWPP.base64ToBlob(recurso.base64.split(',')[1] || recurso.base64, 'audio/ogg');
-          const file = new File([blob], `bulk_${Date.now()}.ogg`, { type: 'audio/ogg; codecs=opus' });
-          const waveform = new Uint8Array(64).map(() => Math.floor(Math.random() * 50) + 10);
-          await window.WPP.chat.sendFileMessage(chatId, file, { type: 'audio', isPtt: true, waveform: Array.from(waveform) });
-        } else if ((tipo === 'documento' || tipo === 'midia') && recurso?.base64) {
-          const blob = InjetorWPP.base64ToBlob(recurso.base64.split(',')[1] || recurso.base64, recurso.mime || 'application/octet-stream');
-          const file = new File([blob], recurso.nome || `bulk_file_${Date.now()}`, { type: recurso.mime || 'application/octet-stream' });
-          await window.WPP.chat.sendFileMessage(chatId, file, { type: 'auto' });
-        }
-
-        enviados++;
-        log.push({ nome: contato.nome, telefone: contato.telefone, status: 'enviado', erro: null });
-        console.log(`${CONTEXTO} [BULK] ✅ ${enviados}/${total} — ${contato.nome || telefone}`);
-      } catch (e) {
-        falhas++;
-        log.push({ nome: contato.nome, telefone: contato.telefone, status: 'falha', erro: e.message });
-        console.error(`${CONTEXTO} [BULK] ❌ Falha: ${contato.nome || telefone} —`, e.message);
-      }
-
-      // Reportar progresso
-      window.postMessage({
-        origem: 'INJETOR_PAGINA',
-        ev: 'bulk_progresso',
-        dados: { campanhaId, enviados, falhas, total, porcentagem: Math.round(((enviados + falhas) / total) * 100) }
-      }, '*');
-    }
-
-    InjetorWPP.bulkEmAndamento = false;
-    InjetorWPP.bulkPausado = false;
-
-    const resultado = { sucesso: true, campanhaId, total, enviados, falhas, log };
-    
-    window.postMessage({
-      origem: 'INJETOR_PAGINA',
-      ev: 'bulk_concluido',
-      dados: resultado
-    }, '*');
-
-    console.log(`${CONTEXTO} [BULK] Concluído — ${enviados} enviados, ${falhas} falhas.`);
-    return resultado;
-  }
-
-  static pausarBulk() { InjetorWPP.bulkPausado = true; }
-  static continuarBulk() { InjetorWPP.bulkPausado = false; }
-  static cancelarBulk() { InjetorWPP.bulkEmAndamento = false; }
-
-  // ── ENVIOS INDIVIDUAIS (existentes) ────────────────────
+  // ── MÉTODOS DE ENVIO (SIMULAÇÃO + DIRECIONAMENTO) ───────
   static base64ToBlob(base64, mime) {
-    const binStr = atob(base64);
-    const len = binStr.length;
-    const arr = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      arr[i] = binStr.charCodeAt(i);
-    }
-    return new Blob([arr], { type: mime });
+    try {
+        const binStr = atob(base64);
+        const len = binStr.length;
+        const arr = new Uint8Array(len);
+        for (let i = 0; i < len; i++) arr[i] = binStr.charCodeAt(i);
+        return new Blob([arr], { type: mime });
+    } catch(e) { return null; }
   }
 
-  static async enviarAudio(dados) {
-    if (!window.WPP || !window.WPP.webpack.isReady) return { sucesso: false, erro: 'WPP não carregado.' };
+  /**
+   * Envia texto com simulação opcional de digitação.
+   * @param {Object} dados { texto, duracaoSimulacao }
+   * @param {string} targetId ID do chat (ex: 55... @c.us)
+   */
+  static async enviarTexto(dados, targetId) {
+    if (!window.WPP?.webpack?.isReady) return { sucesso: false, erro: 'WPP não carregado.' };
     try {
-      const chatAtivo = window.WPP.chat.getActiveChat();
-      if (!chatAtivo) return { sucesso: false, erro: 'Abra um chat primeiro!' };
-      
-      // Simulação de gravação (#4)
-      if (dados.simularGravacao !== false) {
-        await InjetorWPP.simularGravacao(chatAtivo.id, 3000);
+      const chatId = targetId || dados.chatId || (window.WPP.chat.getActiveChat())?.id;
+      if (!chatId) return { sucesso: false, erro: 'ID do chat não fornecido.' };
+
+      if (dados.duracaoSimulacao > 0) {
+        await InjetorWPP.simularDigitacao(chatId, dados.duracaoSimulacao);
       }
 
-      const blob = InjetorWPP.base64ToBlob(dados.base64.split(',')[1] || dados.base64, dados.tipoMime);
-      const file = new File([blob], `voz_Upsiden_${Date.now()}.ogg`, { type: 'audio/ogg; codecs=opus' });
-      const fakeWaveform = new Uint8Array(64).map(() => Math.floor(Math.random() * 50) + 10);
-      const res = await window.WPP.chat.sendFileMessage(chatAtivo.id, file, { type: 'audio', isPtt: true, waveform: Array.from(fakeWaveform) });
+      const res = await window.WPP.chat.sendTextMessage(chatId, dados.texto);
       return { sucesso: true, resultado: res.id };
     } catch (e) { return { sucesso: false, erro: String(e) }; }
   }
 
-  static async enviarArquivo(dados) {
-    if (!window.WPP || !window.WPP.webpack.isReady) return { sucesso: false, erro: 'WPP não carregado.' };
+  /**
+   * Envia áudio como PTT (Gravado na hora) com simulação.
+   */
+  static async enviarAudio(dados, targetId) {
+    if (!window.WPP?.webpack?.isReady) return { sucesso: false, erro: 'WPP não carregado.' };
     try {
-      const chatAtivo = window.WPP.chat.getActiveChat();
-      if (!chatAtivo) return { sucesso: false, erro: 'Abra um chat primeiro!' };
-      const b64Data = dados.base64.split(',')[1] || dados.base64;
-      const blob = InjetorWPP.base64ToBlob(b64Data, dados.tipo);
-      const file = new File([blob], dados.nome, { type: dados.tipo });
-      const res = await window.WPP.chat.sendFileMessage(chatAtivo.id, file, { type: 'auto' });
+      const chatId = targetId || dados.chatId || (window.WPP.chat.getActiveChat())?.id;
+      if (!chatId) return { sucesso: false, erro: 'ID do chat não fornecido.' };
+
+      if (dados.duracaoSimulacao > 0) {
+        await InjetorWPP.simularGravacao(chatId, dados.duracaoSimulacao);
+      }
+
+      const b64 = dados.base64.includes(',') ? dados.base64.split(',')[1] : dados.base64;
+      const blob = InjetorWPP.base64ToBlob(b64, 'audio/ogg');
+      if (!blob) throw new Error('Falha ao processar base64 do áudio');
+
+      const file = new File([blob], `ptt_${Date.now()}.ogg`, { type: 'audio/ogg; codecs=opus' });
+      const waveform = new Uint8Array(64).map(() => Math.floor(Math.random() * 50) + 10);
+      
+      const res = await window.WPP.chat.sendFileMessage(chatId, file, { 
+        type: 'audio', 
+        isPtt: true, 
+        waveform: Array.from(waveform) 
+      });
       return { sucesso: true, resultado: res.id };
     } catch (e) { return { sucesso: false, erro: String(e) }; }
   }
 
-  static async enviarTexto(dados) {
-    if (!window.WPP || !window.WPP.webpack.isReady) return { sucesso: false, erro: 'WPP não carregado.' };
+  /**
+   * Envia arquivo (imagem, vídeo, documento) com caption e simulação.
+   */
+  static async enviarArquivo(dados, targetId) {
+    if (!window.WPP?.webpack?.isReady) return { sucesso: false, erro: 'WPP não carregado.' };
     try {
-      const chatAtivo = window.WPP.chat.getActiveChat();
-      if (!chatAtivo) return { sucesso: false, erro: 'Abra um chat primeiro!' };
-      const res = await window.WPP.chat.sendTextMessage(chatAtivo.id, dados.texto);
+      const chatId = targetId || dados.chatId || (window.WPP.chat.getActiveChat())?.id;
+      if (!chatId) return { sucesso: false, erro: 'ID do chat não fornecido.' };
+
+      // Documentos/Mídias costumam simular digitação se tiverem legenda
+      if (dados.duracaoSimulacao > 0) {
+        await InjetorWPP.simularDigitacao(chatId, dados.duracaoSimulacao);
+      }
+
+      const b64 = dados.base64.includes(',') ? dados.base64.split(',')[1] : dados.base64;
+      const blob = InjetorWPP.base64ToBlob(b64, dados.tipo || 'application/octet-stream');
+      if (!blob) throw new Error('Falha ao processar base64 do arquivo');
+
+      const file = new File([blob], dados.nome || `file_${Date.now()}`, { type: dados.tipo });
+      const res = await window.WPP.chat.sendFileMessage(chatId, file, { 
+        type: 'auto', 
+        caption: dados.caption || dados.texto || '' 
+      });
       return { sucesso: true, resultado: res.id };
     } catch (e) { return { sucesso: false, erro: String(e) }; }
   }
 
   static getActiveChatData() {
-    if (!window.WPP || !window.WPP.webpack.isReady) return { sucesso: false, erro: 'WPP não carregado.' };
+    if (!window.WPP?.webpack?.isReady) return { sucesso: false, erro: 'WPP não carregado.' };
     try {
       const chatAtivo = window.WPP.chat.getActiveChat();
       if (!chatAtivo) return { sucesso: false, erro: 'Nenhum chat ativo.' };
-      return { sucesso: true, id: chatAtivo.id._serialized, nome: chatAtivo.name || '' };
+      return { sucesso: true, id: chatAtivo.id._serialized || chatAtivo.id, nome: chatAtivo.name || '' };
     } catch (e) { return { sucesso: false, erro: String(e) }; }
+  }
+
+  // ── MÉTODOS DE CONTROLE ─────────────────────────────────
+  static pausarBulk() { InjetorWPP.bulkPausado = true; }
+  static continuarBulk() { InjetorWPP.bulkPausado = false; }
+  static cancelarBulk() { InjetorWPP.bulkEmAndamento = false; }
+
+  /**
+   * INICIAR DISPARO EM MASSA (BULK SEND)
+   * Itera sobre contatos e executa a sequência de passos (mensagens).
+   */
+  static async iniciarBulkSend(dados) {
+    if (InjetorWPP.bulkEmAndamento) return;
+    InjetorWPP.bulkEmAndamento = true;
+    InjetorWPP.bulkPausado = false;
+
+    const { contatos, stepsParams, campanha_id, min, max } = dados;
+    let enviados = 0;
+    let falhas = 0;
+
+    console.log(`${CONTEXTO} Iniciando Campanha [${campanha_id}] para ${contatos.length} contatos.`);
+
+    for (let i = 0; i < contatos.length; i++) {
+        if (!InjetorWPP.bulkEmAndamento) break;
+
+        // Pausa
+        while (InjetorWPP.bulkPausado) {
+            await new Promise(r => setTimeout(r, 2000));
+            if (!InjetorWPP.bulkEmAndamento) break;
+        }
+
+        const contato = contatos[i];
+        const chatId = contato.telefone.includes('@') ? contato.telefone : `${contato.telefone}@c.us`;
+
+        try {
+            console.log(`${CONTEXTO} Enviando sequência para ${chatId} (${i + 1}/${contatos.length})`);
+            
+            // Reutilizar o AutomationController se disponível para garantir consistência de mídia
+            if (window.AutomationController && window.AutomationController.executeSequentialFollowup) {
+                await window.AutomationController.executeSequentialFollowup(chatId, stepsParams, contato.nome);
+            } else {
+                // Fallback manual se o controlador não existir (improvável)
+                for (const step of stepsParams) {
+                    const delay = (step.delay_segundos || 2) * 1000;
+                    await new Promise(r => setTimeout(r, delay));
+                    
+                    if (step.tipo === 'texto') {
+                        await InjetorWPP.enviarTexto({ texto: step.conteudo }, chatId);
+                    } else if (step.tipo === 'audio') {
+                        // Precisa de base64... se não tiver, o Bulk vai falhar sem o controller
+                        await InjetorWPP.enviarAudio(step, chatId);
+                    } else {
+                        await InjetorWPP.enviarArquivo(step, chatId);
+                    }
+                }
+            }
+
+            enviados++;
+        } catch (err) {
+            console.error(`${CONTEXTO} Erro ao enviar para ${chatId}:`, err);
+            falhas++;
+        }
+
+        // Delay Anti-ban entre contatos
+        const delayBan = InjetorWPP.randomDelay(min || 5, max || 15);
+        console.log(`${CONTEXTO} Aguardando ${Math.floor(delayBan / 1000)}s (Anti-ban)...`);
+
+        // Feedback de Progresso
+        window.postMessage({
+            origem: 'INJETOR_PAGINA',
+            ev: 'bulk_progresso',
+            dados: { id: campanha_id, enviados, falhas, status: 'andamento' }
+        }, '*');
+
+        await new Promise(r => setTimeout(r, delayBan));
+    }
+
+    InjetorWPP.bulkEmAndamento = false;
+    window.postMessage({
+        origem: 'INJETOR_PAGINA',
+        ev: 'bulk_concluido',
+        dados: { id: campanha_id, enviados, falhas, status: 'concluida' }
+    }, '*');
+
+    console.log(`${CONTEXTO} Campanha Finalizada. Sucesso: ${enviados}, Falhas: ${falhas}`);
   }
 }
 
-// ── ESCUTAR ORDENS DO CONTENT_SCRIPT ─────────────────────
+// ── ESCUTAR ORDENS DO CONTENT_SCRIPT / BACKEND ───────────
 window.addEventListener('message', async (evento) => {
   if (evento.data?.origem === 'CONTENT_SCRIPT') {
-    let resposta = { sucesso: false, erro: 'Tipo desconhecido.' };
+    let resposta = { sucesso: false, erro: 'Tipo de mensagem não reconhecido ou parâmetro ausente.' };
+    const { tipoMensagem, dados, msgId, chatId } = evento.data;
     
-    if (evento.data.tipoMensagem === 'get_active_chat') {
-      resposta = InjetorWPP.getActiveChatData();
-    } else if (evento.data.tipoMensagem === 'set_config_auto_reply') {
-      InjetorWPP.configSaudacao = evento.data.dados;
-      resposta = { sucesso: true };
-    } else if (evento.data.tipoMensagem === 'set_config_triggers') {
-      InjetorWPP.configTriggers = evento.data.dados;
-      resposta = { sucesso: true };
-    } else if (evento.data.tipoMensagem === 'set_config_followups') {
-      InjetorWPP.configFollowups = evento.data.dados;
-      resposta = { sucesso: true };
-    } else if (evento.data.tipoMensagem === 'texto') {
-      resposta = await InjetorWPP.enviarTexto(evento.data);
-    } else if (evento.data.tipoMensagem === 'arquivo') {
-      resposta = await InjetorWPP.enviarArquivo(evento.data);
-    } else if (evento.data.tipoMensagem === 'bulk_send_start') {
-      // Não bloquear — iniciar em background
-      InjetorWPP.iniciarBulkSend(evento.data.dados);
-      resposta = { sucesso: true, msg: 'Envio em massa iniciado.' };
-    } else if (evento.data.tipoMensagem === 'bulk_pausar') {
-      InjetorWPP.pausarBulk();
-      resposta = { sucesso: true };
-    } else if (evento.data.tipoMensagem === 'bulk_continuar') {
-      InjetorWPP.continuarBulk();
-      resposta = { sucesso: true };
-    } else if (evento.data.tipoMensagem === 'bulk_cancelar') {
-      InjetorWPP.cancelarBulk();
-      resposta = { sucesso: true };
-    } else {
-      resposta = await InjetorWPP.enviarAudio(evento.data);
+    try {
+        if (tipoMensagem === 'get_active_chat') {
+          resposta = InjetorWPP.getActiveChatData();
+        } 
+        else if (tipoMensagem === 'set_config_auto_reply') {
+          InjetorWPP.configSaudacao = dados;
+          if(window.AutomationController) window.AutomationController.syncConfig({ saudacao: dados });
+          resposta = { sucesso: true };
+        } 
+        else if (tipoMensagem === 'set_config_triggers') {
+          InjetorWPP.configTriggers = dados;
+          if(window.AutomationController) window.AutomationController.syncConfig({ triggers: dados });
+          resposta = { sucesso: true };
+        } 
+        else if (tipoMensagem === 'set_config_followups') {
+          InjetorWPP.configFollowups = dados;
+          if(window.AutomationController) window.AutomationController.syncConfig({ followups: dados });
+          resposta = { sucesso: true };
+        } 
+        else if (tipoMensagem === 'texto') {
+          resposta = await InjetorWPP.enviarTexto(dados, chatId || dados.chatId);
+        } 
+        else if (tipoMensagem === 'arquivo') {
+          resposta = await InjetorWPP.enviarArquivo(dados, chatId || dados.chatId);
+        } 
+        else if (tipoMensagem === 'audio') {
+          resposta = await InjetorWPP.enviarAudio(dados, chatId || dados.chatId);
+        }
+        else if (tipoMensagem === 'bulk_send_start') {
+          InjetorWPP.iniciarBulkSend(dados);
+          resposta = { sucesso: true, msg: 'Envio em massa iniciado.' };
+        } 
+        else if (tipoMensagem === 'bulk_pausar') { InjetorWPP.pausarBulk(); resposta = { sucesso: true }; }
+        else if (tipoMensagem === 'bulk_continuar') { InjetorWPP.continuarBulk(); resposta = { sucesso: true }; }
+        else if (tipoMensagem === 'bulk_cancelar') { InjetorWPP.cancelarBulk(); resposta = { sucesso: true }; }
+    } catch(err) {
+        resposta = { sucesso: false, erro: err.message };
     }
 
-    window.postMessage({
-      origem: 'INJETOR_PAGINA',
-      msgId: evento.data.msgId,
-      resposta: resposta
-    }, '*');
+    if (msgId) {
+        window.postMessage({ origem: 'INJETOR_PAGINA', msgId, resposta }, '*');
+    }
   }
 });
 

@@ -14,7 +14,7 @@
 
 const P = '[Painel]';
 let currentSection = 'dashboard';
-let userData = { userId: null, nome: '', email: '', isAdmin: false, avatar_url: '' };
+let userData = { userId: null, nome: '', email: '', isAdmin: false, avatar_url: '', permissions: {} };
 let painelData = { audios: [], documentos: [], midias: [], templates: [], leads: [], membros: [] };
 
 // === TOAST ===
@@ -45,34 +45,95 @@ async function initPainel() {
 
     document.getElementById('painel-app').style.display = 'flex';
     userData.userId = await UpsidenAuth.getUserId();
-    userData.isAdmin = await UpsidenAuth.isAdmin();
     const profile = await UpsidenAuth.getProfile();
-    userData.nome = profile?.nome || profile?.email?.split('@')[0] || '';
-    userData.email = profile?.email || '';
-    userData.avatar_url = profile?.avatar_url || '';
+    
+    console.log(P, 'Perfil carregado:', profile);
+    
+    if (profile) {
+      userData.isAdmin = (profile.role === 'admin');
+      userData.teamAdminId = userData.isAdmin ? userData.userId : profile.admin_id;
+      userData.nome = profile.nome || profile.email?.split('@')[0] || '';
+      userData.email = profile.email || '';
+      userData.avatar_url = profile.avatar_url || '';
+      userData.permissions = profile.permissions || {
+        audios: true, midias: true, documentos: true, templates: true, 
+        crm: true, automacao: true, gatilhos: true, fluxos: true
+      };
+    } else {
+      console.warn(P, 'Nenhum perfil encontrado para o ID:', userData.userId);
+      userData.isAdmin = false;
+    }
 
     // UI - user info
     document.getElementById('user-display-name').textContent = userData.nome;
     document.getElementById('user-display-role').textContent = userData.isAdmin ? 'Administrador' : 'Closer';
     document.getElementById('user-display-role').className = `user-role ${userData.isAdmin ? 'admin' : ''}`;
-    document.getElementById('user-avatar').textContent = (userData.nome[0] || 'U').toUpperCase();
+    
+    // Avatar Logic (Header & Popup)
+    const initial = (userData.nome[0] || 'U').toUpperCase();
+    const avatarEl = document.getElementById('user-avatar');
     const presenceStack = document.getElementById('presence-stack');
-    if (presenceStack) presenceStack.innerHTML = `<div class="p-avatar">${(userData.nome[0] || 'U').toUpperCase()}</div>`;
+    
+    if (userData.avatar_url) {
+      if (avatarEl) {
+        avatarEl.style.backgroundImage = `url('${userData.avatar_url}')`;
+        avatarEl.style.backgroundSize = 'cover';
+        avatarEl.style.backgroundPosition = 'center';
+        avatarEl.textContent = '';
+        avatarEl.classList.add('has-avatar');
+      }
+      if (presenceStack) {
+        presenceStack.innerHTML = `<div class="p-avatar has-avatar" style="background-image: url('${userData.avatar_url}'); background-size: cover; background-position: center;"></div>`;
+      }
+    } else {
+      if (avatarEl) avatarEl.textContent = initial;
+      if (presenceStack) presenceStack.innerHTML = `<div class="p-avatar">${initial}</div>`;
+    }
 
     if (userData.isAdmin) {
       document.getElementById('nav-admin').style.display = 'flex';
       document.getElementById('admin-section-label').style.display = 'block';
     }
 
-    // Load data
-    console.log(P, 'Carregando dados...');
+    // Hide restricted sections for non-admins
+    if (!userData.isAdmin) {
+      const map = {
+        'biblioteca': 'audios',
+        'templates': 'templates',
+        'crm': 'crm',
+        'automacoes': 'automacao',
+        'gatilhos': 'gatilhos',
+        'flow': 'fluxos'
+      };
+      Object.entries(map).forEach(([section, key]) => {
+        if (userData.permissions[key] === false) {
+          const btn = document.querySelector(`.nav-item[data-section="${section}"]`);
+          if (btn) btn.style.display = 'none';
+        }
+      });
+    }
+
+    // Load data with Partitioning
+    console.log(P, 'Carregando dados particionados...');
+    const teamAdminId = userData.isAdmin ? userData.userId : profile.admin_id;
+    
+    // Filtro base: admin_id do time
+    const baseQuery = (table) => {
+      let q = UpsidenDB.from(table).select('*').eq('admin_id', teamAdminId);
+      // Se for closer, vê o dele, o compartilhado com o time OU o compartilhado individualmente com ele
+      if (!userData.isAdmin) {
+        q = q.or(`criado_por.eq.${userData.userId},compartilhado.eq.true,acesso_individual.cs.["${userData.userId}"]`);
+      }
+      return q.order('created_at', false).execute().catch(() => []);
+    };
+
     const [audios, docs, midias, templates, leads, membros] = await Promise.all([
-      UpsidenDB.from('audios').select('*').order('created_at', false).execute().catch(()=>[]),
-      UpsidenDB.from('documentos').select('*').order('created_at', false).execute().catch(()=>[]),
-      UpsidenDB.from('midias').select('*').order('created_at', false).execute().catch(()=>[]),
-      UpsidenDB.from('templates').select('*').order('created_at', false).execute().catch(()=>[]),
-      UpsidenDB.from('leads').select('*').order('created_at', false).execute().catch(()=>[]),
-      userData.isAdmin ? UpsidenDB.from('profiles').select('*').execute().catch(()=>[]) : Promise.resolve([])
+      baseQuery('audios'),
+      baseQuery('documentos'),
+      baseQuery('midias'),
+      baseQuery('templates'),
+      baseQuery('leads'),
+      userData.isAdmin ? UpsidenDB.from('profiles').select('*').eq('admin_id', userData.userId).execute().catch(()=>[]) : Promise.resolve([])
     ]);
 
     painelData = { audios: audios||[], documentos: docs||[], midias: midias||[], templates: templates||[], leads: leads||[], membros: membros||[] };
@@ -141,7 +202,17 @@ async function initPainel() {
     const umpAvatar = document.getElementById('user-avatar-popup');
     if (umpName) umpName.textContent = userData.nome || 'Usuario';
     if (umpEmail) umpEmail.textContent = userData.email || '';
-    if (umpAvatar) umpAvatar.textContent = (userData.nome[0] || 'U').toUpperCase();
+    if (userData.avatar_url) {
+      if (umpAvatar) {
+        umpAvatar.style.backgroundImage = `url('${userData.avatar_url}')`;
+        umpAvatar.style.backgroundSize = 'cover';
+        umpAvatar.style.backgroundPosition = 'center';
+        umpAvatar.textContent = '';
+        umpAvatar.classList.add('has-avatar');
+      }
+    } else {
+      if (umpAvatar) umpAvatar.textContent = initial;
+    }
 
     // Perfil (inside popup)
     document.getElementById('btn-nav-perfil')?.addEventListener('click', () => {
@@ -168,6 +239,9 @@ async function initPainel() {
     console.log(P, 'Painel pronto!');
     navigate('dashboard');
 
+    window.checkNotifications();
+    setInterval(window.checkNotifications, 60000);
+
   } catch(err) {
     console.error(P, 'Erro ao inicializar:', err);
     document.getElementById('loading-page').innerHTML = `<p style="color:var(--danger);">Erro ao carregar painel. Recarregue a pagina.</p>`;
@@ -176,9 +250,44 @@ async function initPainel() {
 
 document.addEventListener('DOMContentLoaded', initPainel);
 
-// === GUARD SYSTEM: Exportar funcoes com verificacao de seguranca ===
-// Cada export verifica se a funcao existe antes de atribuir ao window.
-// Se nao existir, atribui um stub que loga erro em vez de crashar.
+window.setCRMTab = function(tab) {
+  if (typeof window.renderCRM === 'function') {
+    window.currentCRMTab = tab;
+    if (currentSection !== 'crm') {
+       navigate('crm');
+    } else {
+       renderSection('crm');
+    }
+  }
+};
+
+window.checkNotifications = async function() {
+  try {
+     const profile = await UpsidenAuth.getProfile();
+     const uid = profile?.role === 'admin' ? profile?.id : (profile?.admin_id || profile?.id);
+     
+     const { data, count, error } = await UpsidenDB.from('crm_reminders')
+        .select('*', { count: 'exact', head: true })
+        .eq('admin_id', uid)
+        .eq('status', 'pending')
+        .lte('reminder_at', new Date().toISOString());
+
+     const badges = ['notif-badge', 'notif-badge-crm'];
+     badges.forEach(id => {
+       const badge = document.getElementById(id);
+       if (badge) {
+          if (count > 0) {
+             badge.textContent = count > 9 ? '9+' : count;
+             badge.style.display = 'flex';
+             badge.parentElement.classList.add('pulse-notif');
+          } else {
+             badge.style.display = 'none';
+             badge.parentElement.classList.remove('pulse-notif');
+          }
+       }
+     });
+  } catch(e) {}
+};
 
 function _guard(name) {
   return (typeof window[name] === 'function')

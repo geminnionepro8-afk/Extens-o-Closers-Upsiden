@@ -10,7 +10,6 @@
 // ═══ STATE ═══════════════════════════════════════════════════
 if (typeof window.autoSubTab === 'undefined') window.autoSubTab = 'saudacao';
 
-// ═══ AUTOMAÇÕES ══════════════════════════════════════════════
 window.renderAutomacoes = function(c) {
   const tabs = [
     { id: 'saudacao', label: '💬 Saudação' },
@@ -18,86 +17,110 @@ window.renderAutomacoes = function(c) {
     { id: 'horario', label: '🕐 Horário de F.' },
     { id: 'regras', label: '⚙️ Regras do Robô' }
   ];
-  let html = `<div class="sub-tabs" style="display:flex;gap:12px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;overflow-x:auto;">`;
+
+  let html = `<div class="rs-tabs-switcher">`;
   tabs.forEach(t => {
-    html += `<button class="btn-ghost ${window.autoSubTab === t.id ? 'active' : ''}" data-click="switchTab('${t.id}')" style="padding:8px 16px;border-radius:20px;color:var(--text);background:${window.autoSubTab === t.id ? 'var(--input-bg)' : 'transparent'};white-space:nowrap;">${t.label}</button>`;
+    html += `<button class="rs-tab-btn ${window.autoSubTab === t.id ? 'active' : ''}" data-click="switchTab('${t.id}')">${t.label}</button>`;
   });
   html += `</div>`;
 
   if (window.autoSubTab === 'saudacao') {
-    html += `<div class="auto-section animate-in">
-      <h3>💬 Resposta Automática (Saudação)</h3>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure uma mensagem automática de boas-vindas para novos contatos.</p>
-      <div class="form-group"><label class="form-label">Mensagem de Saudação</label><textarea class="form-textarea" id="auto-saudacao" rows="3" placeholder="Ex: Olá! Obrigado por entrar em contato. Em breve retornaremos."></textarea></div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-        <label class="toggle-switch"><input type="checkbox" id="auto-saudacao-ativo"><span class="toggle-slider"></span></label>
-        <span style="font-size:13px;color:var(--text-secondary);">Ativar saudação automática</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-         <label style="font-size:13px;color:var(--text-secondary);"><input type="checkbox" id="auto-privado" checked> Aceitar Privado</label>
-         <label style="font-size:13px;color:var(--text-secondary);"><input type="checkbox" id="auto-grupo"> Aceitar Grupos</label>
+    html += `<div class="rs-card rs-card-accent animate-in">
+      <h3 style="margin-bottom:8px; display:flex; align-items:center; gap:8px;">💬 Resposta Automática (Saudação)</h3>
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px; font-weight:500;">Configure uma mensagem automática de boas-vindas para novos contatos de forma profissional.</p>
+      
+      <div class="form-group"><label class="form-label">Mensagem de Saudação Global</label><textarea class="form-textarea" id="auto-saudacao" rows="4" placeholder="Ex: Olá! Obrigado por entrar em contato com a Upsiden."></textarea></div>
+      
+      <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:center; margin-top:16px; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <label class="toggle-switch"><input type="checkbox" id="auto-saudacao-ativo"><span class="toggle-slider"></span></label>
+          <span style="font-size:13px; font-weight:600;">Ativar saudação</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px;">
+           <label style="font-size:13px; color:var(--text-secondary); display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="auto-privado" checked style="accent-color:var(--accent);"> Aceitar Privado</label>
+           <label style="font-size:13px; color:var(--text-secondary); display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="auto-grupo" style="accent-color:var(--accent);"> Aceitar Grupos</label>
+        </div>
       </div>
       
-      <h4 style="margin-top:24px; padding-top:16px; border-top:1px dashed var(--border);">🚀 Programar Mensagens Sequenciais (Follow-ups)</h4>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Adicione mensagens ou áudios para serem enviados automaticamente um tempo depois da saudação explodir.</p>
-      
-      <div id="followups-list"></div>
-      <button class="btn btn-secondary" data-click="addFollowupRow('followups-list')" style="margin-top:12px; margin-bottom:20px;">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Passo
-      </button>
+      <div style="margin-top:32px; padding-top:24px; border-top:1px dashed var(--border);">
+        <h4 style="font-size:15px; font-weight:800; color:var(--text-primary); margin-bottom:8px;">🚀 Funil de Follow-ups (Mensagens Sequenciais)</h4>
+        <p style="color:var(--text-muted); font-size:12px; margin-bottom:20px;">Dê um ar humano salvando áudios ou mídias para dispararem segundos após a saudação.</p>
+        
+        <div id="followups-list"></div>
+        
+        <button class="btn btn-secondary" data-click="addFollowupRow('followups-list')" style="margin-top:12px; margin-bottom:24px; background:transparent; border:1px dashed var(--accent); color:var(--accent); font-weight:700;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Adicionar Novo Passo de Fluxo
+        </button>
+      </div>
 
-      <button class="btn btn-primary" data-click="salvarSaudacao()" style="display:block; width:100%;">Salvar Fluxo de Saudação</button>
+      <button class="btn btn-primary" data-click="salvarSaudacao()" style="display:flex; width:100%; justify-content:center; padding:14px; font-size:14px; font-weight:800; border-radius:var(--radius-sm); margin-top:10px;">Salvar Estrutura de Saudação</button>
     </div>`;
   } else if (window.autoSubTab === 'gatilhos') {
-    html += `<div class="auto-section animate-in">
-      <h3>⚡ Gatilhos Inteligentes</h3>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Defina palavras-chave que disparam respostas ou envio de áudios gravados de forma automática.</p>
-      <div id="triggers-list"></div>
-      <button class="btn btn-secondary" data-click="addTriggerRow()" style="margin-top:12px;"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Gatilho</button>
-      <button class="btn btn-primary" data-click="salvarGatilhos()" style="margin-top:12px;margin-left:8px;">Salvar Gatilhos</button>
+    html += `<div class="rs-card rs-card-accent animate-in">
+      <h3 style="margin-bottom:8px; display:flex; align-items:center; gap:8px;">⚡ Inteligência de Gatilhos</h3>
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px; font-weight:500;">Defina palavras-chave que disparam respostas ou áudios automáticos com perfeição.</p>
+      
+      <div id="triggers-list" style="display:flex; flex-direction:column; gap:16px;"></div>
+      
+      <div style="display:flex; gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+        <button class="btn btn-secondary" data-click="addTriggerRow()" style="flex:1; justify-content:center; font-weight:700;"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Gatilho</button>
+        <button class="btn btn-primary" data-click="salvarGatilhos()" style="flex:1; justify-content:center; font-weight:700; box-shadow: 0 4px 15px var(--accent-glow);">Salvar Todas as Regras</button>
+      </div>
     </div>`;
   } else if (window.autoSubTab === 'horario') {
-    html += `<div class="auto-section animate-in">
-      <h3>🕐 Horário de Funcionamento</h3>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure horários de atividade. Fora desses horários, os robôs ficam inativos ou mandam a mensagem personalizada de fechado.</p>
+    html += `<div class="rs-card rs-card-accent animate-in">
+      <h3 style="margin-bottom:8px; display:flex; align-items:center; gap:8px;">🕐 Filtro de Expediente</h3>
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px; font-weight:500;">Evite que seus automações rodem fora do horário comercial, ou envie mensagens de fechado.</p>
       
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div class="form-group"><label class="form-label">Horário Abertura</label><input type="time" class="form-input" id="hora-ini" value="08:00"></div>
-        <div class="form-group"><label class="form-label">Horário Fechamento</label><input type="time" class="form-input" id="hora-fim" value="18:00"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; background:var(--bg-secondary); padding:20px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+        <div class="form-group" style="margin:0;"><label class="form-label">Início das Operações</label><input type="time" class="form-input" id="hora-ini" value="08:00" style="width:100%;"></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">Término das Operações</label><input type="time" class="form-input" id="hora-fim" value="18:00" style="width:100%;"></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Mensagem FORA do Expediente</label>
-        <textarea class="form-textarea" id="msg-fechado" rows="3" placeholder="No momento nossa equipe não está..."></textarea>
+      
+      <div class="form-group" style="margin-top:24px;">
+        <label class="form-label">Mensagem para Mensagens Fora de Horário (Opcional)</label>
+        <textarea class="form-textarea" id="msg-fechado" rows="4" placeholder="Ex: Olá! No momento não estamos em horário comercial..."></textarea>
       </div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; margin-top:8px; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border);">
         <label class="toggle-switch"><input type="checkbox" id="horario-ativo"><span class="toggle-slider"></span></label>
-        <span style="font-size:13px;color:var(--text-secondary);">Habilitar filtro de horário na automação</span>
+        <span style="font-size:13px; font-weight:600;">Habilitar bloqueio de horário</span>
       </div>
-      <button class="btn btn-primary" data-click="salvarHorario()">Salvar Horário e Regras</button>
+      
+      <button class="btn btn-primary" data-click="salvarHorario()" style="display:flex; width:100%; justify-content:center; padding:14px; font-size:14px; font-weight:800;">Salvar Disposições de Horário</button>
     </div>`;
   } else if (window.autoSubTab === 'regras') {
-    html += `<div class="auto-section animate-in">
-      <h3>⚙️ Regras Globais do Robô</h3>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Configure limites anti-banimento natural (Simulação de Humano).</p>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-         <label class="toggle-switch"><input type="checkbox" id="regra-digitando" checked><span class="toggle-slider"></span></label>
-         <span style="font-size:13px;color:var(--text-secondary);">Simular "digitando..." antes do robô disparar</span>
+    html += `<div class="rs-card rs-card-accent animate-in">
+      <h3 style="margin-bottom:8px; display:flex; align-items:center; gap:8px;">⚙️ Configurações Anti-Banimento</h3>
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px; font-weight:500;">Simule comportamentos humanos para proteger sua conta durante disparos automáticos.</p>
+      
+      <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:24px;">
+         <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border);">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+               <span style="font-size:14px; font-weight:700;">Simular "Digitando..."</span>
+               <span style="font-size:12px; color:var(--text-muted);">Exibe status de digitação antes de enviar texto.</span>
+            </div>
+            <label class="toggle-switch"><input type="checkbox" id="regra-digitando" checked><span class="toggle-slider"></span></label>
+         </div>
+         
+         <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border);">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+               <span style="font-size:14px; font-weight:700;">Simular "Gravando Áudio..."</span>
+               <span style="font-size:12px; color:var(--text-muted);">Exibe status de gravação antes de enviar áudio.</span>
+            </div>
+            <label class="toggle-switch"><input type="checkbox" id="regra-gravando" checked><span class="toggle-slider"></span></label>
+         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-         <label class="toggle-switch"><input type="checkbox" id="regra-gravando" checked><span class="toggle-slider"></span></label>
-         <span style="font-size:13px;color:var(--text-secondary);">Simular "gravando áudio..." antes de enviar áudio</span>
+
+      <div style="background:var(--bg-card-hover); padding:24px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:24px;">
+         <label class="form-label" style="margin-bottom:16px; color:var(--accent);">Intervalos Randômicos de Segurança</label>
+         <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+           <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:10px;">Atraso Mínimo (seg)</label><input type="number" class="form-input" id="regra-min" value="2" min="0" style="width:100%;"></div>
+           <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:10px;">Atraso Máximo (seg)</label><input type="number" class="form-input" id="regra-max" value="5" min="0" style="width:100%;"></div>
+         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;max-width:400px;margin-bottom:16px;">
-        <div class="form-group">
-           <label class="form-label">Delay Mínimo (seg)</label>
-           <input type="number" class="form-input" id="regra-min" value="2" min="0">
-        </div>
-        <div class="form-group">
-           <label class="form-label">Delay Máximo (seg)</label>
-           <input type="number" class="form-input" id="regra-max" value="5" min="0">
-        </div>
-      </div>
-      <button class="btn btn-primary" data-click="salvarRegrasGlobais()">Salvar Regras</button>
+
+      <button class="btn btn-primary" data-click="salvarRegrasGlobais()" style="display:flex; width:100%; justify-content:center; padding:14px; font-size:14px; font-weight:800;">Aplicar Regras de Segurança</button>
     </div>`;
   }
 
@@ -111,87 +134,108 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
 
   const {
      tipo = 'texto', conteudo = '', base64 = '', url = '', mime = '',
-     nome = '', delay_segundos = 3, duracaoSimulacao = 2
+     nome = '', delay_segundos = 3, duracaoSimulacao = 2, sendAs = ''
   } = stepObj;
 
   const row = document.createElement('div');
-  row.className = 'followup-row';
-  row.style.cssText = 'display:flex; flex-direction:column; gap:8px; margin-bottom:12px; align-items:stretch; background:var(--bg-lighter, #f5f5f5); padding:10px; border-radius:8px; border-left:3px solid var(--primary);';
+  row.className = 'rs-action-row followup-row animate-in';
   
-  // Row superior: Tipo e Delays
-  const topRow = document.createElement('div');
-  topRow.style.cssText = 'display:flex; gap:8px; align-items:center;';
+  // Icon based on type
+  let icon = '💬';
+  if (tipo === 'audio') icon = '🎵';
+  else if (['imagem', 'midia', 'video', 'documento'].includes(tipo)) icon = '🖼️';
 
-  const selTipo = document.createElement('select');
-  selTipo.className = 'form-input fup-tipo';
-  selTipo.style.width = '120px';
-  selTipo.innerHTML = `<option value="texto">Texto</option><option value="audio">Áudio</option><option value="imagem">Imagem</option><option value="documento">Documento</option>`;
+  row.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:12px;">
+       <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:32px; height:32px; border-radius:8px; background:var(--accent-dim); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:16px;">${icon}</div>
+          <select class="form-input fup-tipo" style="width:130px; height:32px; padding:2px 8px; font-weight:700;">
+             <option value="texto">Texto</option>
+             <option value="audio">Áudio</option>
+             <option value="imagem">Imagem</option>
+             <option value="documento">Documento</option>
+          </select>
+       </div>
+       <div style="display:flex; align-items:center; gap:8px;">
+          <div style="display:flex; align-items:center; gap:6px; background:var(--bg-input); padding:4px 10px; border-radius:6px; border:1px solid var(--border);">
+            <span style="font-size:11px; color:var(--text-muted); font-weight:700;">ESPERA:</span>
+            <input type="number" class="fup-delay" value="${delay_segundos}" min="0" style="width:40px; background:transparent; border:none; color:var(--text-primary); font-weight:700; outline:none; font-size:12px;">
+            <span style="font-size:11px; color:var(--text-muted);">s</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; background:var(--bg-input); padding:4px 10px; border-radius:6px; border:1px solid var(--border);">
+            <span style="font-size:11px; color:var(--text-muted); font-weight:700;">HUMANO:</span>
+            <input type="number" class="fup-duracao" value="${duracaoSimulacao}" min="0" style="width:40px; background:transparent; border:none; color:var(--text-primary); font-weight:700; outline:none; font-size:12px;">
+            <span style="font-size:11px; color:var(--text-muted);">s</span>
+          </div>
+          <button class="btn-icon btn-remove" style="color:var(--danger); margin-left:8px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+       </div>
+    </div>
+    
+    <div style="display:flex; flex-direction:column; gap:10px;">
+       <textarea class="form-textarea fup-conteudo" rows="2" placeholder="Digite sua mensagem de follow-up aqui..." style="width:100%; min-height:60px;">${conteudo}</textarea>
+       
+       <div class="media-fields" style="display: ${tipo === 'texto' ? 'none' : 'flex'}; flex-direction:column; gap:8px;">
+          <div class="form-group" style="margin:0;">
+             <label class="form-label" style="font-size:10px;">Selecionar da Biblioteca</label>
+             <select class="form-input fup-midia-url" style="width:100%"><option value="">-- Selecione do Seu Cofre --</option></select>
+          </div>
+          <div class="form-group fup-send-as-container" style="margin:0; display:none;">
+             <label class="form-label" style="font-size:10px;">Modo de Envio</label>
+             <select class="form-input fup-send-as" style="width:100%"></select>
+          </div>
+       </div>
+    </div>
+
+    <input type="hidden" class="fup-url" value="${url}">
+    <input type="hidden" class="fup-mime" value="${mime}">
+    <input type="hidden" class="fup-nome" value="${nome}">
+    <input type="hidden" class="fup-base64" value="${base64}">
+  `;
+
+  list.appendChild(row);
+
+  const selTipo = row.querySelector('.fup-tipo');
+  const selMidia = row.querySelector('.fup-midia-url');
+  const selSendAs = row.querySelector('.fup-send-as');
+  const sendAsContainer = row.querySelector('.fup-send-as-container');
+  const mediaFields = row.querySelector('.media-fields');
+  const hiddenUrl = row.querySelector('.fup-url');
+  const hiddenMime = row.querySelector('.fup-mime');
+  const hiddenNome = row.querySelector('.fup-nome');
+
   selTipo.value = ['audio', 'imagem', 'video', 'documento', 'midia'].includes(tipo) ? (tipo==='midia'?'documento':tipo) : 'texto';
 
-  const lblWait = document.createElement('span'); lblWait.textContent = 'Espera:'; lblWait.style.fontSize='11px'; lblWait.style.color='var(--text-secondary)';
-  const inpDelay = document.createElement('input');
-  inpDelay.type = 'number'; inpDelay.className = 'form-input fup-delay'; 
-  inpDelay.value = delay_segundos; inpDelay.style.width = '60px'; inpDelay.min = '0';
-  
-  const lblDur = document.createElement('span'); lblDur.textContent = 'Simula(s):'; lblDur.style.fontSize='11px'; lblDur.style.color='var(--text-secondary)';
-  const inpDuracao = document.createElement('input');
-  inpDuracao.type = 'number'; inpDuracao.className = 'form-input fup-duracao'; 
-  inpDuracao.value = duracaoSimulacao; inpDuracao.style.width = '60px'; inpDuracao.min = '0';
+  row.querySelector('.btn-remove').onclick = () => row.remove();
 
-  const btnRemove = document.createElement('button');
-  btnRemove.className = 'btn-icon'; btnRemove.title = 'Remover Passo'; btnRemove.style.marginLeft = 'auto';
-  btnRemove.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
-  btnRemove.addEventListener('click', () => row.remove());
-
-  topRow.append(selTipo, lblWait, inpDelay, lblDur, inpDuracao, btnRemove);
-
-  // Row inferior: Conteudo Principal (Texto ou Midia Dropdown)
-  const botRow = document.createElement('div');
-  botRow.style.cssText = 'display:flex; gap:8px; align-items:flex-start; margin-top:4px;';
-
-  const inpConteudo = document.createElement('textarea');
-  inpConteudo.className = 'form-textarea fup-conteudo';
-  inpConteudo.rows = 2;
-  inpConteudo.placeholder = 'Texto da Mensagem (ou legenda se for imagem/doc)...';
-  inpConteudo.value = conteudo;
-  inpConteudo.style.flex = '1';
-
-  // Componente de Selecao de Midia
-  const selMidia = document.createElement('select');
-  selMidia.className = 'form-input fup-midia-url';
-  selMidia.style.flex = '1';
-  selMidia.style.display = selTipo.value === 'texto' ? 'none' : 'block';
-  
-  const selSendAs = document.createElement('select');
-  selSendAs.className = 'form-input fup-send-as';
-  selSendAs.style.flex = '1';
-  selSendAs.style.display = 'none';
-
-  // Populador de Midia Dinamica
   const populatarMidias = (tipoAtivo) => {
      selMidia.innerHTML = `<option value="">-- Selecione do Seu Cofre --</option>`;
      selSendAs.innerHTML = '';
-     selSendAs.style.display = 'none';
+     sendAsContainer.style.display = 'none';
+     
+     if (tipoAtivo === 'texto') {
+        mediaFields.style.display = 'none';
+        return;
+     }
+     mediaFields.style.display = 'flex';
      const baseUrl = 'https://imxwpacwtphekrbgwbph.supabase.co/storage/v1/object/public/';
      
      if (tipoAtivo === 'audio') {
         selSendAs.innerHTML = '<option value="ptt">🎙️ Áudio Gravado na Hora (Voz PTT)</option><option value="audio_play">▶️ Música (Player no WhatsApp)</option><option value="document">📄 Enviar como Documento</option>';
-        selSendAs.style.display = 'block';
-        if (stepObj?.sendAs) selSendAs.value = stepObj.sendAs;
+        sendAsContainer.style.display = 'block';
+        if (sendAs) selSendAs.value = sendAs;
 
         (painelData?.audios || []).forEach(a => {
            const op = document.createElement('option');
            op.value = baseUrl + 'audios/' + a.storage_path;
-           op.dataset.nome = a.nome;
-           op.dataset.mime = a.tipo_mime || 'audio/ogg';
+           op.dataset.nome = a.nome; op.dataset.mime = a.tipo_mime || 'audio/ogg';
            op.textContent = `🎙️ ${a.nome}`;
            if (op.value === url) op.selected = true;
            selMidia.appendChild(op);
         });
-     } else if (tipoAtivo === 'midia' || tipoAtivo === 'imagem' || tipoAtivo === 'video' || tipoAtivo === 'documento') {
-        selSendAs.innerHTML = '<option value="nativo">🖼️ Visual Nativo (Foto/Vídeo)</option><option value="document">📄 Enviar como Documento</option>';
-        selSendAs.style.display = 'block';
-        if (stepObj?.sendAs) selSendAs.value = stepObj.sendAs;
+     } else {
+        selSendAs.innerHTML = '<option value="nativo">🖼️ Visual Nativo (Foto/Vídeo/Doc)</option><option value="document">📄 Forçar Envio como Arquivo</option>';
+        sendAsContainer.style.display = 'block';
+        if (sendAs) selSendAs.value = sendAs;
 
         (painelData?.midias || []).filter(m => m.tipo && (m.tipo.includes('image') || m.tipo.includes('video'))).forEach(m => {
            const op = document.createElement('option');
@@ -211,32 +255,17 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
         });
      }
   };
-  
-  populatarMidias(selTipo.value);
 
-  // Hidden Inputs for legacy generic files
-  const hiddenUrl = document.createElement('input'); hiddenUrl.type = 'hidden'; hiddenUrl.className = 'fup-url'; hiddenUrl.value = url;
-  const hiddenMime = document.createElement('input'); hiddenMime.type = 'hidden'; hiddenMime.className = 'fup-mime'; hiddenMime.value = mime;
-  const hiddenNome = document.createElement('input'); hiddenNome.type = 'hidden'; hiddenNome.className = 'fup-nome'; hiddenNome.value = nome;
-  const hiddenBase64 = document.createElement('input'); hiddenBase64.type = 'hidden'; hiddenBase64.className = 'fup-base64'; hiddenBase64.value = base64;
-
-  selMidia.addEventListener('change', (e) => {
+  selTipo.onchange = (e) => populatarMidias(e.target.value);
+  selMidia.onchange = (e) => {
      hiddenUrl.value = e.target.value;
      if (e.target.options[e.target.selectedIndex]) {
         hiddenMime.value = e.target.options[e.target.selectedIndex].dataset.mime || '';
         hiddenNome.value = e.target.options[e.target.selectedIndex].dataset.nome || '';
      }
-  });
+  };
 
-  selTipo.addEventListener('change', (e) => {
-    const val = e.target.value;
-    selMidia.style.display = val === 'texto' ? 'none' : 'block';
-    populatarMidias(val);
-  });
-
-  botRow.append(inpConteudo, selMidia, selSendAs, hiddenUrl, hiddenMime, hiddenNome, hiddenBase64);
-  row.append(topRow, botRow);
-  list.appendChild(row);
+  populatarMidias(selTipo.value);
 };
 
 window.salvarSaudacao = async function() {
@@ -278,7 +307,14 @@ window.salvarSaudacao = async function() {
     }).execute();
   } catch(e) { /* silent */ }
   
-  chrome.storage.local.set({ ups_config_saudacao: { mensagem: msg, ativo, apenasPrivado: p, apenasGrupo: g, followupSteps: followups } }, () => {
+  const storageData = { 
+    saudacao_ativa: ativo, 
+    saudacao_mensagem: msg, 
+    apenas_privado: p, 
+    apenas_grupo: g, 
+    followup_steps: followups 
+  };
+  chrome.storage.local.set({ ups_config_saudacao: storageData }, () => {
     toast('Saudação salva com ' + followups.length + ' passo(s) programado(s)!', 'success');
   });
 };
@@ -300,8 +336,12 @@ window.salvarGatilhos = async function() {
         const url = sr.querySelector('.fup-url').value;
         const mime = sr.querySelector('.fup-mime').value;
         const nome = sr.querySelector('.fup-nome').value;
+        const sendAs = sr.querySelector('.fup-send-as')?.value || '';
         if (ct || url) {
-           stepsListParams.push({ tipo: tp, conteudo: ct, delay_segundos: dl, duracaoSimulacao: dur, url: url, mime: mime, nome: nome });
+           stepsListParams.push({ 
+              tipo: tp, conteudo: ct, delay_segundos: dl, duracaoSimulacao: dur, 
+              url: url, mime: mime, nome: nome, sendAs: sendAs 
+           });
         }
     });
     
@@ -333,39 +373,36 @@ window.addTriggerRow = function(palavra='', respostaObj={}) {
   const uid = 'gatilho-fluxo-' + Date.now() + Math.random().toString(36).substring(2,6);
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'trigger-wrapper';
-  wrapper.style.cssText = 'background:var(--input-bg); padding:12px; border-radius:8px; margin-bottom:16px; border:1px solid var(--border);';
-  
-  const headerRow = document.createElement('div');
-  headerRow.style.cssText = 'display:flex; gap:8px; align-items:center; margin-bottom:12px;';
-  
-  const inpPalavra = document.createElement('input');
-  inpPalavra.className = 'form-input trigger-palavra';
-  inpPalavra.placeholder = 'Palavras-chave (ex: preço, comprar)';
-  inpPalavra.value = palavra;
-  inpPalavra.style.flex = '1';
+  wrapper.className = 'rs-action-row trigger-wrapper animate-in';
+  wrapper.style.borderLeft = '4px solid var(--accent)';
+  wrapper.style.padding = '20px';
 
-  const btnAddStep = document.createElement('button');
-  btnAddStep.className = 'btn btn-secondary';
-  btnAddStep.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> + Ação de Resposta';
-  btnAddStep.addEventListener('click', () => window.addFollowupRow(uid));
+  wrapper.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px;">
+       <div style="flex:1; position:relative;">
+          <label style="font-size:10px; font-weight:800; color:var(--text-muted); position:absolute; top:-8px; left:12px; background:var(--bg-secondary); padding:0 6px; z-index:2;">PALAVRA(S) CHAVE</label>
+          <input type="text" class="form-input trigger-palavra" placeholder="Ex: preco, valor, comprar" value="${palavra}" style="width:100%; font-weight:700; border-radius:8px;">
+       </div>
+       <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary btn-add-step" style="height:42px; font-weight:700; gap:8px;">
+             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> 
+             Add Resposta
+          </button>
+          <button class="btn-icon btn-remove-trigger" style="color:var(--danger); background:var(--bg-input); width:42px; height:42px; border-radius:8px; border:1px solid var(--border);">
+             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+       </div>
+    </div>
+    
+    <div id="${uid}" class="trigger-steps-container" style="padding-left:16px; border-left:2px dashed var(--border); margin-left:8px; display:flex; flex-direction:column; gap:12px;">
+       <!-- Followup Rows nested here -->
+    </div>
+  `;
 
-  const btnRemove = document.createElement('button');
-  btnRemove.className = 'btn-icon'; btnRemove.title = 'Apagar Gatilho inteiro';
-  btnRemove.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
-  btnRemove.addEventListener('click', () => wrapper.remove());
-
-  headerRow.append(inpPalavra, btnAddStep, btnRemove);
-
-  const stepsContainer = document.createElement('div');
-  stepsContainer.id = uid;
-  stepsContainer.className = 'trigger-steps-container';
-  stepsContainer.style.cssText = 'padding-left:12px; border-left:2px solid var(--border);';
-
-  wrapper.append(headerRow, stepsContainer);
   list.appendChild(wrapper);
 
-  // Restore legacy flat strings by migrating them to Step Objects
+  wrapper.querySelector('.btn-add-step').onclick = () => window.addFollowupRow(uid);
+  wrapper.querySelector('.btn-remove-trigger').onclick = () => wrapper.remove();
   if (respostaObj) {
      let steps = [];
      if (typeof respostaObj === 'string') {
@@ -391,16 +428,18 @@ window.loadAutomationConfig = async function() {
   const fallbackLocal = () => {
     chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers', 'ups_config_horario', 'ups_config_regras'], res => {
       if(window.autoSubTab === 'saudacao' && res.ups_config_saudacao) {
+        const s = res.ups_config_saudacao;
         const eMsg = document.getElementById('auto-saudacao'); const eAtivo = document.getElementById('auto-saudacao-ativo');
-        if(eMsg) eMsg.value = res.ups_config_saudacao.mensagem || '';
-        if(eAtivo) eAtivo.checked = res.ups_config_saudacao.ativo || false;
-        if(document.getElementById('auto-privado')) document.getElementById('auto-privado').checked = res.ups_config_saudacao.apenasPrivado !== false;
-        if(document.getElementById('auto-grupo')) document.getElementById('auto-grupo').checked = res.ups_config_saudacao.apenasGrupo || false;
+        if(eMsg) eMsg.value = s.saudacao_mensagem || s.mensagem || '';
+        if(eAtivo) eAtivo.checked = s.saudacao_ativa || s.ativo || false;
+        if(document.getElementById('auto-privado')) document.getElementById('auto-privado').checked = s.apenas_privado !== false;
+        if(document.getElementById('auto-grupo')) document.getElementById('auto-grupo').checked = s.apenas_grupo || false;
         // Restore followups
         const list = document.getElementById('followups-list');
         if (list) list.innerHTML = '';
-        if (res.ups_config_saudacao.followupSteps && Array.isArray(res.ups_config_saudacao.followupSteps)) {
-           res.ups_config_saudacao.followupSteps.forEach(p => window.addFollowupRow('followups-list', p));
+        const steps = s.followup_steps || s.followupSteps;
+        if (steps && Array.isArray(steps)) {
+           steps.forEach(p => window.addFollowupRow('followups-list', p));
         }
       }
       if(window.autoSubTab === 'gatilhos') {

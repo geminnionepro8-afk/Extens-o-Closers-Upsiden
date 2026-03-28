@@ -1,0 +1,55 @@
+﻿/* --- Unified Library Sub-Nav (V3 - Red Sun Style) --- */
+.header-title-row {
+    display: flex;
+    align-items: flex-end; /* Align tabs to bottom of title */
+    gap: 32px;
+}
+.header-sub-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+}
+.sub-nav-btn {
+    padding: 0 12px 14px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    border-bottom: 2px solid transparent;
+}
+.sub-nav-btn:hover {
+    color: var(--text-primary);
+}
+.sub-nav-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+.sub-nav-btn svg {
+    width: 15px;
+    height: 15px;
+    opacity: 0.7;
+}
+.sub-nav-btn.active svg {
+    opacity: 1;
+}
+.sub-nav-btn .badge {
+    font-size: 10px;
+    background: rgba(255, 77, 0, 0.1);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 77, 0, 0.2);
+}
+.sub-nav-btn.active .badge {
+    background: var(--accent);
+    color: #fff;
+}

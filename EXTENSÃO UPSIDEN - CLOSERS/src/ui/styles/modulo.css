@@ -229,12 +229,13 @@ body {
   gap: 8px;
   padding: 10px 16px;
   background: var(--bg-secondary);
+  justify-content: space-between;
 }
 .mod-search {
   padding: 10px 16px;
   flex-shrink: 0;
 }
-.search-wrap { flex: 1; position: relative; }
+.search-wrap { width: 220px; position: relative; }
 .search-icon {
   position: absolute;
   left: 12px; top: 50%;
@@ -297,6 +298,68 @@ body {
   color: #fff;
   font-weight: 600;
   box-shadow: var(--shadow-glow);
+}
+
+/* ============== LIB TABS SWITCHER (NEW) ============== */
+.lib-tabs-switcher {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-tertiary);
+  padding: 4px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+}
+
+.lib-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.lib-tab-btn svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.lib-tab-btn .badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.lib-tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.lib-tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow-glow);
+}
+
+.lib-tab-btn.active svg {
+  opacity: 1;
+}
+
+.lib-tab-btn.active .badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
 /* ============== LIST VIEW ============== */
@@ -860,4 +923,212 @@ body {
   background: var(--bg-input);
   color: var(--danger);
   border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ============== VIEW MODES (Explorer Dynamic) ============== */
+
+/* Mode: Details (Handled by existing .mod-row default) */
+
+/* Mode: List (Compact) */
+.view-mode-list .mod-table-header,
+.view-mode-list .table-header { display: none; }
+
+.view-mode-list .mod-row,
+.view-mode-list .audio-row {
+  padding: 8px 16px;
+  gap: 12px;
+}
+.view-mode-list .row-avatar,
+.view-mode-list .doc-miniature,
+.view-mode-list .media-avatar {
+  width: 24px; height: 24px; font-size: 10px;
+}
+.view-mode-list .row-stats,
+.view-mode-list .row-meta { display: none; }
+.view-mode-list .row-title,
+.view-mode-list .row-name { font-size: 13px; }
+
+/* Mode: Grid / Big Grid */
+.view-mode-grid .mod-table-header,
+.view-mode-grid .table-header,
+.view-mode-big-grid .mod-table-header,
+.view-mode-big-grid .table-header { display: none; }
+
+.view-mode-grid .mod-list,
+.view-mode-grid #audio-list-container,
+.view-mode-grid #doc-lista,
+.view-mode-grid #media-grid,
+.view-mode-big-grid .mod-list,
+.view-mode-big-grid #audio-list-container,
+.view-mode-big-grid #doc-lista,
+.view-mode-big-grid #media-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+.view-mode-big-grid .mod-list,
+.view-mode-big-grid #audio-list-container,
+.view-mode-big-grid #doc-lista,
+.view-mode-big-grid #media-grid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.view-mode-grid .mod-row,
+.view-mode-grid .audio-row,
+.view-mode-big-grid .mod-row,
+.view-mode-big-grid .audio-row {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  gap: 12px;
+}
+
+.view-mode-grid .row-main,
+.view-mode-big-grid .row-main {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.view-mode-grid .row-avatar,
+.view-mode-grid .doc-miniature,
+.view-mode-grid .media-avatar {
+  width: 64px; height: 64px; font-size: 18px;
+}
+
+.view-mode-big-grid .row-avatar,
+.view-mode-big-grid .doc-miniature,
+.view-mode-big-grid .media-avatar {
+  width: 120px; height: 120px; font-size: 32px;
+}
+
+.view-mode-grid .row-details,
+.view-mode-big-grid .row-details {
+  align-items: center;
+}
+
+.view-mode-grid .row-stats,
+.view-mode-grid .row-meta,
+.view-mode-big-grid .row-stats,
+.view-mode-big-grid .row-meta {
+  display: none;
+}
+
+.view-mode-grid .row-actions,
+.view-mode-big-grid .row-actions {
+  width: 100%;
+  padding: 12px 16px;
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+/* View Switcher UI */
+.view-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-tertiary);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.btn-view-mode {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-view-mode:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-view-mode.active {
+  background: var(--bg-input);
+  color: var(--accent);
+}
+
+.btn-view-mode svg { width: 16px; height: 16px; }
+
+/* Refined Row/Card Name Layout & Overflow */
+.row-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  max-width: 100%;
+  flex: 1;
+  min-width: 0;
+}
+
+.row-details {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Mode-Specific Overrides for Name Lines */
+.view-mode-list .row-name, 
+.view-mode-details .row-name { 
+  -webkit-line-clamp: 1; 
+  line-clamp: 1;
+  white-space: nowrap; 
+}
+
+.view-mode-grid .row-name,
+.view-mode-big-grid .row-name { 
+  -webkit-line-clamp: 2; 
+  line-clamp: 2;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.view-mode-grid .row-name-line,
+.view-mode-big-grid .row-name-line {
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* View Mode Containers (Refined Grid Spacing) */
+.view-mode-grid .mod-list, .view-mode-grid #audio-list-container, 
+.view-mode-grid #doc-lista, .view-mode-grid #media-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  align-content: start;
+}
+
+.view-mode-big-grid .mod-list, .view-mode-big-grid #audio-list-container, 
+.view-mode-big-grid #doc-lista, .view-mode-big-grid #media-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  align-content: start;
 }

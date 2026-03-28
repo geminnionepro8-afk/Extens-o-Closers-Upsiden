@@ -1,0 +1,265 @@
+﻿/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MAIN CONTENT Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+   Must clear the floating sidebar + its gap                    */
+.painel-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-primary);
+  /* sidebar-width + gap*2 (gap on left of sidebar + gap between sidebar and content) */
+  margin-left: calc(var(--sidebar-width) + var(--sidebar-gap) * 2);
+  transition: margin-left 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+.painel-layout:has(.painel-sidebar.collapsed) .painel-main {
+  margin-left: calc(var(--sidebar-collapsed) + var(--sidebar-gap) * 2);
+}
+
+
+
+
+/* Header */
+.main-header {
+  height: var(--header-height);
+  padding: 0 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-primary);
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.main-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.header-breadcrumb {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+}
+
+.header-breadcrumb span { color: var(--text-secondary); }
+
+.main-header h1 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+
+.main-header .header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* RedSun Triple-Row Header Design */
+.main-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  justify-content: center;
+  height: 100%;
+}
+
+.header-breadcrumb-top {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-title-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.main-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+  color: var(--text-primary);
+  line-height: 1.1;
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.header-route-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.header-route-nav span,
+.header-route-nav a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.header-route-nav a:hover {
+  color: var(--accent);
+}
+
+.header-route-icon {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none !important;
+  stroke-width: 2.5;
+  display: inline-block;
+  vertical-align: middle;
+  opacity: 0.7;
+}
+
+.header-route-nav .separator {
+  color: rgba(255,255,255,0.08);
+  font-weight: 300;
+  margin: 0 -2px;
+}
+
+/* Page Controls Bar (Relocated CRM Actions) */
+.page-controls-bar {
+  height: 52px; /* Smaller height */
+  padding: 0 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.page-controls-bar:empty {
+  display: none;
+}
+
+.sub-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sub-nav-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+.sub-nav-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.sub-nav-btn .badge {
+  background: rgba(255, 255, 255, 0.15);
+  color: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.sub-nav-btn.active .badge {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.sub-nav-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.separator-v {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 8px;
+  opacity: 0.4;
+}
+
+.main-header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-left: auto;
+}
+
+/* Presence avatars */
+.presence-stack {
+  display: flex;
+  align-items: center;
+}
+.presence-stack .p-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-secondary);
+  background: var(--accent-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-left: -8px;
+  overflow: hidden;
+}
+.presence-stack .p-avatar:first-child { margin-left: 0; }
+.presence-stack .p-avatar.p-more {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 9px;
+  border-color: var(--border);
+}
+
+/* Main scrollable area */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+.main-content::-webkit-scrollbar { width: 6px; }
+.main-content::-webkit-scrollbar-track { background: transparent; }
+.main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+

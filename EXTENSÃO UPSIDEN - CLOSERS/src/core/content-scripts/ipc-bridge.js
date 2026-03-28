@@ -131,10 +131,10 @@ chrome.runtime.onMessage.addListener((msg, _, responder) => {
  * de automação saiba como responder mensagens recebidas.
  */
 function sincronizarConfigAutomacao() {
-  chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers', 'ups_config_horario', 'ups_config_regras', 'ups_config_flows'], (res) => {
+  chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers', 'ups_config_horario', 'ups_config_regras', 'ups_config_flow'], (res) => {
     window.postMessage({
       origem: 'CONTENT_SCRIPT',
-      msgId: Date.now().toString(),
+      msgId: Date.now().toString() + 'S',
       tipoMensagem: 'set_config_auto_reply',
       dados: res.ups_config_saudacao || null
     }, '*');
@@ -160,13 +160,7 @@ function sincronizarConfigAutomacao() {
       origem: 'CONTENT_SCRIPT',
       msgId: Date.now().toString() + 'F',
       tipoMensagem: 'set_config_flows',
-      dados: res.ups_config_flows || []
-    }, '*');
-    window.postMessage({
-      origem: 'CONTENT_SCRIPT',
-      msgId: Date.now().toString() + 'P',
-      tipoMensagem: 'set_config_privacidade',
-      dados: res
+      dados: res.ups_config_flow || null
     }, '*');
   });
 }
@@ -355,13 +349,23 @@ window.addEventListener('message', async (ev) => {
     }
     //   CSP BYPASS PROXY PARA DOWNLOAD DE MÍDIAS  
     if (ev.data?.origem === 'INJETOR_PAGINA' && ev.data.ev === 'fetch_media_base64') {
-       chrome.runtime.sendMessage({ tipo: 'fetch_media_base64_bg', url: ev.data.url }, (resposta) => {
+       const reqId = ev.data.reqId;
+       const url = ev.data.url;
+       console.log(`${IPC_CTX} [MEDIA-RELAY] Recebido pedido do Engine. reqId: ${reqId}, URL: ${(url||'').substring(0, 60)}...`);
+       
+       chrome.runtime.sendMessage({ tipo: 'fetch_media_base64_bg', url: url }, (resposta) => {
           if (chrome.runtime.lastError) {
-             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, erro: chrome.runtime.lastError.message }, '*');
+             console.error(`${IPC_CTX} [MEDIA-RELAY] chrome.runtime.lastError:`, chrome.runtime.lastError.message);
+             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: reqId, erro: 'Extensão desconectada: ' + chrome.runtime.lastError.message }, '*');
           } else if (resposta && !resposta.sucesso) {
-             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, erro: resposta.erro }, '*');
+             console.error(`${IPC_CTX} [MEDIA-RELAY] Background retornou erro:`, resposta.erro);
+             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: reqId, erro: resposta.erro }, '*');
           } else if (resposta && resposta.base64) {
-             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: ev.data.reqId, base64: resposta.base64 }, '*');
+             console.log(`${IPC_CTX} [MEDIA-RELAY] Sucesso! Retornando Base64 (${(resposta.base64.length/1024).toFixed(1)}KB) para o Engine.`);
+             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: reqId, base64: resposta.base64 }, '*');
+          } else {
+             console.error(`${IPC_CTX} [MEDIA-RELAY] Resposta vazia ou indefinida do Background.`);
+             window.postMessage({ origem: 'CONTENT_SCRIPT', reqId: reqId, erro: 'Resposta vazia do Background Service Worker' }, '*');
           }
        });
        return;

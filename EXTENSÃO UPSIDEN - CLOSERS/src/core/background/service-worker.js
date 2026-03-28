@@ -12,11 +12,8 @@
 
 const CONTEXTO = '[Upsiden-Background]';
 
-try {
-  importScripts('../../libs/supabase.min.js', '../../libs/supabase-config.js');
-} catch (e) {
-  console.error("Failed to load Supabase scripts.", e);
-}
+// ── Dependências Críticas (RAIZ) ──
+importScripts('/src/libs/supabase.min.js', '/src/libs/supabase-config.js');
 
 chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
   // ── Envio de áudio da biblioteca ──
@@ -106,6 +103,13 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
 
   // ── CSP IMMUNE PROXY (BLOB -> BASE64) ──
   if (mensagem.tipo === 'fetch_media_base64_bg') {
+     console.log(`${CONTEXTO} [MEDIA-PROXY] Download solicitado: ${(mensagem.url || '').substring(0, 80)}...`);
+     
+     const downloadTimeout = setTimeout(() => {
+        console.error(`${CONTEXTO} [MEDIA-PROXY] TIMEOUT 50s atingido para: ${(mensagem.url || '').substring(0, 50)}`);
+        responder({ sucesso: false, erro: 'Timeout no Download (Background 50s). Verifique sua conexão e a URL do Supabase.' });
+     }, 50000);
+
      chrome.storage.local.get(['ups_supabase_session'], (resStore) => {
         let headers = {};
         if (resStore.ups_supabase_session) {
@@ -117,28 +121,49 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
            } catch(e) {}
         }
         
+        console.log(`${CONTEXTO} [MEDIA-PROXY] Fazendo fetch... Auth: ${headers['Authorization'] ? 'SIM' : 'NÃO'}`);
+        
         fetch(mensagem.url, { headers })
           .then(async r => {
               if (!r.ok) {
                  const errText = await r.text();
-                 throw new Error(`Supabase Bloqueou o Download (HTTP ${r.status}): ${errText}`);
+                 throw new Error(`Supabase HTTP ${r.status}: ${errText.substring(0, 100)}`);
               }
-              return r.blob();
+              const contentType = r.headers.get('content-type') || 'application/octet-stream';
+              const blob = await r.blob();
+              console.log(`${CONTEXTO} [MEDIA-PROXY] Blob recebido: ${(blob.size/1024).toFixed(1)}KB, tipo: ${contentType}`);
+              
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                  clearTimeout(downloadTimeout);
+                  console.log(`${CONTEXTO} [MEDIA-PROXY] Base64 pronto! Tamanho: ${(reader.result.length/1024).toFixed(1)}KB`);
+                  responder({ sucesso: true, base64: reader.result });
+              };
+              reader.onerror = () => {
+                  clearTimeout(downloadTimeout);
+                  responder({ sucesso: false, erro: 'Falha FileReader no Background' });
+              };
+              reader.readAsDataURL(blob);
           })
-          .then(async blob => {
-              const buffer = await blob.arrayBuffer();
-              const bytes = new Uint8Array(buffer);
-              let binary = '';
-              for (let i = 0; i < bytes.byteLength; i += 1024) {
-                  binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 1024));
-              }
-              const b64 = btoa(binary);
-              const mime = blob.type || mensagem.mime || 'application/octet-stream';
-              responder({ sucesso: true, base64: `data:${mime};base64,${b64}` });
-          })
-          .catch(e => responder({ sucesso: false, erro: e.message }));
+          .catch(e => {
+              clearTimeout(downloadTimeout);
+              console.error(`${CONTEXTO} [MEDIA-PROXY] Erro no fetch:`, e.message);
+              responder({ sucesso: false, erro: e.message });
+          });
      });
      return true;
+  }
+
+  // ── GERENCIADOR DE TIMEOUTS E FLOWS EM BACKROUND ──
+  if (mensagem.tipo === 'schedule_flow_task') {
+    chrome.storage.local.get(['ups_pending_flows'], (res) => {
+      const p = res.ups_pending_flows || [];
+      p.push(mensagem.task);
+      chrome.storage.local.set({ ups_pending_flows: p }, () => {
+         responder({ sucesso: true });
+      });
+    });
+    return true;
   }
 
   // ── AGENDAMENTO DE MENSAGENS ──
@@ -157,6 +182,35 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
     }
     responder({ sucesso: true, alarm: alarmName });
     return false;
+  }
+});
+
+// CRON JOB para Timeouts/Delays longos (Rodando a cada 1 minuto)
+chrome.alarms.create("upsiden_flow_cron", { periodInMinutes: 1 });
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "upsiden_flow_cron") {
+    chrome.storage.local.get(['ups_pending_flows'], (res) => {
+      const pending = res.ups_pending_flows || [];
+      if (!pending.length) return;
+      
+      const now = Date.now();
+      const ready = pending.filter(p => now >= p.targetTime);
+      const remaining = pending.filter(p => now < p.targetTime);
+
+      if (ready.length > 0) {
+        chrome.storage.local.set({ ups_pending_flows: remaining });
+        chrome.tabs.query({ url: '*://web.whatsapp.com/*' }).then((abas) => {
+          if (!abas || abas.length === 0) return;
+          ready.forEach(task => {
+             chrome.tabs.sendMessage(abas[0].id, {
+                tipo: 'resume_flow_task',
+                dados: task
+             });
+          });
+        });
+      }
+    });
   }
 });
 

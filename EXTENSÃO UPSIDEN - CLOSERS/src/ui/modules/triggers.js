@@ -48,7 +48,7 @@ async function initFlow() {
       // Setup Initial Demo Nodes se vazio
       nodes = [
         { id: 'n1', type: 'trigger', title: 'Gatilho: Olá', x: 200, y: 300, data: { palavra: 'Olá', condicao: 'exata' } },
-        { id: 'n2', type: 'action', title: 'Ação: Responder', x: 600, y: 300, data: { resposta: 'Olá! Como posso ajudar?', delay: 2 } }
+        { id: 'n2', type: 'action', title: 'Ação: Responder', x: 600, y: 300, data: { resposta: 'Olá! Como posso ajudar?', delay: 2, duracaoSimulacao: 2 } }
       ];
       edges = [{ id: 'e1', source: 'n1', target: 'n2' }];
     }
@@ -290,7 +290,7 @@ document.getElementById('btn-add-action').addEventListener('click', () => {
   const id = generateId();
   const cx = (-translateX + window.innerWidth/2) / scale;
   const cy = (-translateY + window.innerHeight/2) / scale;
-  nodes.push({ id, type: 'action', title: 'Nova Ação', x: cx, y: cy, data: { resposta: '', delay: 2 } });
+  nodes.push({ id, type: 'action', title: 'Nova Ação', x: cx, y: cy, data: { resposta: '', delay: 2, duracaoSimulacao: 2 } });
   renderCanvas();
   openInspector(id);
 });
@@ -347,6 +347,10 @@ function openInspector(id) {
         <label class="form-label">Delay antes de Enviar (segundos)</label>
         <input type="number" class="form-input" id="ins-delay" value="${n.data.delay || 2}">
       </div>
+      <div class="form-group">
+        <label class="form-label">Simular Digitação (segundos)</label>
+        <input type="number" class="form-input" id="ins-simulacao" value="${n.data.duracaoSimulacao || 2}">
+      </div>
     `;
   }
 
@@ -372,6 +376,7 @@ btnSaveNode.addEventListener('click', () => {
   } else if (n.type === 'action') {
     n.data.resposta = document.getElementById('ins-resposta').value;
     n.data.delay = parseInt(document.getElementById('ins-delay').value, 10) || 0;
+    n.data.duracaoSimulacao = parseInt(document.getElementById('ins-simulacao').value, 10) || 0;
   }
 
   renderCanvas();

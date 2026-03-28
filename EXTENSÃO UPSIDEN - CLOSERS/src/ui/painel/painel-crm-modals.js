@@ -1,0 +1,411 @@
+﻿/**
+ * @file painel-crm-modals.js
+ * @scope Modais de Lead, Agenda CRM, Configuracao do Funil, Historico
+ * @depends painel-crm-core.js (dynamicStages, dynamicTags, URGENCY_LEVELS_CRM, loadCRMDynamics)
+ * @depends painel-helpers.js (renderSection, toast, closeModal, painelData, UpsidenDB, userData)
+ * @extracted-from painel-templates-crm.js (Etapa 2 refatoracao)
+ */
+// === LEAD MODAL (Expanded) ===
+function showNewLeadModal() { showLeadEditModal(null); }
+function editLeadModal(id) { const l = painelData.leads.find(x=>x.id===id); if(l) showLeadEditModal(l); }
+
+function showLeadEditModal(lead) {
+  const existing = document.querySelector('.modal-overlay'); if (existing) existing.remove();
+  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;';
+  
+  // Array format compatibility
+  let selectedTags = lead && lead.tag ? (Array.isArray(lead.tag) ? lead.tag : [lead.tag]) : [];
+  
+  const tagOptions = Object.entries(dynamicTags).map(([k,v]) => `<option value="${k}" ${selectedTags.includes(k)?'selected':''}>${v.emoji} ${k}</option>`).join('');
+  const lembreteVal = lead?.lembrete_data ? new Date(lead.lembrete_data).toISOString().slice(0,16) : '';
+  const leadId = lead?.id || '';
+
+  // Urgency selector options
+  const urgOptions = Object.keys(URGENCY_LEVELS_CRM).map(k => {
+    const u = URGENCY_LEVELS_CRM[k];
+    const sel = (lead?.urgencia || 'normal') === k ? 'selected' : '';
+    return `<option value="${k}" ${sel}>${u.label}</option>`;
+  }).join('');
+
+  // Photo avatar
+  let avatarEl = lead?.foto_url
+    ? `<img src="${lead.foto_url}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);">`
+    : `<div style="width:48px;height:48px;border-radius:50%;background:rgba(255,98,0,0.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;">${(lead?.nome||'L').charAt(0).toUpperCase()}</div>`;
+
+  // Interacao Historico
+  const historyLink = leadId ? `<button data-click="showLeadHistory('${leadId}')" class="btn btn-secondary" style="font-size:12px; padding:4px 8px; margin-left:auto;">\ud83d\udcdc Ver Hist\u00f3rico</button>` : '';
+
+  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:540px; border-radius:16px; backdrop-filter:blur(20px); background:var(--bg-secondary); border: 1px solid var(--border);">
+    <div class="modal-header" style="display:flex; align-items:center;">
+       <div style="display:flex;align-items:center;gap:12px;">
+         <div style="position:relative;cursor:pointer;" id="foto-avatar-wrap" title="Clique para alterar foto">
+           ${avatarEl}
+           <div style="position:absolute;bottom:-2px;right:-2px;background:var(--accent);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;">
+             <svg viewBox="0 0 24 24" fill="#fff" width="8" height="8"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+           </div>
+           <input type="file" id="crm-foto-upload" accept="image/*" style="display:none">
+         </div>
+         <h3>${lead ? '\ud83d\udccb Ficha do Lead' : 'Novo Lead'}</h3>
+       </div>
+       ${historyLink}
+       <button class="btn-ghost" data-click="closeModal()" style="margin-left:8px;"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    </div>
+    <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
+      <div style="display:flex;gap:10px;"><div class="form-group" style="flex:1;"><label class="form-label">Qual o Nome?</label><input class="form-input" id="lead-nome" placeholder="Ex: Maria" value="${lead?.nome||''}"></div><div class="form-group" style="flex:1;"><label class="form-label">Telefone (WPP)</label><input class="form-input" id="lead-tel" placeholder="55119..." value="${lead?.telefone||''}"></div></div>
+      
+      <div style="display:flex;gap:10px; margin-top:6px;">
+         <div class="form-group" style="flex:1;">
+            <label class="form-label" style="color:var(--success);">Valor do Deal (R$)</label>
+            <input type="number" class="form-input" id="lead-valor" value="${lead?.valor||0.00}" min="0" step="0.01" style="border-color:var(--success-dim); font-weight:bold; color:var(--success);">
+         </div>
+         <div class="form-group" style="flex:1;">
+            <label class="form-label">Prioridade / Urg\u00eancia</label>
+            <select class="form-input" id="lead-urgencia">
+               ${urgOptions}
+            </select>
+         </div>
+      </div>
+
+      <div style="display:flex;gap:10px; margin-top:6px;">
+         <div class="form-group" style="flex:1;">
+            <label class="form-label">Multi-Tags (Aperte CTRL)</label>
+            <select class="form-input" id="lead-tag" multiple style="height:64px; font-size:12px; background:var(--bg-card); color:var(--text-primary);">
+               ${tagOptions}
+            </select>
+         </div>
+      </div>
+
+      <div class="form-group" style="margin-top:6px;"><label class="form-label">Anota\u00e7\u00f5es Fixadas</label><textarea class="form-textarea" id="lead-notas" rows="3" placeholder="Contexto da negocia\u00e7\u00e3o...">${lead?.notas||''}</textarea></div>
+      
+      <div style="padding:12px; background:var(--bg-card); border-radius:8px; border:1px solid var(--border); margin-top:12px;">
+         <div style="display:flex;gap:10px;">
+           <div class="form-group" style="flex:1; margin:0;"><label class="form-label" style="color:var(--accent);">\ud83d\udd14 Alarme</label><input type="datetime-local" class="form-input" id="lead-lembrete" value="${lembreteVal}"></div>
+           <div class="form-group" style="flex:1; margin:0;"><label class="form-label">Motivo</label><input class="form-input" id="lead-lembrete-txt" placeholder="Ex: Ligar pra fechar doc" value="${lead?.lembrete_texto||''}"></div>
+         </div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Sair</button><button class="btn btn-primary" data-click="salvarLeadCompleto('${leadId}')">Salvar Ficha do Lead</button></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+  
+  // Photo upload handler
+  setTimeout(() => {
+    const fotoWrap = document.getElementById('foto-avatar-wrap');
+    const fotoInput = document.getElementById('crm-foto-upload');
+    if (fotoWrap && fotoInput) {
+      fotoWrap.addEventListener('click', () => fotoInput.click());
+      fotoInput.addEventListener('change', async () => {
+        const file = fotoInput.files?.[0];
+        if (!file || !leadId) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          try {
+            await UpsidenDB.from('leads').update({ foto_url: ev.target.result }).eq('id', leadId);
+            const idx = painelData.leads.findIndex(x => x.id === leadId);
+            if (idx >= 0) painelData.leads[idx].foto_url = ev.target.result;
+            overlay.remove();
+            renderSection('crm');
+            typeof toast === 'function' && toast('Foto atualizada!', 'success');
+            setTimeout(() => editLeadModal(leadId), 300);
+          } catch(err) { typeof toast === 'function' && toast('Erro ao salvar foto', 'error'); }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  }, 100);
+}
+
+async function salvarLeadCompleto(id) {
+  const nome = document.getElementById('lead-nome').value.trim();
+  const telefone = document.getElementById('lead-tel').value.trim();
+  const valor = parseFloat(document.getElementById('lead-valor').value) || 0;
+  const urgencia = document.getElementById('lead-urgencia')?.value || 'normal';
+  
+  // Extract multiple selected tags
+  const tagSelect = document.getElementById('lead-tag');
+  const tagsElegidas = Array.from(tagSelect.selectedOptions).map(opt => opt.value).filter(val => val !== '');
+  
+  // Tag Cor (Using the first one arbitrarily for fallback legacy color needs)
+  const tagCor = tagsElegidas.length > 0 && dynamicTags[tagsElegidas[0]] ? dynamicTags[tagsElegidas[0]].bg : '#8696a0';
+  const notas = document.getElementById('lead-notas').value.trim();
+  const lembreteInput = document.getElementById('lead-lembrete').value;
+  const lembreteData = lembreteInput ? new Date(lembreteInput).toISOString() : null;
+  const lembreteTexto = document.getElementById('lead-lembrete-txt').value.trim();
+
+  if (!nome) { typeof toast === 'function' && toast('Informe o nome primário do lead', 'error'); return; }
+  try {
+    // Persistent urgency storage (Local because Supabase column is missing)
+    if (id) {
+       chrome.storage.local.get(['ups_crm_urgencias'], (res) => {
+         const map = res.ups_crm_urgencias || {};
+         map[id] = urgencia;
+         chrome.storage.local.set({ ups_crm_urgencias: map });
+       });
+    }
+
+    if (id) {
+      const upd = { nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, updated_at: new Date().toISOString() };
+      await UpsidenDB.from('leads').update(upd).eq('id', id);
+      const idx = painelData.leads.findIndex(l=>l.id===id);
+      if (idx>=0) {
+         painelData.leads[idx] = {...painelData.leads[idx], ...upd};
+         painelData.leads[idx].tag = tagsElegidas;
+      }
+      try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: id, tipo: 'edicao', descricao: 'Anotações de CRM Atualizadas Diretamente no Painel', criado_por: userData?.userId||undefined, metadados: { campos_alterados: ['nome','telefone','valor','tag','notas','lembrete'], valor_novo: valor, tag_nova: tagsElegidas } }); } catch(e){}
+    } else {
+      // Default to first stage available if dynamic
+      const estagioDefault = dynamicStages.length > 0 ? dynamicStages[0].id : 'prospeccao';
+      const tAdminId = userData.isAdmin ? userData.userId : (userData.teamAdminId || null);
+      const res = await UpsidenDB.from('leads').insert({ 
+        nome, telefone, valor, tag: tagsElegidas, tag_cor: tagCor, 
+        notas, lembrete_data: lembreteData, lembrete_texto: lembreteTexto, 
+        etapa: estagioDefault,
+        admin_id: tAdminId,
+        criado_por: userData?.userId
+      }).select();
+      if (res?.length) { 
+         const newId = res[0].id;
+         res[0].tag = tagsElegidas;
+         res[0].urgencia = urgencia; // Attach locally
+         
+         // Save urgency to local storage map
+         chrome.storage.local.get(['ups_crm_urgencias'], (db) => {
+           const map = db.ups_crm_urgencias || {};
+           map[newId] = urgencia;
+           chrome.storage.local.set({ ups_crm_urgencias: map });
+         });
+
+         painelData.leads.unshift(res[0]); 
+         try { await UpsidenDB.from('historico_interacoes').insert({ lead_id: newId, tipo: 'criacao', descricao: `Novo Lead Inserido Manualmente 🤝`, criado_por: userData?.userId||undefined, metadados: { valor_inicial: valor, tags_iniciais: tagsElegidas, telefone, urgencia_inicial: urgencia } }); } catch(e){} 
+      }
+    }
+    if (lembreteData) { 
+        typeof toast === 'function' && toast('Sino de Alarme ativado com precisão Background', 'info');
+        try { chrome.runtime.sendMessage({ action: 'SET_REMINDER', payload: { leadId: id||'new', nome, data: lembreteData, texto: lembreteTexto } }); } catch(e){} 
+    }
+    document.querySelector('.modal-overlay')?.remove();
+    renderSection('crm'); typeof toast === 'function' && toast('Lead salvo!', 'success');
+  } catch(e) { 
+    console.error('Falha monstruosa no salvar lead:', e); 
+    const msg = e.message || String(e);
+    typeof toast === 'function' && toast('Erro SQL: '+msg.substring(0,25), 'error'); 
+    alert("ERRO SUPABASE DETECTADO:\n\n" + msg + "\n\n(Tire um print da tela para me enviar!)");
+  }
+}
+
+// === CRM AGENDA VIEW (NEW) ===
+async function renderAgendaCRM(c) {
+    document.getElementById('header-actions').innerHTML = '';
+    document.getElementById('page-controls-bar').innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px; width:100%;">
+        <div class="rs-tabs-switcher" style="margin-bottom:0; padding:2px;">
+           <button class="rs-tab-btn" data-click="setCRMTab('kanban')">📋 Kanban</button>
+           <button class="rs-tab-btn active" data-click="setCRMTab('agenda')">🔔 Agenda</button>
+        </div>
+        <button class="btn btn-secondary" data-click="navigate('crm')">↻ Atualizar</button>
+        
+        <div style="margin-left:auto; display:flex; align-items:center;">
+           <button class="btn-icon" data-click="setCRMTab('agenda')" id="btn-bell-reminders-crm" title="Central de Lembretes" style="position:relative;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span id="notif-badge-crm" class="notif-badge" style="display:none; position:absolute; top:-5px; right:-5px;">0</span>
+           </button>
+        </div>
+      </div>
+    `;
+
+    // Esconder o sino original do header
+    const headerBell = document.getElementById('btn-bell-reminders');
+    if (headerBell) headerBell.parentElement.style.display = 'none';
+
+    if (typeof window.checkNotifications === 'function') window.checkNotifications();
+
+    c.innerHTML = `<div class="empty-state"><div class="loading-spinner"></div><h3>Lendo sua Agenda...</h3></div>`;
+
+    try {
+        const teamAdminId = userData.isAdmin ? userData.userId : userData.teamAdminId;
+        console.log('[Agenda] Buscando lembretes para AdminID:', teamAdminId);
+
+        const { data: reminders, error } = await UpsidenDB
+            .from('crm_reminders')
+            .select('*, leads(nome, telefone, foto_url)')
+            .eq('admin_id', teamAdminId)
+            .eq('status', 'pending')
+            .order('reminder_at', { ascending: true });
+
+        if (error) throw error;
+
+        if (!reminders || reminders.length === 0) {
+            c.innerHTML = `<div class="empty-state"><div class="empty-icon">🎉</div><h3>Tudo em dia!</h3><p>Você não tem lembretes pendentes para hoje.</p></div>`;
+            return;
+        }
+
+        let html = `
+          <div class="agenda-container animate-in" style="padding:20px; max-width:900px; margin:0 auto;">
+            <div class="section-header" style="margin-bottom:24px;">
+               <h2>📅 Próximos Compromissos</h2>
+               <p style="font-size:13px; color:var(--text-muted);">${reminders.length} lembretes pendentes</p>
+            </div>
+            <div class="agenda-list" style="display:flex; flex-direction:column; gap:12px;">
+        `;
+
+        reminders.forEach(rem => {
+            const date = new Date(rem.reminder_at).toLocaleString('pt-BR');
+            const lead = rem.leads || { nome: 'Lead Desconhecido' };
+            const priorityColor = rem.priority === 'high' ? 'var(--accent)' : 'var(--text-muted)';
+            
+            html += `
+              <div class="rs-card" style="margin-bottom:0; display:flex; align-items:center; gap:20px; border-left:4px solid ${priorityColor};">
+                <div style="width:140px; flex-shrink:0;">
+                   <div style="font-size:11px; color:var(--accent); font-weight:800; text-transform:uppercase;">${date.split(' ')[0]}</div>
+                   <div style="font-size:18px; font-weight:800; color:var(--text-primary);">${date.split(' ')[1]}</div>
+                </div>
+                
+                <div style="flex:1;">
+                   <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">${rem.title}</div>
+                   <div style="font-size:13px; color:var(--text-secondary);">${rem.description || ''}</div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:12px; padding:0 20px; border-left:1px solid var(--border); border-right:1px solid var(--border);">
+                   <div class="avatar-sm-rs round" style="width:36px; height:36px;">
+                      ${lead.foto_url ? `<img src="${lead.foto_url}" class="round" style="width:100%; height:100%; object-fit:cover;">` : lead.nome[0].toUpperCase()}
+                   </div>
+                   <div style="font-size:13px; font-weight:600;">${lead.nome}</div>
+                </div>
+
+                <div style="display:flex; gap:8px;">
+                   <button class="btn-icon" title="Ver Lead" data-click="editLeadModal('${rem.lead_id}')">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                   </button>
+                   <button class="btn-icon" title="Concluído" data-click="markReminderCompleted('${rem.id}')">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                   </button>
+                </div>
+              </div>
+            `;
+        });
+
+        html += `</div></div>`;
+        c.innerHTML = html;
+
+    } catch (e) {
+        c.innerHTML = `<div class="empty-state"><h3>Erro na Agenda</h3><p>${e.message}</p></div>`;
+    }
+}
+
+window.markReminderCompleted = async function(id) {
+    try {
+        await UpsidenDB.from('crm_reminders').update({ status: 'completed' }).eq('id', id);
+        toast('Lembrete concluído!', 'success');
+        renderSection('crm');
+    } catch(e) {
+        toast('Falha ao atualizar', 'error');
+    }
+};
+
+// === CRM CONFIGURATION MANAGER ===
+window.showCRMManagerModal = function() {
+  const existing = document.querySelector('.modal-overlay'); if (existing) existing.remove();
+  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;';
+  
+  let colsHtml = dynamicStages.map((s, idx) => `
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+       <input class="form-input" style="width:40px;height:40px;padding:0;" type="color" id="cfg-col-cor-${idx}" value="${s.color}">
+       <input class="form-input" style="flex:1;" type="text" id="cfg-col-lbl-${idx}" value="${s.label}">
+       <input class="form-input" style="width:100px;" type="text" id="cfg-col-id-${idx}" value="${s.id}" placeholder="ID curto">
+    </div>
+  `).join('');
+
+  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:540px; border-radius:16px; backdrop-filter:blur(20px); background:var(--bg-secondary); border: 1px solid var(--border);">
+    <div class="modal-header"><h3>⚙️ Configuração do Funil Upsiden</h3><button class="btn-ghost" data-click="closeModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
+    <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
+       <h4 style="margin-bottom:10px; color:var(--text-secondary);">1. Editar Fases do Funil (Colunas)</h4>
+       <div id="cfg-col-container">${colsHtml}</div>
+       <button class="btn btn-secondary" style="width:100%; margin-top:8px;" data-click="addColField()">+ Nova Coluna</button>
+       
+       <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
+       <h4 style="color:var(--text-muted); font-size:12px;">2. Para editar as Tags Visuais e Cores, em breve na seção Master.<br>As colunas salvas atualizarão o Kanban instantaneamente.</h4>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Sair</button><button class="btn btn-primary" data-click="saveCRMManager()">Salvar Novo Funil</button></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+}
+
+window.addColField = function() {
+  const container = document.getElementById('cfg-col-container');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;';
+  div.innerHTML = `
+     <input class="form-input" style="width:40px;height:40px;padding:0;" type="color" id="cfg-col-cor-${idx}" value="#FF4D00">
+     <input class="form-input" style="flex:1;" type="text" id="cfg-col-lbl-${idx}" placeholder="Nova Coluna">
+     <input class="form-input" style="width:100px;" type="text" id="cfg-col-id-${idx}" placeholder="id_curto">
+  `;
+  container.appendChild(div);
+}
+
+window.saveCRMManager = function() {
+  const container = document.getElementById('cfg-col-container');
+  let newStages = [];
+  for(let i=0; i<container.children.length; i++) {
+     const cor = document.getElementById(`cfg-col-cor-${i}`).value;
+     const lbl = document.getElementById(`cfg-col-lbl-${i}`).value.trim();
+     let cid = document.getElementById(`cfg-col-id-${i}`).value.trim();
+     if(lbl) {
+       if(!cid) cid = lbl.toLowerCase().replace(/[^a-z0-9]/g, '');
+       newStages.push({ id: cid, label: lbl, color: cor });
+     }
+  }
+  if(newStages.length === 0) { typeof toast === 'function' && toast('É necessário ter ao menos 1 fase no funil.', 'error'); return; }
+  
+  chrome.storage.local.set({ ups_crm_colunas: newStages }, () => {
+     typeof toast === 'function' && toast('Funil atualizado com RedSun Engine!', 'success');
+     document.querySelector('.modal-overlay')?.remove();
+     renderSection('crm');
+  });
+}
+
+window.closeHistoryModal = function() {
+  document.getElementById('history-mini-modal')?.remove();
+};
+
+// === HISTORY MODAL ===
+window.showLeadHistory = async function(leadId) {
+  const existing = document.getElementById('history-mini-modal'); if(existing) existing.remove();
+  const div = document.createElement('div');
+  div.id = 'history-mini-modal';
+  div.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:90%; max-width:500px; max-height:80vh; background:var(--bg-secondary); border:1px solid var(--border); border-radius:12px; z-index:10000; display:flex; flex-direction:column; box-shadow:0 12px 40px rgba(0,0,0,0.8);';
+  div.innerHTML = `<div style="padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="margin:0;">📜 Histórico Passivo WPP</h3>
+    <button data-click="closeHistoryModal()" style="background:none; border:none; color:var(--text-primary); cursor:pointer;">✖</button>
+  </div><div id="h-body" style="padding:16px; overflow-y:auto; flex:1; font-size:13px; color:var(--text-secondary);"><div style="text-align:center;">Buscando logs de disparo no Servidor...</div></div>`;
+  document.body.appendChild(div);
+
+  try {
+     const { data, error } = await UpsidenDB.from('historico_interacoes').select('*').eq('lead_id', leadId).order('criado_em', { ascending: false });
+     const hub = document.getElementById('h-body');
+     if (!hub) return;
+     if (error || !data || data.length === 0) { hub.innerHTML = '<div style="text-align:center;">Nenhuma interação registrada ainda para este prospect.</div>'; return; }
+     
+     hub.innerHTML = data.map(log => `
+       <div style="margin-bottom:12px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; border-left: 2px solid var(--accent);">
+          <div style="font-size:11px; color:#667781; margin-bottom:4px;">${new Date(log.criado_em).toLocaleString('pt-BR')}</div>
+          <div style="color:var(--text-primary); font-weight:600; margin-bottom:4px;">${log.tipo.toUpperCase()}</div>
+          <div>${log.descricao}</div>
+       </div>
+     `).join('');
+  } catch(e) {
+     const hub = document.getElementById('h-body');
+     if(hub) hub.innerHTML = '<div style="color:var(--danger); text-align:center;">Falha ao buscar auditoria do funil.</div>';
+  }
+}
+
+// === EXPORTS ===
+window.showNewLeadModal = showNewLeadModal;
+window.editLeadModal = editLeadModal;
+window.showLeadEditModal = showLeadEditModal;
+window.salvarLeadCompleto = salvarLeadCompleto;
+window.salvarLead = salvarLeadCompleto; // backward compat alias
