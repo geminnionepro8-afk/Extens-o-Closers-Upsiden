@@ -35,6 +35,44 @@ const ViewSvc = {
     localStorage.setItem('upsiden_view_midias', this.current);
   },
   switch(mode) { if (this.MODES.includes(mode)) { this.current = mode; this.apply(); } },
+  showPreview(m) {
+    const root = window.$upsRoot || document;
+    let modal = root.querySelector('#media-preview-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'media-preview-modal';
+      modal.className = 'modal-overlay';
+      modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter:blur(20px); z-index:99999; display:none; align-items:center; justify-content:center; padding:40px; cursor:zoom-out;';
+      modal.innerHTML = `
+        <div class="preview-content" style="position:relative; max-width:100%; max-height:100%; display:flex; flex-direction:column; align-items:center; gap:20px; animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+          <div id="preview-media-container" style="box-shadow: 0 20px 60px rgba(0,0,0,0.5); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); background: #000;"></div>
+          <div class="preview-info" style="color:white; text-align:center;">
+            <h3 id="preview-title" style="margin:0; font-size:18px; font-weight:700;"></h3>
+            <p id="preview-meta" style="margin:5px 0 0; color:rgba(255,255,255,0.5); font-size:14px; font-weight:500;"></p>
+          </div>
+          <button style="position:fixed; top:30px; right:30px; background:rgba(255,255,255,0.1); border:none; color:white; width:44px; height:44px; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✕</button>
+        </div>
+        <style>
+          @keyframes zoomIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+        </style>
+      `;
+      modal.onclick = (e) => { modal.style.display = 'none'; };
+      document.body.appendChild(modal);
+    }
+
+    const container = modal.querySelector('#preview-media-container');
+    const isVideo = isTipoVideo(m.tipo);
+    const thumbUrl = CACHE.thumbs[m.id] || m._url || '';
+
+    container.innerHTML = isVideo 
+      ? `<video src="${thumbUrl}" controls autoplay style="max-width:90vw; max-height:80vh; display:block;"></video>`
+      : `<img src="${thumbUrl}" style="max-width:90vw; max-height:80vh; display:block; object-fit:contain;">`;
+    
+    modal.querySelector('#preview-title').textContent = m.nome;
+    modal.querySelector('#preview-meta').textContent = `${formatarTamanho(m.tamanho)} · ${m.tipo?.split('/')[1]?.toUpperCase()} Media`;
+    
+    modal.style.display = 'flex';
+  },
   setupZoom() {
     if (window._upsZoomMidias) return;
     window._upsZoomMidias = true;
@@ -176,15 +214,12 @@ function renderizar() {
         </div>
 
         <div class="row-actions" style="display: flex; align-items: center; gap: 8px;">
-           <button class="btn-dim" data-action="access" title="Configurar Acesso" style="padding: 10px; border-radius: 12px; flex: 0 0 38px;">
+           <button class="btn-action-sec" data-action="access" title="Configurar Acesso" style="padding: 10px; border-radius: 12px; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; transition: 0.2s;">
              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+             <span>Acesso</span>
            </button>
-           <button class="btn-dim" data-action="delete" title="Remover" style="padding: 10px; border-radius: 12px; flex: 0 0 38px;">
-             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-           </button>
-           <button class="btn-send-main action-btn-main" data-id="${m.id}" style="flex: 1; padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; background: var(--accent); color: white; border: none; cursor: pointer;">
-             <svg viewBox="0 0 24 24" width="16" height="16"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg>
-             <span>Enviar</span>
+           <button class="btn-action-danger" data-action="delete" title="Remover" style="padding: 10px; border-radius: 12px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center; background: rgba(241, 71, 71, 0.1); border: 1px solid rgba(241, 71, 71, 0.2); color: #f14747; cursor: pointer; transition: 0.2s;">
+             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
            </button>
         </div>
       `;
@@ -231,7 +266,7 @@ async function boot() {
       const btn = e.target.closest('.lib-tab-btn, .btn-view-mode');
       if (!btn) return;
       if (btn.classList.contains('lib-tab-btn')) {
-        const tabTarget = btn.dataset.tab;
+        const tabTarget = btn.dataset.libTab;
         if (tabTarget && tabTarget !== 'midias') window.parent.switchBibliotecaTab(tabTarget);
       } else if (btn.classList.contains('btn-view-mode')) {
         const viewTarget = btn.dataset.view;
@@ -275,16 +310,28 @@ async function boot() {
     });
   }
 
-  // Grid click delegation (Send / Delete / Access)
+  // Grid click delegation (Send / Delete / Access / Preview)
   const gridCont = root.querySelector('#media-grid');
   if (gridCont) {
     gridCont.addEventListener('click', async (e) => {
       const btnAction = e.target.closest('[data-action]');
-      const btnSend = e.target.closest('[data-id]');
+      const mediaThumb = e.target.closest('.media-avatar');
       
+      if (mediaThumb) {
+        const id = mediaThumb.id.replace('thumb-', '');
+        const m = midias.find(x => x.id === id);
+        if (m) ViewSvc.showPreview(m);
+        return;
+      }
+
       if (btnAction) {
         const action = btnAction.dataset.action;
-        const id = btnAction.closest('.mod-row').querySelector('[data-id]').dataset.id;
+        const row = btnAction.closest('.mod-row');
+        // Find ID from the row's thumbnail ID
+        const thumbEl = row.querySelector('[id^="thumb-"]');
+        if (!thumbEl) return;
+        const id = thumbEl.id.replace('thumb-', '');
+
         if (action === 'delete') {
           if (!confirm('Excluir esta mídia permanentemente?')) return;
           const m = midias.find(x => x.id === id);
@@ -310,27 +357,6 @@ async function boot() {
           }
         }
         return;
-      }
-
-      if (btnSend) {
-        const m = midias.find(x => x.id === btnSend.dataset.id);
-        if (m) {
-          try {
-            const originalHTML = btnSend.innerHTML;
-            btnSend.textContent = '...';
-            const blob = await UpsidenStorage.download('midias', m.storage_path);
-            const reader = new FileReader();
-            reader.onload = () => {
-              window.parent.postMessage({
-                type: 'upsiden_send_file',
-                data: { nome: m.nome, tipo: m.tipo, base64: reader.result }
-              }, '*');
-              UpsidenMetrics.registrar('midia', m.id);
-              btnSend.innerHTML = originalHTML;
-            };
-            reader.readAsDataURL(blob);
-          } catch (err) { btnSend.innerHTML = originalHTML; }
-        }
       }
     });
   }

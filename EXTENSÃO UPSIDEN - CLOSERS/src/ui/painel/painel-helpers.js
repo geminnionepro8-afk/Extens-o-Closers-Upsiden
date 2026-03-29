@@ -68,23 +68,46 @@ function navigate(section) {
   const title = titles[section] || section;
   document.getElementById('page-title').textContent = title;
   
-  // Header breadcrumb top
+  // Header breadcrumb top - OCULTO PARA EVITAR REDUNDÂNCIA PREMIUM
   const bcTop = document.getElementById('header-breadcrumb-top');
-  if (bcTop) {
-    bcTop.innerHTML = `Painel / ${title}`;
-  }
+  if (bcTop) bcTop.style.display = 'none';
 
-  // Header Route Nav (With Icons)
+  // Header Route Nav - MODERNIZADO (estilo premium com respiro saudável)
   const routeNav = document.getElementById('header-route-nav');
   if (routeNav) {
-    let html = `<span>${icons.home} Home</span> <span class="separator">/</span> `;
-    if (section === 'dashboard') {
-      html += `<span>${icons.dashboard} Dashboard</span>`;
-    } else {
-      const sectionIcon = icons[section] || icons.dashboard;
-      html += `<span>${icons.dashboard} Dashboard</span> <span class="separator">/</span> <span>${sectionIcon} ${title}</span>`;
-    }
-    routeNav.innerHTML = html;
+    const sectionIcon = icons[section] || icons.dashboard;
+    routeNav.innerHTML = `
+      <div class="rs-breadcrumbs">
+        <div class="rs-breadcrumb-item" onclick="navigate('dashboard')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Início
+        </div>
+        <span class="rs-breadcrumb-sep">/</span>
+        <div class="rs-breadcrumb-item" onclick="navigate('dashboard')">Painel</div>
+        <span class="rs-breadcrumb-sep">/</span>
+        <div class="rs-breadcrumb-item active" style="color:var(--accent);">${title}</div>
+      </div>
+    `;
+  }
+
+  // Inject Modern CSS for Breadcrumbs if not exists
+  if (!document.getElementById('rs-global-nav-styles')) {
+    const s = document.createElement('style');
+    s.id = 'rs-global-nav-styles';
+    s.textContent = `
+       .rs-breadcrumbs { 
+          display: flex; align-items: center; gap: 10px; 
+          color: rgba(255,255,255,0.4); font-size: 13px; font-weight: 500; 
+          margin-top: 24px; padding-bottom: 8px;
+          animation: fadeIn 0.3s ease;
+       }
+       .rs-breadcrumb-item { display: flex; align-items: center; gap: 6px; cursor: pointer; transition: color 0.2s; }
+       .rs-breadcrumb-item:hover { color: #fff; }
+       .rs-breadcrumb-item svg { width: 14px; height: 14px; opacity: 0.7; }
+       .rs-breadcrumb-sep { opacity: 0.3; font-size: 11px; }
+       .rs-breadcrumb-item.active { font-weight: 600; }
+       @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    `;
+    document.head.appendChild(s);
   }
 
   // Stats / Subtitle
@@ -139,25 +162,7 @@ function renderSection(section) {
 // ═══ BIBLIOTECA HEADER NAVIGATION ════════════════════════════
 function renderBibliotecaHeader() {
   const subNav = document.getElementById('page-controls-bar');
-  if (!subNav) return;
-
-  const tabs = [
-    { id: 'audios', label: 'Áudios', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' },
-    { id: 'documentos', label: 'Documentos', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' },
-    { id: 'midias', label: 'Mídias', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>' }
-  ];
-
-  const activeTab = window.bibliotecaTabAtiva || 'audios';
-
-  subNav.innerHTML = tabs.map(t => `
-    <button class="sub-nav-btn ${activeTab === t.id ? 'active' : ''}" data-click="switchBibliotecaTab('${t.id}')" style="display:flex; align-items:center; gap:8px;">
-      ${t.icon}
-      <span>${t.label}</span>
-      <span class="badge" id="badge-${t.id}">0</span>
-    </button>
-  `).join('');
-  
-  atualizarBadgesBiblioteca();
+  if (subNav) subNav.innerHTML = '';
 }
 
 window.switchBibliotecaTab = function(tab) {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file painel-crm-kanban.js
  * @scope Renderizacao Kanban (Internal + Sync WPP) + Drag and Drop
  * @depends painel-crm-core.js (KANBAN_CORE_STYLE, dynamicStages, dynamicTags, URGENCY_LEVELS_CRM, loadCRMDynamics)
@@ -17,31 +17,48 @@ async function renderCustomCRM(c) {
 
   const modoAtual = window.crmSyncModeActive ? 'Etiquetas WPP' : 'Abas do Funil';
   
-  // Limpar header actions e carregar no controls-bar
   document.getElementById('header-actions').innerHTML = '';
+
   document.getElementById('page-controls-bar').innerHTML = `
-    <div style="display:flex; align-items:center; gap:8px; width:100%;">
-      <div class="rs-tabs-switcher" style="margin-bottom:0; padding:2px;">
-         <button class="rs-tab-btn ${window.currentCRMTab === 'kanban' ? 'active' : ''}" data-click="setCRMTab('kanban')">📋 Kanban</button>
-         <button class="rs-tab-btn ${window.currentCRMTab === 'agenda' ? 'active' : ''}" data-click="setCRMTab('agenda')">🔔 Agenda</button>
-      </div>
-      
-      <div class="separator-v" style="width:1px; height:20px; background:var(--border); margin:0 8px;"></div>
+    <div class="rs-crm-header-wrap">
+      <!-- Main Controls -->
+      <div class="rs-controls-row">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <!-- View Switcher -->
+          <div class="rs-btn-group">
+            <button class="rs-btn-premium active">
+              <svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm7 0h5v-6h-5v6zm0-13v6h5V5h-5z"/></svg> 
+              Ver Funil
+            </button>
+          </div>
 
-      <button class="btn btn-secondary" data-click="toggleCRMViewMode()" title="Alternar Base">
-         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-         Modo: ${modoAtual}
-      </button>
+          <!-- Mode Toggle -->
+          <div class="rs-btn-group" title="Trocar para Etiquetas WPP">
+            <button class="rs-btn-premium" data-click="toggleCRMViewMode()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              Modo: ${modoAtual}
+            </button>
+          </div>
 
-      <button class="btn btn-primary" data-click="showNewLeadModal()">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Lead
-      </button>
+          <!-- Icons Actions -->
+          <div style="display:flex; gap:8px;">
+             <button class="rs-btn-icon-group" title="Filtros"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button>
+          </div>
+        </div>
 
-      <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
-         <button class="btn-icon" data-click="setCRMTab('agenda')" id="btn-bell-reminders-crm" title="Central de Lembretes" style="position:relative;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span id="notif-badge-crm" class="notif-badge" style="display:none; position:absolute; top:-5px; right:-5px;">0</span>
-         </button>
+        <div style="display:flex; gap:12px; align-items:center;">
+           <div class="rs-btn-group">
+              <button class="rs-btn-premium" data-click="navigate('contatos')" title="Gerenciar Pipelines">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Importar / Exportar
+              </button>
+           </div>
+           
+           <button class="rs-btn-plus" data-click="showNewLeadModal()">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+              Novo Lead
+           </button>
+        </div>
       </div>
     </div>
   `;
@@ -104,8 +121,6 @@ async function renderCustomCRM(c) {
       
       // Configurable urgency
       let urg = URGENCY_LEVELS_CRM[lead.urgencia] || URGENCY_LEVELS_CRM.normal;
-      let urgPillClass = urg.pillClass ? ` ${urg.pillClass}` : '';
-      let urgPillStyle = urg.pillClass ? '' : `background:${urg.bg};color:${urg.color};border:1px solid ${urg.border};`;
       
       let dateStr = lead.lembrete_data ? new Date(lead.lembrete_data).toLocaleDateString('pt-BR') : 'Hoje';
 
@@ -118,7 +133,7 @@ async function renderCustomCRM(c) {
         <div class="kanban-card ws-card-premium" draggable="true" data-lead-id="${lead.id}">
            <!-- Priority Banner -->
            <div class="card-priority-banner" style="--urgency-color: ${urg.color};">
-             ${urg.label} PRIORIDADE
+              ${urg.label}
            </div>
            
            <div class="card-inner-box">
@@ -131,28 +146,27 @@ async function renderCustomCRM(c) {
              <div class="card-mid-row">
                <div class="card-avatars-rs">
                  ${photoAvatar}
-                 <div class="card-avatar-item" style="background:var(--bg-tertiary);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg></div>
                </div>
                
                <div class="card-status-badge-rs" style="--status-color: ${col.color}; --status-bg: ${col.color}15;">
                  ${col.titulo}
                </div>
              </div>
-           </div>
-           
-           <div class="card-footer-premium">
-              <div class="card-meta-rs">
-                <div class="meta-rs-item" title="Ver Notas" data-click="editLeadModal('${lead.id}')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  <span>1</span>
+
+             <div class="card-footer-premium">
+                <div class="card-meta-rs">
+                  <div class="meta-rs-item" title="Ver Notas" data-click="editLeadModal('${lead.id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span>1</span>
+                  </div>
+                  <div class="meta-rs-item" style="cursor:pointer;" data-click="openWppDirect('${clearPhone}')" title="WhatsApp Business">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </div>
                 </div>
-                <div class="meta-rs-item" style="cursor:pointer;" data-click="openWppDirect('${clearPhone}')" title="WhatsApp Business">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                <div class="card-date-premium">
+                  ${dateStr}
                 </div>
-              </div>
-              <div class="card-date-premium">
-                ${dateStr}
-              </div>
+             </div>
            </div>
         </div>
       `;
@@ -170,32 +184,45 @@ async function renderCustomCRM(c) {
 // === CRM SINCRONIZADO (ETIQUETAS DO WPP) ===
 async function renderSyncLabelsCRM(c) {
     // 1. Unified Header (Consistent with Manual CRM)
-    const modoAtual = 'Etiquetas WPP';
+    const modoAtual = window.crmSyncModeActive ? 'Etiquetas WPP' : 'Abas do Funil';
     document.getElementById('header-actions').innerHTML = '';
-    document.getElementById('page-controls-bar').innerHTML = `
-      <div style="display:flex; align-items:center; gap:8px; width:100%;">
-       <button class="btn btn-secondary" data-click="toggleCRMViewMode()" title="Voltar para Funil Interno">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-          Modo: Etiquetas WPP
-       </button>
-       <button class="btn btn-secondary" data-click="navigate('contatos')" title="Extração & Importação">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Extração & Importação
-       </button>
-       <div class="separator-v" style="width:1px; height:20px; background:var(--border); margin:0 8px;"></div>
-       <span style="font-size:12px; color:var(--success); font-weight:bold; display:flex; align-items:center; gap:6px;">
-         <span style="display:inline-block; width:6px; height:6px; background:var(--success); border-radius:50%; box-shadow:0 0 8px var(--success);"></span> 
-         Conexão Live: Ativa
-       </span>
 
-       <div style="margin-left:auto; display:flex; align-items:center;">
-          <button class="btn-icon" data-click="setCRMTab('agenda')" id="btn-bell-reminders-crm" title="Central de Lembretes" style="position:relative;">
-             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-             <span id="notif-badge-crm" class="notif-badge" style="display:none; position:absolute; top:-5px; right:-5px;">0</span>
-          </button>
-       </div>
-     </div>
-   `;
+    document.getElementById('page-controls-bar').innerHTML = `
+      <div class="rs-crm-header-wrap">
+        <!-- Controls Row Sync -->
+        <div class="rs-controls-row">
+          <div style="display:flex; gap:12px; align-items:center;">
+             <div class="rs-btn-group">
+                <button class="rs-btn-premium active">
+                   <svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm7 0h5v-6h-5v6zm0-13v6h5V5h-5z"/></svg>
+                   Etiquetas Sincronizadas
+                </button>
+             </div>
+             
+             <div class="rs-btn-group">
+                <button class="rs-btn-premium" data-click="toggleCRMViewMode()">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                   Modo: ${modoAtual}
+                </button>
+             </div>
+
+             <span style="font-size:12px; color:var(--success); font-weight:bold; display:flex; align-items:center; gap:6px; margin-left:10px;">
+               <span style="display:inline-block; width:6px; height:6px; background:var(--success); border-radius:50%; box-shadow:0 0 8px var(--success);"></span> 
+               Online
+             </span>
+          </div>
+
+          <div style="display:flex; gap:12px; align-items:center;">
+             <div class="rs-btn-group">
+                <button class="rs-btn-premium" data-click="navigate('contatos')">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                   Extrair e Exportar
+                </button>
+             </div>
+          </div>
+        </div>
+      </div>
+    `;
 
    // Esconder o sino original do header
    const headerBellSync = document.getElementById('btn-bell-reminders');
@@ -258,25 +285,24 @@ async function renderSyncLabelsCRM(c) {
                        <div class="card-mid-row">
                          <div class="card-avatars-rs">
                            ${photoAvatar}
-                           <div class="card-avatar-item" style="background:var(--bg-tertiary);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
                          </div>
                          
                          <div class="card-status-badge-rs" style="--status-color: ${corHex}; --status-bg: ${corHex}15;">
                            ${lbl.name}
                          </div>
                        </div>
-                     </div>
 
-                     <div class="card-footer-premium">
-                       <div class="card-meta-rs">
-                         <div class="meta-rs-item">
-                           <span style="color:var(--success); font-size:14px; line-height:1;">●</span> Online
+                       <div class="card-footer-premium">
+                         <div class="card-meta-rs">
+                           <div class="meta-rs-item">
+                             <span style="color:var(--success); font-size:14px; line-height:1;">●</span> Online
+                           </div>
                          </div>
-                       </div>
-                       <div class="card-actions-rs">
-                           <button title="Abrir Chat" class="col-btn-rs" style="width:24px; height:24px; border-radius:6px;" data-click="openWppChatSync('${foneTratado}')">
-                              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
-                           </button>
+                         <div class="card-actions-rs">
+                             <button title="Abrir Chat" class="col-btn-rs" style="border:none;background:transparent;width:auto;height:auto;padding:0;" data-click="openWppChatSync('${foneTratado}')">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
+                             </button>
+                         </div>
                        </div>
                      </div>
                   </div>`;
@@ -304,12 +330,12 @@ async function renderSyncLabelsCRM(c) {
                  ${cardsHtml || '<div style="padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px; opacity:0.3; font-style:italic;">Nenhum contato nesta etiqueta</div>'}
                </div>
              </div>`;
-        });
-       html += '</div>';
-       c.innerHTML = html;
-       
-       setTimeout(assignSyncKanbanDragDrop, 150);
-    });
+         });
+        html += '</div>';
+        c.innerHTML = html;
+        
+        setTimeout(assignSyncKanbanDragDrop, 150);
+     });
 }
 
 

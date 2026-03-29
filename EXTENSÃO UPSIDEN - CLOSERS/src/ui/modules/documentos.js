@@ -190,15 +190,12 @@ function renderizar() {
         </div>
 
         <div class="row-actions" style="display: flex; align-items: center; gap: 8px;">
-           <button class="btn-dim" data-action="access" title="Configurar Acesso" style="padding: 10px; border-radius: 12px; flex: 0 0 38px;">
+           <button class="btn-action-sec" data-action="access" title="Configurar Acesso" style="padding: 10px; border-radius: 12px; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; transition: 0.2s;">
              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+             <span>Acesso</span>
            </button>
-           <button class="btn-dim" data-action="delete" title="Remover" style="padding: 10px; border-radius: 12px; flex: 0 0 38px;">
-             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-           </button>
-           <button class="btn-send-main action-btn-main" data-id="${doc.id}" style="flex: 1; padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; background: var(--accent); color: white; border: none; cursor: pointer;">
-             <svg viewBox="0 0 24 24" width="16" height="16"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg>
-             <span>Enviar</span>
+           <button class="btn-action-danger" data-action="delete" title="Remover" style="padding: 10px; border-radius: 12px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center; background: rgba(241, 71, 71, 0.1); border: 1px solid rgba(241, 71, 71, 0.2); color: #f14747; cursor: pointer; transition: 0.2s;">
+             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
            </button>
         </div>
       `;
@@ -322,12 +319,23 @@ async function boot() {
     });
   }
 
-  // List click delegation
-  const listaCont = root.querySelector('#doc-lista');
-  if (listaCont) {
-    listaCont.addEventListener('click', async (e) => {
-      const btnAction = e.target.closest('[data-action]');
-      const btnSend = e.target.closest('.action-btn-main');
+  // 3. Clique Delegado (Tabs e Lista)
+  if (!root._upsClickDocumentos) {
+    root._upsClickDocumentos = true;
+    root.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.lib-tab-btn, .btn-view-mode, [data-action], .action-btn-main');
+      if (!btn) return;
+
+      // Tabs Switcher
+      const tabTarget = btn.dataset.libTab;
+      if (tabTarget) {
+        if (tabTarget === 'documentos') return;
+        window.parent.switchBibliotecaTab(tabTarget);
+        return;
+      }
+
+      const btnAction = btn.closest('[data-action]');
+      const btnSend = btn.closest('.action-btn-main');
       
       if (btnAction) {
         const action = btnAction.dataset.action;

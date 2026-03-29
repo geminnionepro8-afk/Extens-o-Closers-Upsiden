@@ -1,4 +1,4 @@
-﻿/* --- Unified Library Sub-Nav (V3 - Red Sun Style) --- */
+/* --- Unified Library Sub-Nav (V3 - Red Sun Style) --- */
 .header-title-row {
     display: flex;
     align-items: flex-end; /* Align tabs to bottom of title */
@@ -11,12 +11,12 @@
     height: 100%;
 }
 .sub-nav-btn {
-    padding: 0 12px 14px 12px;
-    font-size: 13px;
+    padding: 0 16px 14px 16px;
+    font-size: 13.5px;
     font-weight: 600;
     color: var(--text-muted);
-    background: transparent;
-    border: none;
+    background: transparent !important; /* Force transparent since parent header.css may set a background */
+    border: none !important;
     cursor: pointer;
     transition: all var(--transition);
     white-space: nowrap;
@@ -24,32 +24,39 @@
     align-items: center;
     gap: 8px;
     position: relative;
-    border-bottom: 2px solid transparent;
+    border-bottom: 2px solid transparent !important;
+    box-shadow: none !important;
 }
 .sub-nav-btn:hover {
     color: var(--text-primary);
+    background: transparent !important;
 }
 .sub-nav-btn.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+    color: var(--accent) !important;
+    border-bottom-color: var(--accent) !important;
+    opacity: 1 !important;
 }
 .sub-nav-btn svg {
     width: 15px;
     height: 15px;
     opacity: 0.7;
+    stroke-width: 2.2px;
 }
 .sub-nav-btn.active svg {
     opacity: 1;
+    color: var(--accent);
 }
 .sub-nav-btn .badge {
     font-size: 10px;
     background: rgba(255, 77, 0, 0.1);
     color: var(--accent);
-    padding: 1px 6px;
+    padding: 2px 7px;
     border-radius: 6px;
     border: 1px solid rgba(255, 77, 0, 0.2);
+    font-weight: 700;
 }
 .sub-nav-btn.active .badge {
     background: var(--accent);
     color: #fff;
+    border-color: var(--accent);
 }

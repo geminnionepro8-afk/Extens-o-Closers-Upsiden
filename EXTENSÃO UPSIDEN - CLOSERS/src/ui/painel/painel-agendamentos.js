@@ -172,10 +172,8 @@ const AGEND_CORE_STYLE = `
   </style>
 `;
 
-window.renderAgendamentos = async function() {
-  const main = document.getElementById('main-content');
-  document.getElementById('page-title').textContent = 'Calendário de Envios';
-  document.getElementById('breadcrumb-section').textContent = 'Agendamentos';
+window.renderAgendamentos = async function(c) {
+  const main = c || document.getElementById('main-content');
   
   main.innerHTML = AGEND_CORE_STYLE + `
     <div class="agend-wrapper-rs">
