@@ -80,8 +80,8 @@ window.renderAutomacoes = function(c) {
     </div>`;
   } else if (window.autoSubTab === 'gatilhos') {
     html += `
-    <div class="auto-container animate-in">
-       <aside class="auto-sidebar-rs">
+    <div class="timeline-main-grid animate-in" style="padding: 16px; height: calc(100vh - 70px); box-sizing: border-box;">
+       <aside class="auto-sidebar-rs" style="height: 100%; overflow-y: auto;">
           <div style="font-size:10px; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; padding:0 12px;">Pastas da Inteligência</div>
           <button class="rs-folder-btn ${window.autoSelectedFolder === 'todos' ? 'active' : ''}" data-click="switchAutoFolder('todos')">
              <svg class="folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v11z"/></svg> Todos os Gatilhos <span class="folder-count" id="count-all">0</span>
@@ -93,31 +93,69 @@ window.renderAutomacoes = function(c) {
           <button class="rs-btn-premium" style="width:100%; padding:10px; font-size:12px; background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.15); color:var(--text-muted); box-shadow:none; text-align:center; justify-content:center;" data-click="addAutoFolder()">+ Criar Nova Pasta</button>
        </aside>
 
-       <div class="auto-content-rs">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+       <div class="auto-content-rs" style="height: 100%; overflow-y: auto; padding-right: 12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; position: sticky; top: 0; background: var(--bg-primary); z-index: 100; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
              <div>
                 <h3 style="font-size:18px; font-weight:800; color:#fff; margin:0;" id="folder-title">Todos os Gatilhos</h3>
-                <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">Combine palavras-chave para criar fluxos inquebráveis.</p>
+                <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">Timeline avançada. O que você vê aqui, será enviado.</p>
              </div>
               <div style="display:flex; gap:12px;">
                 <button class="rs-btn-premium" style="background:rgba(255,255,255,0.03); color:white; border:1px solid rgba(255,255,255,0.08); box-shadow:none; padding:10px 20px;" data-click="addTriggerRow()">
                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:8px;"><path d="M12 5v14M5 12h14"/></svg>
-                   Novo Gatilho
+                   Novo Fluxo
                 </button>
-                <button class="rs-btn-plus" data-click="salvarGatilhos()" style="padding:10px 24px;">Salvar Alterações</button>
+                <button class="rs-btn-plus" data-click="salvarGatilhos()" style="padding:10px 24px;">Salvar Cloud</button>
              </div>
           </div>
           
-          <div id="triggers-list" style="display:flex; flex-direction:column; gap:20px;">
+          <div id="triggers-list" style="display:flex; flex-direction:column; gap:40px;">
              <div class="rs-empty-automations animate-in">
                 <div style="width:60px; height:60px; background:rgba(255,255,255,0.03); border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; color:var(--text-muted);">
                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                 </div>
-                <h4 style="color:#fff; margin:0 0 8px 0; font-weight:800;">Nenhum gatilho nesta pasta</h4>
-                <p style="font-size:12px; color:var(--text-muted); margin:0;">Clique em 'Novo Gatilho' para expandir sua inteligência artificial.</p>
+                <h4 style="color:#fff; margin:0 0 8px 0; font-weight:800;">Nenhum fluxo configurado</h4>
+                <p style="font-size:12px; color:var(--text-muted); margin:0;">Clique em 'Novo Fluxo' para estruturar uma Timeline conversacional.</p>
              </div>
           </div>
        </div>
+
+       <aside class="mobile-preview-container">
+          <h4 style="font-size: 13px; font-weight:900; color:var(--text-muted); margin:0 0 16px 0; text-align:center; text-transform:uppercase; letter-spacing:1px; width:100%;">Device Simulador</h4>
+          <div class="iphone-mockup" id="iphone-live-preview">
+             <div class="iphone-notch"></div>
+             <div class="wpp-header">
+                <div class="wpp-avatar">LC</div>
+                <div>
+                   <div class="wpp-title">Lead Curioso</div>
+                   <div class="wpp-subtitle">online</div>
+                </div>
+             </div>
+             <div class="wpp-chat-body" id="preview-messages-container">
+                <div style="font-size:11px; color:#8696a0; text-align:center; font-weight:500; margin: 10px 0;">Hoje</div>
+                
+                <div class="wpp-bubble in">
+                   Olá, tenho interesse! 
+                   <div class="wpp-bubble-time">14:02</div>
+                </div>
+             </div>
+             <div class="wpp-footer">
+                <div class="wpp-input">Mensagem</div>
+                <div style="width:32px; height:32px; background:#00a884; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                   <svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"></path></svg>
+                </div>
+             </div>
+          </div>
+          
+          <div class="preview-summary" id="preview-summary-box">
+             <h4>Analítico do Fluxo</h4>
+             <div class="preview-stat">Tempo Estimado: <strong id="preview-time-estimado">0 seg</strong></div>
+             <div class="preview-stat">Passos Lógicos: <strong id="preview-total-passos">0</strong></div>
+             <div class="preview-stat" style="margin-top:8px; display:flex; gap:8px;">
+                 <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#3b82f6; margin-top:3px; flex-shrink:0;"></span>
+                 <span style="color:var(--text-secondary); line-height:1.2;">Edite uma timeline para visualizar a simulação de disparo.</span>
+             </div>
+          </div>
+       </aside>
     </div>`;
   } else if (window.autoSubTab === 'horario') {
     html += `
@@ -217,37 +255,67 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
   } = stepObj;
 
   const row = document.createElement('div');
-  row.className = 'rs-action-row followup-row animate-in';
+  row.className = 'timeline-node-wrapper followup-row animate-in';
+
+  let typeColor = 'var(--text-secondary)';
+  let typeLabel = 'Texto Escrito';
+  let typeSvg = '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline>';
+  let cardClass = 'card-text';
+
+  if (tipo === 'audio') {
+    cardClass = 'card-audio';
+    typeLabel = 'Áudio (PTT)';
+    typeSvg = '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line>';
+  } else if (tipo === 'imagem' || tipo === 'video') {
+    cardClass = 'card-image';
+    typeLabel = 'Mídia/Imagem';
+    typeSvg = '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>';
+  } else if (tipo === 'documento') {
+    cardClass = 'card-image';
+    typeLabel = 'Documento';
+    typeSvg = '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline>';
+  }
 
   row.innerHTML = `
-    <div class="rs-step-pill" style="padding: 16px; display:flex; align-items:center; gap:16px; margin-bottom:12px; border-radius:12px; flex-wrap:nowrap; overflow:hidden;">
-       
-       <div style="display:flex; flex-direction:column; width:130px; flex-shrink:0;">
-         <select class="rs-input fup-tipo" style="height:38px; padding:0 10px; font-size:12px; font-weight:700;">
-            <option value="texto">Texto Escrito</option>
-            <option value="audio">Áudio (PTT)</option>
-            <option value="imagem">Mídia/Imagem</option>
-            <option value="documento">Documento</option>
-         </select>
+    <!-- DELAY NODE IN TIMELINE -->
+    <div class="timeline-delay-node">
+       <div class="delay-badge">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Pausa de <input type="number" class="fup-delay" value="${delay_segundos}" min="0"> seg
        </div>
+    </div>
 
-       <div style="flex:1; display:flex; flex-direction:column; gap:8px; min-width:0;">
+    <!-- ACTION CARD -->
+    <div class="timeline-action-card ${cardClass}" style="margin: 0 auto;">
+       <div class="card-icon-pane">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">${typeSvg}</svg>
+       </div>
+       <div class="card-content-pane">
+          <div class="card-header-actions">
+             <div style="display:flex; align-items:center; gap:12px;">
+                <span class="card-type-label">${typeLabel}</span>
+                <select class="rs-input fup-tipo" style="height:24px; padding:0 8px; font-size:10px; font-weight:700; width:100px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05);">
+                   <option value="texto" ${tipo==='texto'?'selected':''}>Mudar p/ Texto</option>
+                   <option value="audio" ${tipo==='audio'?'selected':''}>Mudar p/ Áudio</option>
+                   <option value="imagem" ${tipo==='imagem'?'selected':''}>Mudar p/ Mídia</option>
+                   <option value="documento" ${tipo==='documento'?'selected':''}>Mudar p/ Doc</option>
+                </select>
+             </div>
+             <button class="btn-card-action btn-remove" title="Remover Etapa">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+             </button>
+          </div>
+
           <textarea class="rs-input fup-conteudo" rows="2" placeholder="Conteúdo da resposta..." 
-                style="width:100%; min-height:46px; height:auto; padding:10px 14px; font-size:13px; resize:vertical; line-height:1.4;">${conteudo}</textarea>
+                style="width:100%; min-height:46px; height:auto; padding:10px 14px; font-size:13px; resize:vertical; line-height:1.4; border:1px solid rgba(255,255,255,0.05); background:rgba(0,0,0,0.1); border-radius:8px;">${conteudo}</textarea>
           
-          <div class="media-fields" style="display: ${tipo === 'texto' ? 'none' : 'flex'}; gap:10px;">
-             <select class="fup-midia-url rs-input" style="height:32px; font-size:11px; padding:0 10px; flex:1; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05);"><option value="">-- Selecione a Mídia --</option></select>
-             <select class="fup-send-as rs-input fup-send-as-container" style="height:32px; font-size:11px; padding:0 10px; flex:1; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); display:none;"></select>
+          <div class="media-fields card-media-select" style="display: ${tipo === 'texto' ? 'none' : 'flex'};">
+             <div class="media-thumbnail-preview">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+             </div>
+             <select class="fup-midia-url rs-input" style="height:32px; font-size:11px; padding:0 10px; flex:1; background:transparent; border:none; outline:none;"><option value="">-- Carregando Cofre de Mídias --</option></select>
+             <select class="fup-send-as rs-input fup-send-as-container" style="height:32px; font-size:11px; padding:0 10px; width:90px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; display:none;"></select>
           </div>
-       </div>
-
-       <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
-          <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.03); padding:0 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.05); height:38px;">
-            <span style="font-size:10px; color:var(--text-muted); font-weight:800;">TIMER:</span>
-            <input type="number" class="fup-delay" value="${delay_segundos}" min="0" style="width:36px; background:transparent; border:none; color:#fff; font-weight:800; font-size:14px; outline:none; text-align:center;">
-            <span style="font-size:10px; color:var(--text-muted);">s</span>
-          </div>
-          <button class="btn-remove" title="Remover Etapa" style="background:rgba(241, 92, 109, 0.1); border:1px solid rgba(241, 92, 109, 0.15); color:var(--danger); cursor:pointer; width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; transition:all 0.2s;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
        </div>
     </div>
     
@@ -471,45 +539,44 @@ window.addTriggerRow = function(palavra='', respostaObj={}, pasta='Geral', condi
   wrapper.dataset.pasta = pasta;
 
   wrapper.innerHTML = `
-    <div class="trigger-header-rs">
+    <div class="trigger-header-rs" style="position:relative; z-index:10; background:var(--bg-secondary); border-radius:16px 16px 0 0; padding:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
        <div class="trigger-title-wrap">
-          <div class="trigger-word-label">
-             <span>Regra de Ativação (Palavras-chave separadas por vírgula)</span>
-             <input type="text" class="trigger-palavra rs-input" placeholder="Ex: preco, valor, comprar" value="${palavra}" 
-                    style="font-size:16px; font-weight:700; padding:10px 16px; margin-top:8px; width:100%; min-width:320px;">
+          <div class="trigger-word-label" style="width: 100%;">
+             <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:800; letter-spacing:1px;">Regra de Ativação (Palavras-chave)</span>
+             <input type="text" class="trigger-palavra rs-input" placeholder="Ex: preco, comprar, mais info" value="${palavra}" 
+                    style="font-size:18px; font-weight:800; padding:12px 16px; margin-top:8px; width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2);">
           </div>
        </div>
-       <div style="display:flex; gap:12px; align-items:center;">
-          <div style="text-align:left;">
-             <div style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Condição</div>
-             <select class="trigger-condicao rs-input" style="height:36px; padding:0 12px; font-size:13px; font-weight:600; min-width:120px; cursor:pointer;">
-                <option value="exata" ${condicao === 'exata' ? 'selected' : ''}>Exata</option>
-                <option value="contem" ${condicao === 'contem' ? 'selected' : ''}>Contém</option>
-             </select>
-          </div>
-          <div style="text-align:left;">
-             <div style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Pasta do Gatilho</div>
-             <select class="trigger-pasta rs-input" style="height:36px; padding:0 12px; font-size:13px; font-weight:600; min-width:140px; cursor:pointer;">
-                <!-- Dinâmico -->
-             </select>
-          </div>
-          <div style="display:flex; flex-direction:column; justify-content:flex-end;">
-             <div style="height:21px;"></div>
-             <div style="display:flex; gap:8px;">
-                <button class="rs-btn-premium btn-add-step" style="padding:0 16px; height:36px; font-size:12px; gap:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); box-shadow:none;">
-                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg> Adicionar Ação
-                </button>
-                <button class="btn-remove-trigger" style="background:rgba(241, 92, 109, 0.1); color:var(--danger); width:36px; height:36px; border-radius:12px; border:1px solid rgba(241, 92, 109, 0.15); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;">
-                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+          <div style="display:flex; gap:16px;">
+             <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:11px; font-weight:600; color:var(--text-muted);">Condição:</span>
+                <select class="trigger-condicao rs-input" style="height:32px; padding:0 12px; font-size:12px; font-weight:600; cursor:pointer;">
+                   <option value="exata" ${condicao === 'exata' ? 'selected' : ''}>Exata</option>
+                   <option value="contem" ${condicao === 'contem' ? 'selected' : ''}>Contém</option>
+                </select>
              </div>
+             <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:11px; font-weight:600; color:var(--text-muted);">Pasta:</span>
+                <select class="trigger-pasta rs-input" style="height:32px; padding:0 12px; font-size:12px; font-weight:600; cursor:pointer;">
+                   <!-- Dinâmico -->
+                </select>
+             </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+             <button class="rs-btn-premium btn-add-step" style="height:36px; padding:0 16px; font-size:12px; gap:8px; background:rgba(16, 185, 129, 0.1); color:#34d399; border:1px solid rgba(16, 185, 129, 0.2); box-shadow:none;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg> Novo Passo
+             </button>
+             <button class="btn-remove-trigger" style="background:rgba(241, 92, 109, 0.1); color:var(--danger); width:36px; height:36px; border-radius:12px; border:1px solid rgba(241, 92, 109, 0.15); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+             </button>
           </div>
        </div>
     </div>
-
     
-    <div id="${uid}" class="action-flow-container">
-       <!-- Followup Rows nested here -->
+    <div id="${uid}" class="timeline-canvas-area" style="border-radius:0 0 16px 16px; border-top:none; background:var(--bg-primary);">
+       <div class="timeline-line"></div>
+       <!-- Action Cards and Delay Nodes will be populated here -->
     </div>
   `;
 
@@ -671,3 +738,150 @@ window.salvarRegrasGlobais = async function() {
     toast('Regras de humanização salvas e sincronizadas!', 'success');
   });
 };
+
+// ═══ LIVE PREVIEW RENDERING ════════════════════════════════
+window.renderLivePreview = function() {
+  const container = document.getElementById('preview-messages-container');
+  const sumTimeBox = document.getElementById('preview-time-estimado');
+  const sumStepsBox = document.getElementById('preview-total-passos');
+  if (!container) return;
+
+  let html = `<div style="font-size:11px; color:#8696a0; text-align:center; font-weight:500; margin: 10px 0;">Hoje</div>
+              <div class="wpp-bubble in">
+                 Olá, tenho interesse! 
+                 <div class="wpp-bubble-time">Agora</div>
+              </div>`;
+
+  let totalTime = 0;
+  let totalSteps = 0;
+
+  // Pegamos o fluxo sendo editado na página
+  const triggers = document.querySelectorAll('#triggers-list .trigger-wrapper');
+  if (triggers.length > 0) {
+     // Focar pro primeiro só pra dar um preview realístico de 1 sequência
+     const firstTrigger = triggers[0];
+     const rows = firstTrigger.querySelectorAll('.followup-row');
+     totalSteps = rows.length;
+     let currTime = new Date();
+     
+     rows.forEach(row => {
+        const tp = row.querySelector('.fup-tipo').value;
+        const ct = row.querySelector('.fup-conteudo').value || '';
+        const dl = Number(row.querySelector('.fup-delay').value) || 0;
+        const dur = Number(row.querySelector('.fup-duracao').value) || 2;
+        
+        totalTime += dl + dur;
+        
+        let timeStr = `${currTime.getHours().toString().padStart(2,'0')}:${currTime.getMinutes().toString().padStart(2,'0')}`;
+
+        if (tp === 'audio') {
+           html += `<div class="wpp-bubble out" style="padding:4px; max-width:90%;">
+                       <div class="wpp-bubble-audio">
+                          <svg viewBox="0 0 24 24" fill="var(--accent)" width="20" height="20" style="margin:0 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                          <div class="wpp-audio-wave"></div>
+                          <div class="wpp-audio-avatar" style="width:30px; height:30px; background:rgba(0,0,0,0.2);"></div>
+                       </div>
+                       <div class="wpp-bubble-time">${timeStr}</div>
+                    </div>`;
+        } else if (tp === 'imagem' || tp === 'video') {
+           html += `<div class="wpp-bubble out">
+                       <div style="width: 100%; height: 120px; background:rgba(255,255,255,0.1); border-radius: 6px; margin-bottom:4px; display:flex; align-items:center; justify-content:center;">
+                          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                       </div>
+                       ${ct ? `<div>${ct.replace(/\n/g, '<br>')}</div>` : ''}
+                       <div class="wpp-bubble-time">${timeStr}</div>
+                    </div>`;
+        } else if (tp === 'documento') {
+           html += `<div class="wpp-bubble out" style="display:flex; align-items:center; gap:8px;">
+                       <div style="width:36px; height:36px; background:rgba(255,255,255,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                       </div>
+                       <div style="flex:1;">
+                          <div style="font-weight:700; color:#fff;">Documento</div>
+                          ${ct ? `<div style="font-size:10px; color:rgba(255,255,255,0.7);">${ct}</div>` : ''}
+                       </div>
+                       <div class="wpp-bubble-time" style="margin-top:0;">${timeStr}</div>
+                    </div>`;
+        } else {
+           html += `<div class="wpp-bubble out">
+                       ${ct.replace(/\n/g, '<br>') || '<em>(Texto em branco)</em>'}
+                       <div class="wpp-bubble-time">${timeStr}</div>
+                    </div>`;
+        }
+     });
+  }
+
+  container.innerHTML = html;
+  if(sumTimeBox) sumTimeBox.textContent = totalTime + ' seg';
+  if(sumStepsBox) sumStepsBox.textContent = totalSteps;
+  
+  container.scrollTop = container.scrollHeight;
+};
+
+// ═══ EVENT LISTENERS GLOBAIS ════════════════════════════════
+document.addEventListener('input', (e) => {
+   if (e.target.closest('#triggers-list') || e.target.closest('#followups-list')) {
+      window.renderLivePreview();
+   }
+});
+
+document.addEventListener('change', (e) => {
+   if ((e.target.closest('#triggers-list') || e.target.closest('#followups-list')) && e.target.classList.contains('fup-tipo')) {
+      const row = e.target.closest('.followup-row');
+      const tipo = e.target.value;
+      const mediaFields = row.querySelector('.media-fields');
+      const cardTypeLabel = row.querySelector('.card-type-label');
+      const cardIcon = row.querySelector('.card-icon-pane');
+      const actionCard = row.querySelector('.timeline-action-card');
+
+      if (mediaFields) mediaFields.style.display = (tipo === 'texto') ? 'none' : 'flex';
+      
+      let typeLabel = 'Texto Escrito';
+      let typeSvg = '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline>';
+      
+      if (actionCard) {
+         actionCard.className = 'timeline-action-card';
+
+         if (tipo === 'audio') {
+            actionCard.classList.add('card-audio');
+            typeLabel = 'Áudio (PTT)';
+            typeSvg = '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line>';
+         } else if (tipo === 'imagem' || tipo === 'video') {
+            actionCard.classList.add('card-image');
+            typeLabel = 'Mídia/Imagem';
+            typeSvg = '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>';
+         } else if (tipo === 'documento') {
+            actionCard.classList.add('card-image');
+            typeLabel = 'Documento';
+            typeSvg = '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline>';
+         } else {
+            actionCard.classList.add('card-text');
+         }
+
+         if (cardTypeLabel) cardTypeLabel.textContent = typeLabel;
+         if (cardIcon) cardIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">${typeSvg}</svg>`;
+      }
+
+      window.renderLivePreview();
+   }
+});
+
+document.addEventListener('click', (e) => {
+   if (e.target.closest('.btn-remove')) {
+      const row = e.target.closest('.followup-row');
+      if (row) {
+         row.remove();
+         window.renderLivePreview();
+      }
+   }
+   
+   if (e.target.closest('.btn-add-step')) {
+      // Add event listeners on add to update view
+      setTimeout(window.renderLivePreview, 50);
+   }
+});
+
+// Auto-init preview após carregar config
+setTimeout(() => {
+    if (typeof window.renderLivePreview === 'function') window.renderLivePreview();
+}, 800);
