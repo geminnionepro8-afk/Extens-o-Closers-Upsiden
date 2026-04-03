@@ -83,22 +83,18 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
                  throw new Error(`HTTP ${r.status}: ${txt.substring(0, 100)}`);
              }
              
-             const contentType = r.headers.get('content-type') || 'application/octet-stream';
-             const buffer = await r.arrayBuffer();
-             const bytes = new Uint8Array(buffer);
+             const blob = await r.blob();
+             const reader = new FileReader();
+             reader.onloadend = () => {
+                 clearTimeout(downloadTimeout);
+                 responder({ sucesso: true, base64: reader.result });
+             };
+             reader.onerror = () => {
+                 clearTimeout(downloadTimeout);
+                 responder({ sucesso: false, erro: 'Falha na conversão de mídia no Worker' });
+             };
+             reader.readAsDataURL(blob);
              
-             // Otimização Crítica Segura: O uso de apply() causa RangeError em Workers. 
-             // Usamos um array indexado simples para construir a string sem locking.
-             const chunks = new Array(bytes.length);
-             for (let i = 0; i < bytes.length; i++) {
-                 chunks[i] = String.fromCharCode(bytes[i]);
-             }
-             
-             const b64 = btoa(chunks.join(''));
-             const dataUrl = `data:${contentType};base64,${b64}`;
-             
-             clearTimeout(downloadTimeout);
-             responder({ sucesso: true, base64: dataUrl });
          } catch (e) {
              clearTimeout(downloadTimeout);
              console.error(`${CONTEXTO} [MEDIA-PROXY] Erro:`, e.message);
