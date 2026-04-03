@@ -1,12 +1,12 @@
 /**
  * @file wpp-engine.js
- * @description MOTOR CENTRAL Deduplicated & Robustified.
- * Versão: 2.5 - UNIVERSAL DISPATCHER (No More Silos)
+ * @description MOTOR CENTRAL — Universal Dispatcher.
+ * Versão: 3.0 — REESTRUTURADO
  * Roda dentro da página do WhatsApp Web com acesso direto à API WPP Connect.
  */
 
 const CONTEXTO = '[Upsiden-Engine]';
-console.log('%c' + CONTEXTO + ' SCRIPT LOADED', 'background: #222; color: #bada55; padding: 2px 5px;');
+console.log('%c' + CONTEXTO + ' v3.0 SCRIPT LOADED @ ' + new Date().toLocaleTimeString('pt-BR'), 'background: #222; color: #bada55; padding: 4px 8px; font-size: 13px;');
 
 class InjetorWPP {
   static bulkActive = false;
@@ -44,7 +44,7 @@ class InjetorWPP {
       await new Promise(r => setTimeout(r, 500));
     }
 
-    console.log(`${CONTEXTO} API WPP PRONTA (v2.5 Universal) ✅`);
+    console.log(`%c${CONTEXTO} API WPP PRONTA (v3.0 Universal) ✅`, 'background: #25D366; color: white; padding: 4px 8px; font-weight: bold; font-size: 13px;');
     
     try {
       InjetorWPP.iniciarOuvintes();
@@ -140,27 +140,57 @@ class InjetorWPP {
 
   // ── OUVINTES DE MENSAGENS ──
   static iniciarOuvintes() {
-    setInterval(() => window.postMessage({ origem: 'INJETOR_PAGINA_INIT', ev: 'puxar_config_auto_reply' }, '*'), 5000);
+    // Config polling (fallback — primário agora é storage.onChanged via IPC Bridge)
+    setInterval(() => window.postMessage({ origem: 'INJETOR_PAGINA_INIT', ev: 'puxar_config_auto_reply' }, '*'), 10000);
     window.postMessage({ origem: 'INJETOR_PAGINA_INIT', ev: 'puxar_config_auto_reply' }, '*');
 
+    // Handler de mensagens recebidas
     const handleMsg = async (msg) => {
-      if (msg.fromMe || msg.id?.fromMe || msg.isStatusV3) return;
-      const timestamp = (msg.t || msg.timestamp) * 1000;
-      if (Date.now() - timestamp > 600000) return;
-
-      const chatId = InjetorWPP.normalizeChatId(msg.from || msg.id?.remote);
-      let chatName = '';
       try {
-        const chat = await window.WPP.chat.get(chatId);
-        chatName = chat?.name || chat?.formattedTitle || '';
-      } catch (e) {}
+        if (msg.fromMe || msg.id?.fromMe || msg.isStatusV3) return;
+        const timestamp = (msg.t || msg.timestamp) * 1000;
+        if (Date.now() - timestamp > 600000) return;
 
-      if (window.AutomationController) {
+        const chatId = InjetorWPP.normalizeChatId(msg.from || msg.id?.remote);
+        let chatName = '';
+        try {
+          const chat = await window.WPP.chat.get(chatId);
+          chatName = chat?.name || chat?.formattedTitle || '';
+        } catch (e) {}
+
+        if (window.AutomationController) {
           window.AutomationController.handleIncomingMessage(msg, chatName);
+        } else {
+          console.warn(`${CONTEXTO} AutomationController não disponível!`);
+        }
+      } catch(err) {
+        console.error(`${CONTEXTO} Erro no handler de mensagem:`, err);
       }
     };
 
-    if (window.WPP.on) window.WPP.on('chat.new_message', handleMsg);
+    // Registrar listener com fallback robusto
+    let listenerRegistered = false;
+    try {
+      if (window.WPP?.on) {
+        window.WPP.on('chat.msg_receive', handleMsg);
+        window.WPP.on('chat.new_message', handleMsg); // Fallback secundário
+        listenerRegistered = true;
+        console.log(`%c${CONTEXTO} ✅ Listeners 'chat.msg_receive' / 'chat.new_message' REGISTRADOS`, 'color: #2ecc71; font-weight: bold;');
+      }
+    } catch(e) {
+      console.error(`${CONTEXTO} Falha ao registrar listener primário:`, e);
+    }
+
+    if (!listenerRegistered) {
+      console.error(`%c${CONTEXTO} ❌ NENHUM LISTENER REGISTRADO — Automação NÃO funcionará!`, 'color: #e74c3c; font-weight: bold; font-size: 14px;');
+    }
+
+    // Diagnóstico final
+    console.log(`%c${CONTEXTO} 🔧 STATUS DO ENGINE:`, 'color: #f39c12; font-weight: bold;');
+    console.log(`  • WPP Ready: ${!!window.WPP?.webpack?.isReady}`);
+    console.log(`  • AutomationController: ${!!window.AutomationController}`);
+    console.log(`  • Listener: ${listenerRegistered ? 'ATIVO ✅' : 'FALHOU ❌'}`);
+
     window.postMessage({ origem: 'INJETOR_PAGINA', ev: 'engine_pronto_para_automacao' }, '*');
   }
 
