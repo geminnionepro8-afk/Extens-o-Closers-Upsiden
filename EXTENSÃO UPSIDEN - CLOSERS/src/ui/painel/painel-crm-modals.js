@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file painel-crm-modals.js
  * @scope Modais de Lead, Agenda CRM, Configuracao do Funil, Historico
  * @depends painel-crm-core.js (dynamicStages, dynamicTags, URGENCY_LEVELS_CRM, loadCRMDynamics)
@@ -36,57 +36,152 @@ function showLeadEditModal(lead) {
   // Interacao Historico
   const historyLink = leadId ? `<button data-click="showLeadHistory('${leadId}')" class="btn btn-secondary" style="font-size:12px; padding:4px 8px; margin-left:auto;">\ud83d\udcdc Ver Hist\u00f3rico</button>` : '';
 
-  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:540px; border-radius:16px; backdrop-filter:blur(20px); background:var(--bg-secondary); border: 1px solid var(--border);">
-    <div class="modal-header" style="display:flex; align-items:center;">
-       <div style="display:flex;align-items:center;gap:12px;">
-         <div style="position:relative;cursor:pointer;" id="foto-avatar-wrap" title="Clique para alterar foto">
-           ${avatarEl}
-           <div style="position:absolute;bottom:-2px;right:-2px;background:var(--accent);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;">
-             <svg viewBox="0 0 24 24" fill="#fff" width="8" height="8"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-           </div>
-           <input type="file" id="crm-foto-upload" accept="image/*" style="display:none">
-         </div>
-         <h3>${lead ? '\ud83d\udccb Ficha do Lead' : 'Novo Lead'}</h3>
-       </div>
-       ${historyLink}
-       <button class="btn-ghost" data-click="closeModal()" style="margin-left:8px;"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
-    </div>
-    <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
-      <div style="display:flex;gap:10px;"><div class="form-group" style="flex:1;"><label class="form-label">Qual o Nome?</label><input class="form-input" id="lead-nome" placeholder="Ex: Maria" value="${lead?.nome||''}"></div><div class="form-group" style="flex:1;"><label class="form-label">Telefone (WPP)</label><input class="form-input" id="lead-tel" placeholder="55119..." value="${lead?.telefone||''}"></div></div>
+  // Tag Selector Render (Chips)
+  const tagChipsHtml = Object.entries(dynamicTags).map(([k,v]) => {
+      const active = selectedTags.includes(k) ? 'active' : '';
+      return `<div class="rs-tag-chip ${active}" data-tag="${k}" style="border-color:${v.bg}80;" onclick="toggleTagChip(this, '${k}')">
+                <span>${v.emoji}</span> ${k}
+              </div>`;
+  }).join('');
+
+  overlay.innerHTML = `
+    <div class="modal rs-modal-premium" style="width:100%; max-width:580px; border-radius:24px; background:var(--bg-secondary); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); overflow:hidden; animation: rsModalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
       
-      <div style="display:flex;gap:10px; margin-top:6px;">
-         <div class="form-group" style="flex:1;">
-            <label class="form-label" style="color:var(--success);">Valor do Deal (R$)</label>
-            <input type="number" class="form-input" id="lead-valor" value="${lead?.valor||0.00}" min="0" step="0.01" style="border-color:var(--success-dim); font-weight:bold; color:var(--success);">
+      <!-- Premium Header -->
+      <div class="modal-header rs-modal-header" style="padding: 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.01);">
+         <div style="display:flex; align-items:center; gap:16px;">
+            <div style="position:relative; cursor:pointer; width:54px; height:54px;" id="foto-avatar-wrap" title="Alterar Foto">
+               ${avatarEl}
+               <div style="position:absolute; bottom:0; right:0; background:var(--accent); border:2px solid var(--bg-secondary); border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                  <svg viewBox="0 0 24 24" fill="#fff" width="10" height="10"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+               </div>
+               <input type="file" id="crm-foto-upload" accept="image/*" style="display:none">
+            </div>
+            <div>
+               <h3 style="margin:0; font-size:18px; font-weight:700; color:var(--text-primary);">${lead ? '📋 Ficha do Lead' : 'Novo Lead'}</h3>
+               <div style="font-size:12px; color:var(--text-muted); font-weight:500;">Gestão Detalhada de Contato</div>
+            </div>
          </div>
-         <div class="form-group" style="flex:1;">
-            <label class="form-label">Prioridade / Urg\u00eancia</label>
-            <select class="form-input" id="lead-urgencia">
-               ${urgOptions}
-            </select>
+         <div style="display:flex; align-items:center; gap:12px;">
+            ${historyLink}
+            <button class="rs-close-btn" data-click="closeModal()" title="Fechar">
+               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
          </div>
       </div>
 
-      <div style="display:flex;gap:10px; margin-top:6px;">
-         <div class="form-group" style="flex:1;">
-            <label class="form-label">Multi-Tags (Aperte CTRL)</label>
-            <select class="form-input" id="lead-tag" multiple style="height:64px; font-size:12px; background:var(--bg-card); color:var(--text-primary);">
-               ${tagOptions}
+      <!-- Modal Body -->
+      <div class="modal-body rs-modal-body" style="padding: 32px; max-height:65vh; overflow-y:auto;">
+         
+         <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:20px; margin-bottom:24px;">
+            <div class="form-group-rs">
+               <label class="rs-label">Nome Completo</label>
+               <input class="rs-input" id="lead-nome" placeholder="Nome do prospect..." value="${lead?.nome||''}">
+            </div>
+            <div class="form-group-rs">
+               <label class="rs-label">Telefone WhatsApp</label>
+               <div style="position:relative;">
+                  <input class="rs-input" id="lead-tel" placeholder="55119..." value="${lead?.telefone||''}" style="padding-left:36px;">
+                  <svg style="position:absolute; left:12px; top:12px; color:var(--text-muted);" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.886 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .004 5.412.001 12.048c0 2.123.54 4.197 1.566 6.065L0 24l6.094-1.6a11.776 11.776 0 005.952 1.621h.005c6.637 0 12.046-5.414 12.049-12.05a11.829 11.829 0 00-3.53-8.513z"/></svg>
+               </div>
+            </div>
+         </div>
+
+         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:24px;">
+            <div class="form-group-rs">
+               <label class="rs-label">Valor Estimado</label>
+               <div style="position:relative;">
+                  <span style="position:absolute; left:14px; top:12px; color:var(--success); font-weight:700;">R$</span>
+                  <input type="number" class="rs-input" id="lead-valor" value="${lead?.valor||0.00}" step="0.01" style="padding-left:42px; color:var(--success); font-weight:700;">
+               </div>
+            </div>
+            <div class="form-group-rs">
+               <label class="rs-label">Classificação de Urgência</label>
+               <select class="rs-input" id="lead-urgencia" style="cursor:pointer;">
+                  ${urgOptions}
+               </select>
+            </div>
+         </div>
+
+         <div class="form-group-rs" style="margin-bottom:24px;">
+            <label class="rs-label">Multi-Tags (Categorias)</label>
+            <div class="rs-tags-container" id="rs-tags-grid">
+               ${tagChipsHtml}
+            </div>
+            <select id="lead-tag" multiple style="display:none;">
+               ${Object.keys(dynamicTags).map(k => `<option value="${k}" ${selectedTags.includes(k)?'selected':''}>${k}</option>`).join('')}
             </select>
+         </div>
+
+         <div class="form-group-rs" style="margin-bottom:24px;">
+            <label class="rs-label">Anotações Estratégicas</label>
+            <textarea class="rs-textarea" id="lead-notas" rows="4" placeholder="Algum detalhe importante da negociação...">${lead?.notas||''}</textarea>
+         </div>
+         
+         <!-- Lembrete / Alarme -->
+         <div class="rs-alarm-box" style="padding:20px; background:rgba(255,98,0,0.04); border:1px solid rgba(255,98,0,0.1); border-radius:16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; color:var(--accent); font-size:13px; font-weight:700;">
+               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+               RELEMBRAR ESTE CONTATO
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:16px;">
+               <input type="datetime-local" class="rs-input" id="lead-lembrete" value="${lembreteVal}" style="background:var(--bg-secondary); border-color:rgba(255,255,255,0.05);">
+               <input class="rs-input" id="lead-lembrete-txt" placeholder="Motivo do alarme..." value="${lead?.lembrete_texto||''}" style="background:var(--bg-secondary); border-color:rgba(255,255,255,0.05);">
+            </div>
          </div>
       </div>
 
-      <div class="form-group" style="margin-top:6px;"><label class="form-label">Anota\u00e7\u00f5es Fixadas</label><textarea class="form-textarea" id="lead-notas" rows="3" placeholder="Contexto da negocia\u00e7\u00e3o...">${lead?.notas||''}</textarea></div>
-      
-      <div style="padding:12px; background:var(--bg-card); border-radius:8px; border:1px solid var(--border); margin-top:12px;">
-         <div style="display:flex;gap:10px;">
-           <div class="form-group" style="flex:1; margin:0;"><label class="form-label" style="color:var(--accent);">\ud83d\udd14 Alarme</label><input type="datetime-local" class="form-input" id="lead-lembrete" value="${lembreteVal}"></div>
-           <div class="form-group" style="flex:1; margin:0;"><label class="form-label">Motivo</label><input class="form-input" id="lead-lembrete-txt" placeholder="Ex: Ligar pra fechar doc" value="${lead?.lembrete_texto||''}"></div>
-         </div>
+      <div class="modal-footer rs-modal-footer" style="padding: 24px 32px; border-top:1px solid rgba(255,255,255,0.03); display:flex; justify-content:flex-end; gap:12px; background:rgba(255,255,255,0.01);">
+         <button class="rs-btn-cancel" data-click="closeModal()">Cancelar</button>
+         <button class="rs-btn-save-lead" data-click="salvarLeadCompleto('${leadId}')">Salvar Informações</button>
       </div>
     </div>
-    <div class="modal-footer"><button class="btn btn-secondary" data-click="closeModal()">Sair</button><button class="btn btn-primary" data-click="salvarLeadCompleto('${leadId}')">Salvar Ficha do Lead</button></div>
-  </div>`;
+
+    <!-- Modal Styles -->
+    <style id="rs-modal-styles-dynamic">
+       .rs-modal-premium { font-family: 'Outfit', sans-serif; }
+       .rs-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px; }
+       .rs-input, .rs-textarea { 
+          width: 100%; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08); 
+          color: #fff; border-radius: 12px; padding: 12px 14px; font-size: 14px; 
+          transition: all 0.2s; box-sizing: border-box; outline: none;
+       }
+       .rs-input:focus, .rs-textarea:focus { border-color: var(--accent); background: #222; box-shadow: 0 0 0 3px rgba(255,75,0,0.1); }
+       
+       .rs-tags-container { display: flex; flex-wrap: wrap; gap: 8px; }
+       .rs-tag-chip { 
+          padding: 6px 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 100px; 
+          font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted); 
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(255,255,255,0.02);
+       }
+       .rs-tag-chip:hover { border-color: rgba(255,255,255,0.3); color: #fff; transform: translateY(-1px); }
+       .rs-tag-chip.active { background: rgba(255,75,0,0.1); border-color: var(--accent) !important; color: var(--accent); box-shadow: 0 4px 12px rgba(255,75,0,0.1); }
+       
+       .rs-close-btn { 
+          width: 36px; height: 36px; border-radius: 50%; border: none; 
+          background: rgba(255,255,255,0.05); color: var(--text-muted); 
+          display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; 
+       }
+       .rs-close-btn:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; transform: rotate(90deg); }
+       
+       .rs-btn-cancel { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+       .rs-btn-cancel:hover { background: rgba(255,255,255,0.05); color: #fff; }
+       
+       .rs-btn-save-lead { background: var(--accent-gradient); border: none; color: white; padding: 12px 32px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(255,75,0,0.2); }
+       .rs-btn-save-lead:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,75,0,0.4); }
+       
+       @keyframes rsModalSlideIn { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    </style>
+  `;
+
+  // Initialize Toggle Logic
+  window.toggleTagChip = function(el, tag) {
+      el.classList.toggle('active');
+      const select = document.getElementById('lead-tag');
+      const option = Array.from(select.options).find(o => o.value === tag);
+      if (option) option.selected = el.classList.contains('active');
+  };
+
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
   

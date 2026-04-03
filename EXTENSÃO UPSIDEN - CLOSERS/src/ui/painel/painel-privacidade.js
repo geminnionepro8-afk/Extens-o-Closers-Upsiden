@@ -6,80 +6,114 @@
 
 window.renderPrivacidade = async function(container) {
   const html = `
-    <div style="padding: 20px; max-width: 800px;">
-      <div class="module-header" style="margin-bottom:24px;">
-        <h2>Segurança e Privacidade</h2>
-        <p style="color:var(--text-muted);">Gerencie quem ve seus passos no WhatsApp e proteja sua tela de olhos curiosos.</p>
-      </div>
-
-      <!-- Toggles List -->
-      <div class="config-section" style="background:var(--bg-layer-2); padding:20px; border-radius:12px; margin-bottom:24px; border: 1px solid var(--border-color);">
-        <h3 style="margin-bottom:16px; font-size:16px; color:var(--text-primary); border-bottom:1px solid var(--border-color); padding-bottom:8px;">
-          Modo Fantasma (Via WPPConnect Sockets)
+    <div style="padding: 0 40px 40px 40px; max-width: 800px; min-height: 100vh;">
+      
+      <!-- SESSÃO 1: MODO BORRADO (Checkboxes Style) -->
+      <div style="margin-bottom: 48px;">
+        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 24px; margin-top: 0;">
+          Modo Borrado (Blur Visual)
         </h3>
-        <label class="toggle-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; cursor:pointer;">
-          <span style="font-weight:500;">Ocultar Status "Online"</span>
-          <input type="checkbox" id="chk_privacy_hide_online" class="toggle-cb" style="transform:scale(1.2);">
-        </label>
-        <label class="toggle-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; cursor:pointer;">
-          <span style="font-weight:500;">Ocultar "Digitando..." e "Gravando..."</span>
-          <input type="checkbox" id="chk_privacy_hide_typing" class="toggle-cb" style="transform:scale(1.2);">
-        </label>
-        <label class="toggle-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; cursor:pointer;">
-          <span style="font-weight:500;">Desativar Tiques Azuis (Avisos de Leitura)</span>
-          <input type="checkbox" id="chk_privacy_hide_read" class="toggle-cb" style="transform:scale(1.2);">
-        </label>
-        <label class="toggle-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; cursor:pointer;">
-          <span style="font-weight:500;">Visualizar Status/Stories Em Segredo</span>
-          <input type="checkbox" id="chk_privacy_hide_status" class="toggle-cb" style="transform:scale(1.2);">
-        </label>
-        <label class="toggle-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; cursor:pointer;">
-          <span style="font-weight:500; color:#3b82f6;">Ver Mensagens Apagadas (Anti-Delete Real-Time)</span>
-          <input type="checkbox" id="chk_privacy_recover_deleted" class="toggle-cb" style="transform:scale(1.2);">
-        </label>
-      </div>
-
-      <div class="config-section" style="background:var(--bg-layer-2); padding:20px; border-radius:12px; margin-bottom:24px; border: 1px solid var(--border-color);">
-        <h3 style="margin-bottom:16px; font-size:16px; color:var(--text-primary); border-bottom:1px solid var(--border-color); padding-bottom:8px;">
-          Modo Borrado (Blur) (Injecao CSS)
-        </h3>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">
-          As informacoes borradas se revelam magicamente quando voce rolar o mouse por cima delas.
-        </p>
-        <label class="toggle-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; cursor:pointer;">
-          <span style="font-weight:500;">Borrar Nomes dos Contatos</span>
-          <input type="checkbox" id="chk_privacy_blur_contacts" class="toggle-cb" style="transform:scale(1.2);">
-        </label>
-        <label class="toggle-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; cursor:pointer;">
-          <span style="font-weight:500;">Borrar Fotos de Perfil (Avatares)</span>
-          <input type="checkbox" id="chk_privacy_blur_avatars" class="toggle-cb" style="transform:scale(1.2);">
-        </label>
-        <label class="toggle-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; cursor:pointer;">
-          <span style="font-weight:500;">Borrar Janela de Bate-Papo (Mensagens)</span>
-          <input type="checkbox" id="chk_privacy_blur_msgs" class="toggle-cb" style="transform:scale(1.2);">
-        </label>
-      </div>
-
-      <div class="config-section" style="background:var(--bg-layer-2); padding:20px; border-radius:12px; border: 1px solid rgba(239, 68, 68, 0.4);">
-        <h3 style="margin-bottom:16px; font-size:16px; color:#ef4444; border-bottom:1px solid rgba(239, 68, 68, 0.2); padding-bottom:8px;">
-          Cadeado de Tela (Senha PIN Mestra)
-        </h3>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">
-          Exige uma senha imodificavel de 4 digitos sempre que a tela do Web.WhatsApp carregar, isolando o Workspace.
-        </p>
-        <label class="toggle-row" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-          <span style="font-weight:500;">Ativar Bloqueio por Senha (PIN)</span>
-          <input type="checkbox" id="chk_privacy_pin_enabled" class="toggle-cb" style="transform:scale(1.2);">
-        </label>
         
-        <div id="pin-setup-box" style="display:none; margin-top:20px; align-items:center; justify-content:space-between; background:var(--bg-layer-1); padding:16px; border-radius:8px;">
-          <div>
-            <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Defina seu PIN de 4 digitos:</span>
-            <input type="password" id="inp_privacy_pin_code" maxlength="4" placeholder="••••" style="width:100px; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-layer-3); color:var(--text-primary); text-align:center; font-size:20px; letter-spacing:4px;">
-          </div>
-          <button id="btn_salvar_pin" class="btn btn-sm" style="background:#ef4444; border:none; padding:10px 24px; border-radius:8px; font-weight:600; cursor:pointer; color:#fff;">Gravar PIN de Seguranca</button>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+           <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin:0;">Ocultar Elementos em Tela...</h4>
+           <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Selecione os elementos que deseja proteger para que só fiquem visíveis sob a passagem do mouse.</p>
+           
+           <div style="display:flex; flex-direction:column; gap: 16px;">
+              <label style="display:flex; align-items:center; gap: 12px; cursor: pointer;">
+                 <input type="checkbox" id="chk_privacy_blur_contacts" style="accent-color: var(--accent); width: 18px; height: 18px; cursor:pointer; flex-shrink:0; border-radius:4px; border:1px solid var(--border-color);">
+                 <span style="font-size: 14px; font-weight: 500; color: var(--text-primary);">Nomes dos Contatos</span>
+              </label>
+              
+              <label style="display:flex; align-items:center; gap: 12px; cursor: pointer;">
+                 <input type="checkbox" id="chk_privacy_blur_avatars" style="accent-color: var(--accent); width: 18px; height: 18px; cursor:pointer; flex-shrink:0; border-radius:4px; border:1px solid var(--border-color);">
+                 <span style="font-size: 14px; font-weight: 500; color: var(--text-primary);">Fotos de Perfil (Avatares)</span>
+              </label>
+              
+              <label style="display:flex; align-items:center; gap: 12px; cursor: pointer;">
+                 <input type="checkbox" id="chk_privacy_blur_msgs" style="accent-color: var(--accent); width: 18px; height: 18px; cursor:pointer; flex-shrink:0; border-radius:4px; border:1px solid var(--border-color);">
+                 <span style="font-size: 14px; font-weight: 500; color: var(--text-primary);">Janela de Bate-Papo (Mensagens)</span>
+              </label>
+           </div>
         </div>
       </div>
+
+      <!-- SESSÃO 2: MODO FANTASMA (Toggles Style - Interruptores à direita) -->
+      <div style="margin-bottom: 48px;">
+        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 16px;">
+          Modo Fantasma (Infraestrutura)
+        </h3>
+
+        <!-- Toggle Row 1 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.02);">
+           <div style="padding-right: 24px;">
+              <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Ocultar Status "Online"</h4>
+              <p style="font-size: 12px; color: var(--text-muted); margin:0;">Esconda totalmente sua presença e permanência enquanto navega.</p>
+           </div>
+           <label class="toggle-switch" style="flex-shrink:0;"><input type="checkbox" id="chk_privacy_hide_online"><span class="toggle-slider"></span></label>
+        </div>
+
+        <!-- Toggle Row 2 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.02);">
+           <div style="padding-right: 24px;">
+              <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Ocultar "Digitando..." e "Gravando..."</h4>
+              <p style="font-size: 12px; color: var(--text-muted); margin:0;">Não deixe os contatos perceberem seu momento de ação ao redigir conteúdo.</p>
+           </div>
+           <label class="toggle-switch" style="flex-shrink:0;"><input type="checkbox" id="chk_privacy_hide_typing"><span class="toggle-slider"></span></label>
+        </div>
+
+        <!-- Toggle Row 3 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.02);">
+           <div style="padding-right: 24px;">
+              <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Ocultar Tiques Azuis (Notificação de Leitura)</h4>
+              <p style="font-size: 12px; color: var(--text-muted); margin:0;">Sua confirmação de leitura não será enviada à outra ponta do chat.</p>
+           </div>
+           <label class="toggle-switch" style="flex-shrink:0;"><input type="checkbox" id="chk_privacy_hide_read"><span class="toggle-slider"></span></label>
+        </div>
+
+        <!-- Toggle Row 4 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.02);">
+           <div style="padding-right: 24px;">
+              <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Visualizar Stories & Status Confidencialmente</h4>
+              <p style="font-size: 12px; color: var(--text-muted); margin:0;">Explore os status contatados de modo totalmente isolado e não rastreado.</p>
+           </div>
+           <label class="toggle-switch" style="flex-shrink:0;"><input type="checkbox" id="chk_privacy_hide_status"><span class="toggle-slider"></span></label>
+        </div>
+        
+        <!-- Toggle Row 5 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 16px 0;">
+           <div style="padding-right: 24px;">
+              <h4 style="font-size: 14px; font-weight: 600; color: var(--accent); margin-bottom: 4px;">Interceptador de Mensagens Apagadas</h4>
+              <p style="font-size: 12px; color: var(--text-muted); margin:0;">Realiza a leitura forçada em cache de toda mensagem que for excluída 'para ambos'.</p>
+           </div>
+           <label class="toggle-switch" style="flex-shrink:0;"><input type="checkbox" id="chk_privacy_recover_deleted"><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
+      <!-- SESSÃO 3: CADEADO (Toggles Style + Input field) -->
+      <div style="margin-bottom: 48px;">
+        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 16px;">
+          Segurança Local
+        </h3>
+
+        <!-- Toggle Row PIN -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 16px 0;">
+           <div style="padding-right: 24px;">
+              <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Autenticação em Duas Etapas Externa (PIN Mestre)</h4>
+              <p style="font-size: 12px; color: var(--text-muted); margin:0;">Tranque e sele o acesso primário ao ser exigido quatro dígitos secretos no seu portal.</p>
+           </div>
+           <label class="toggle-switch" style="flex-shrink:0;"><input type="checkbox" id="chk_privacy_pin_enabled"><span class="toggle-slider"></span></label>
+        </div>
+        
+        <!-- Bloco Interativo PIN (Compacto) -->
+        <div id="pin-setup-box" style="display:none; align-items:center; justify-content:space-between; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-top: 8px;">
+           <div style="flex:1;">
+               <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">Defina seu Código de Segredo:</div>
+               <input type="password" id="inp_privacy_pin_code" maxlength="4" placeholder="••••" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; font-size: 20px; letter-spacing: 12px; border-radius: 8px; width: 140px; color: #fff; text-align: center; outline: none;">
+           </div>
+           <button id="btn_salvar_pin" style="background: var(--accent); color: #fff; padding: 10px 24px; font-weight: 700; border-radius: 8px; font-size: 13px; border: none; cursor: pointer; transition: all 0.2s;">Guardar Senha Secreta</button>
+        </div>
+      </div>
+
     </div>
   `;
   container.innerHTML = html;

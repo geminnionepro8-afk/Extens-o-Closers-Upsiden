@@ -1,0 +1,301 @@
+/* --- AUTOMATIONS LAYOUT (Red Sun DNA) --- */
+.auto-container {
+  display: flex;
+  gap: 24px;
+  height: calc(100vh - 240px);
+  min-height: 500px;
+}
+
+/* --- FOLDER SIDEBAR --- */
+.auto-sidebar-rs {
+  width: 260px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.rs-folder-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: left;
+}
+
+.rs-folder-btn:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: white;
+}
+
+.rs-folder-btn.active {
+  background: var(--accent-dim);
+  border-color: rgba(255, 75, 0, 0.1);
+  color: var(--accent);
+}
+
+.rs-folder-btn .folder-icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+}
+
+.rs-folder-btn.active .folder-icon {
+  fill: rgba(255, 75, 0, 0.1);
+}
+
+.folder-count {
+  margin-left: auto;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-weight: 800;
+}
+
+/* --- TRIGGER CONTENT AREA --- */
+.auto-content-rs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* --- PREMIUM TRIGGER CARD --- */
+.rs-trigger-card {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeIn 0.4s ease;
+}
+
+.rs-trigger-card:hover {
+  border-color: rgba(255, 75, 0, 0.2);
+  transform: translateX(4px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.trigger-header-rs {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.trigger-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.trigger-icon-pill {
+  width: 44px;
+  height: 44px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(255, 75, 0, 0.1);
+}
+
+.trigger-word-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trigger-word-label h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: white;
+}
+
+.trigger-word-label span {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+/* --- ACTION FLOW VISUAL --- */
+.action-flow-container {
+  padding-left: 22px;
+  border-left: 2px dashed rgba(255, 255, 255, 0.05);
+  margin-left: 21px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rs-step-pill {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.rs-step-pill::before {
+  content: "";
+  position: absolute;
+  left: -23px;
+  top: 50%;
+  width: 22px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.rs-step-type-icon {
+  font-size: 16px;
+}
+
+.rs-step-delay {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* --- EMPTY STATE --- */
+.rs-empty-automations {
+  text-align: center;
+  padding: 80px 40px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+}
+
+
+/* --- FORM COMPONENTS (Red Sun DNA) --- */
+.form-group-rs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.rs-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.rs-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: white;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 14px;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.rs-input:focus {
+  border-color: var(--accent);
+  background: rgba(255, 75, 0, 0.05);
+  box-shadow: 0 0 0 4px rgba(255, 75, 0, 0.1);
+}
+
+.rs-btn-premium {
+  background: var(--bg-card);
+  color: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.rs-btn-premium:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.1);
+}
+
+.rs-btn-premium.active {
+  background: var(--accent-dim);
+  border-color: rgba(255, 75, 0, 0.2);
+  color: var(--accent);
+}
+
+.rs-btn-plus {
+  background: var(--accent-gradient, linear-gradient(135deg, #FF3B1D, #ff7a00));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(255, 59, 29, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.rs-btn-plus:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 59, 29, 0.4);
+}
+
+.rs-btn-dark {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.rs-btn-dark:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -67,11 +67,29 @@ window.renderCampanhas = function(c) {
     { id: 'config', label: 'Anti-Ban' }
   ];
 
-  let html = `<div class="rs-tabs-switcher" style="padding:4px; gap:2px; margin-bottom:20px;">`;
-  tabs.forEach(t => {
-    html += `<button class="rs-tab-btn ${window.campSubTab === t.id ? 'active' : ''}" style="padding:6px 14px; font-size:12px;" data-click="switchCampTab('${t.id}')">${t.label}</button>`;
-  });
-  html += `</div>`;
+  let html = `
+    <!-- Switcher Profissional (Estilo Red Sun Premium) -->
+    <div style="margin-bottom: 32px; display:flex; justify-content:center;">
+       <div class="selector-group animate-in">
+          ${tabs.map(t => {
+            const icons = {
+              dashboard: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+              nova: '<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+              historico: '<svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+              listas: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-3-3.87"/><path d="M9 21v-2a4 4 0 0 1 4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+              config: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+            };
+            return `
+              <button class="selector-item ${window.campSubTab === t.id ? 'active' : ''}" 
+                      data-click="switchCampTab('${t.id}')">
+                ${icons[t.id] || ''}
+                ${t.label}
+              </button>
+            `;
+          }).join('')}
+       </div>
+    </div>
+  `;
   
   if (window.campSubTab === 'dashboard') {
     html += `<div class="animate-in" id="camp-dash-container" style="padding:0; background:transparent; border:none;">
@@ -105,38 +123,45 @@ window.renderCampanhas = function(c) {
 
       <div class="wizard-body">
         <div id="wiz-step-1" style="display: ${s === 1 ? 'block' : 'none'};">
-          <h3 style="margin-bottom:24px; font-size:16px; font-weight:800; text-align:center;">Escolha um Modelo Estratégico</h3>
-          <div class="rs-template-grid">
-            <div class="rs-template-card ${window.campWiz.template === 'blank' ? 'selected' : ''}" data-click="selectCampTemplate('blank')">
-              <div class="rs-template-icon">
+          <h3 style="margin-bottom:32px; font-size:18px; font-weight:800; text-align:center; color:#fff;">Escolha um Modelo Estratégico</h3>
+          <div class="rs-template-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;">
+            
+            <div class="rs-template-card ${window.campWiz.template === 'blank' ? 'selected' : ''}" data-click="selectCampTemplate('blank')" 
+                 style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:16px; padding:20px 16px; text-align:center; cursor:pointer; transition:all 0.3s;">
+              <div class="template-icon-rs" style="width:48px; height:48px; background:rgba(255,255,255,0.03); border-radius:12px; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; color:var(--text-muted);">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
               </div>
-              <h4 style="margin-bottom:8px; font-weight:900; font-size:14px;">Campanha em Branco</h4>
-              <p style="font-size:11px; color:var(--text-muted); line-height:1.5;">Comece do zero e construa seu próprio funil de mensagens personalizado.</p>
+              <h4 style="margin:0 0 4px 0; font-weight:800; color:#fff; font-size:14px;">Campanha em Branco</h4>
+              <p style="font-size:11px; color:var(--text-muted); line-height:1.4; margin:0;">Comece do zero e construa seu próprio funil.</p>
             </div>
-            <div class="rs-template-card ${window.campWiz.template === 'promo' ? 'selected' : ''}" data-click="selectCampTemplate('promo')">
-              <div class="rs-template-icon" style="color:var(--accent);">
+
+            <div class="rs-template-card ${window.campWiz.template === 'promo' ? 'selected' : ''}" data-click="selectCampTemplate('promo')"
+                 style="background:rgba(255,152,0,0.03); border:1px solid rgba(255,152,0,0.1); border-radius:16px; padding:20px 16px; text-align:center; cursor:pointer; transition:all 0.3s;">
+              <div class="template-icon-rs" style="width:48px; height:48px; background:rgba(255,152,0,0.1); border-radius:12px; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; color:#ff9800;">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
               </div>
-              <h4 style="margin-bottom:8px; font-weight:900; font-size:14px;">Promoção Relâmpago</h4>
-              <p style="font-size:11px; color:var(--text-muted); line-height:1.5;">Ideal para avisos de desconto em massa, com gatilhos de escassez e urgência.</p>
+              <h4 style="margin:0 0 4px 0; font-weight:800; color:#fff; font-size:14px;">Promoção Relâmpago</h4>
+              <p style="font-size:11px; color:var(--text-muted); line-height:1.4; margin:0;">Avisos de desconto em massa c/ urgência.</p>
             </div>
-            <div class="rs-template-card ${window.campWiz.template === 'welcome' ? 'selected' : ''}" data-click="selectCampTemplate('welcome')">
-              <div class="rs-template-icon">
+
+            <div class="rs-template-card ${window.campWiz.template === 'welcome' ? 'selected' : ''}" data-click="selectCampTemplate('welcome')"
+                 style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:16px; padding:20px 16px; text-align:center; cursor:pointer; transition:all 0.3s;">
+              <div class="template-icon-rs" style="width:48px; height:48px; background:rgba(255,255,255,0.03); border-radius:12px; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; color:var(--text-muted);">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </div>
-              <h4 style="margin-bottom:8px; font-weight:900; font-size:14px;">Boas-Vindas Clientes</h4>
-              <p style="font-size:11px; color:var(--text-muted); line-height:1.5;">Sequência humanizada de saudação e apresentação para listas de novos leads.</p>
+              <h4 style="margin:0 0 4px 0; font-weight:800; color:#fff; font-size:14px;">Boas-Vindas Clientes</h4>
+              <p style="font-size:11px; color:var(--text-muted); line-height:1.4; margin:0;">Sequência humanizada para novos leads.</p>
             </div>
+
           </div>
         </div>
 
-        <div id="wiz-step-2" style="display: ${s === 2 ? 'block' : 'none'}; max-width: 600px; margin: 0 auto;">
-          <h3 style="margin-bottom:24px; text-align:center; font-size:18px; font-weight:700;">Defina o Alvo do Disparo</h3>
-          <div class="rs-card" style="background:var(--bg-secondary);">
-            <div class="form-group" style="margin-bottom:24px;">
-              <label class="form-label">Nome de Identificação da Campanha</label>
-              <input class="form-input" style="width:100%;" id="camp-nome" placeholder="Ex: Lead Reaquecimento - Março" value="${window.campWiz.nome}">
+        <div id="wiz-step-2" style="display: ${s === 2 ? 'block' : 'none'}; max-width: 500px; margin: 0 auto;">
+          <h3 style="margin-bottom:16px; text-align:center; font-size:16px; font-weight:700;">Defina o Alvo do Disparo</h3>
+          <div class="rs-card" style="background:var(--bg-secondary); padding:20px;">
+            <div class="form-group" style="margin-bottom:16px;">
+              <label class="form-label" style="margin-bottom:4px;">Nome de Identificação da Campanha</label>
+              <input class="form-input" style="width:100%; padding:10px;" id="camp-nome" placeholder="Ex: Lead Reaquecimento - Março" value="${window.campWiz.nome}">
             </div>
             <div class="form-group">
               <label class="form-label">Selecione a Lista de Contatos</label>
@@ -216,51 +241,62 @@ window.renderCampanhas = function(c) {
       </div>
     </div>`;
   } else if (window.campSubTab === 'listas') {
-    html += `<div class="rs-card rs-card-accent animate-in">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-         <div style="display:flex; align-items:center; gap:12px;">
-            <div style="color:var(--accent);">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-3-3.87"/><path d="M9 21v-2a4 4 0 0 1 4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            </div>
-            <h3 style="font-size:18px; font-weight:900; margin:0;">Segmentação de Listas</h3>
-         </div>
-         <button class="rs-btn rs-btn-primary" data-click="showNovaListaModal()">+ Nova Lista</button>
-      </div>
-      <div id="listas-container"><div class="spinner"></div></div>
+    html += `
+    <div class="rs-card rs-card-accent animate-in" style="padding:32px; border-left-width:4px;">
+       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+          <div>
+             <h3 style="font-size:22px; font-weight:800; color:#fff; margin:0;">Segmentação de Listas</h3>
+             <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">Organize seus contatos para disparos cirúrgicos.</p>
+          </div>
+          <button class="rs-btn-save-lead" data-click="showNovaListaModal()">
+             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:8px;"><path d="M12 5v14M5 12h14"/></svg>
+             Nova Lista de Leads
+          </button>
+       </div>
+       
+       <div id="listas-container">
+          <div style="text-align:center; padding:100px 0;">
+             <div class="spinner"></div>
+          </div>
+       </div>
     </div>`;
   } else if (window.campSubTab === 'config') {
-    html += `<div class="rs-card rs-card-accent animate-in" style="max-width:650px; margin: 0 auto;">
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
-         <div style="color:var(--accent);">
-           <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-         </div>
-         <h3 style="font-size:18px; font-weight:900; margin:0;">Modo Anti-Ban</h3>
-      </div>
-      
-      <div class="rs-card" style="background:var(--bg-secondary); margin-bottom:24px; padding:24px;">
-         <div style="display:flex; gap:20px;">
-            <div class="form-group" style="flex:1;">
-               <label class="form-label">Delay Mínimo (seg)</label>
-               <input class="form-input" type="number" id="anti-min" value="4" style="font-weight:900;" min="1">
-            </div>
-            <div class="form-group" style="flex:1;">
-               <label class="form-label">Delay Máximo (seg)</label>
-               <input class="form-input" type="number" id="anti-max" value="10" style="font-weight:900;" min="1">
-            </div>
-         </div>
-         
-         <div style="margin-top:20px; display:flex; gap:12px; align-items:flex-start; background:rgba(0,168,132,0.05); border:1px solid rgba(0,168,132,0.2); border-radius:12px; padding:16px;">
-            <div style="color:#00a884; flex-shrink:0;">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            </div>
-            <div>
-               <strong style="color:#00a884; font-size:12px; display:block; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.5px;">Recomendação Segura</strong>
-               <p style="font-size:11px; color:var(--text-muted); line-height:1.5; margin:0;">Manter o mínimo em 4s e o máximo em 10s+ garante segurança absoluta em disparos de larga escala.</p>
-            </div>
-         </div>
-      </div>
+    html += `
+    <div class="rs-card rs-card-accent animate-in" style="max-width:700px; margin: 0 auto; padding:40px; border-left-width:4px;">
+       <div style="text-align:center; margin-bottom:40px;">
+          <div style="width:70px; height:70px; background:var(--accent-dim); color:var(--accent); border-radius:24px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 15px 30px var(--accent-glow);">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3 style="font-size:24px; font-weight:900; color:#fff; margin:0;">Protocolo Anti-Ban</h3>
+          <p style="font-size:14px; color:var(--text-muted); margin-top:8px;">Ajuste a velocidade dos disparos para simular o comportamento humano.</p>
+       </div>
+       
+       <div class="rs-card" style="background:rgba(255,255,255,0.02); margin-bottom:32px; padding:32px; border:1px solid rgba(255,255,255,0.05); border-radius:20px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+             <div class="form-group-rs">
+                <label class="rs-label">Delay Mínimo <span style="color:var(--text-muted); font-weight:400;">(segundos)</span></label>
+                <input class="rs-input" type="number" id="anti-min" value="4" style="font-weight:800; font-size:18px; text-align:center;" min="1">
+             </div>
+             <div class="form-group-rs">
+                <label class="rs-label">Delay Máximo <span style="color:var(--text-muted); font-weight:400;">(segundos)</span></label>
+                <input class="rs-input" type="number" id="anti-max" value="10" style="font-weight:800; font-size:18px; text-align:center;" min="1">
+             </div>
+          </div>
+          
+          <div style="margin-top:32px; display:flex; gap:16px; align-items:flex-start; background:rgba(16,185,129,0.04); border:1px solid rgba(16,185,129,0.1); border-radius:16px; padding:20px;">
+             <div style="color:var(--success); flex-shrink:0;">
+               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+             </div>
+             <div>
+                <strong style="color:var(--success); font-size:13px; display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Blindagem Upsiden Ativada</strong>
+                <p style="font-size:12px; color:var(--text-muted); line-height:1.6; margin:0;">Utilizamos tecnologia de delay randômico entre cada mensagem. Recomendamos manter o intervalo entre 4s e 12s para disparos acima de 500 contatos.</p>
+             </div>
+          </div>
+       </div>
 
-      <button class="rs-btn rs-btn-primary" data-click="salvarConfigAntiBan()" style="width:100%; justify-content:center; padding:12px; font-weight:900;">SALVAR CONFIGURAÇÕES</button>
+       <button class="rs-btn-save-lead" data-click="salvarConfigAntiBan()" style="width:100%; justify-content:center; padding:16px; font-size:15px;">
+          GARANTIR PROTEÇÃO DO NÚMERO
+       </button>
     </div>`;
   }
   c.innerHTML = html;
@@ -395,47 +431,45 @@ window.loadCampanhaDashboard = async function() {
         </div>
       </div>
 
-      <div class="stat-grid animate-in" style="animation-delay:0.1s;">
-        <div class="stat-card-premium">
-          <div class="premium-icon-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      <div class="stat-grid animate-in" style="animation-delay:0.1s; margin-bottom:24px;">
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <div class="stat-icon" style="background-color:var(--accent); color:#fff;">
+              <svg viewBox="0 0 24 24" fill="none" class="dash-icon" style="width:18px;height:18px;stroke:currentColor;stroke-width:2;"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+            </div>
           </div>
-          <div class="stat-content">
-            <div class="stat-label">Entregues</div>
-            <div class="stat-value">${enviosTotal.toLocaleString()}</div>
-          </div>
-          <div class="stat-badge">TOTAL</div>
+          <div class="stat-value">${enviosTotal.toLocaleString()}</div>
+          <div class="stat-label">Total Entregues</div>
         </div>
 
-        <div class="stat-card-premium">
-          <div class="premium-icon-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <div class="stat-icon" style="background-color:var(--accent); color:#fff;">
+              <svg viewBox="0 0 24 24" fill="none" class="dash-icon" style="width:18px;height:18px;stroke:currentColor;stroke-width:2;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
           </div>
-          <div class="stat-content">
-            <div class="stat-label">Taxa de Sucesso</div>
-            <div class="stat-value">${taxaSucesso}%</div>
-          </div>
+          <div class="stat-value">${taxaSucesso}%</div>
+          <div class="stat-label">Taxa de Sucesso</div>
         </div>
 
-        <div class="stat-card-premium">
-          <div class="premium-icon-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <div class="stat-icon" style="background-color:var(--accent); color:#fff;">
+              <svg viewBox="0 0 24 24" fill="none" class="dash-icon" style="width:18px;height:18px;stroke:currentColor;stroke-width:2;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
           </div>
-          <div class="stat-content">
-            <div class="stat-label">Em Operação</div>
-            <div class="stat-value">${ativas}</div>
-          </div>
-          <div class="stat-badge">ATIVAS</div>
+          <div class="stat-value">${ativas}</div>
+          <div class="stat-label">Em Operação</div>
         </div>
 
-        <div class="stat-card-premium">
-          <div class="premium-icon-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-3-3.87"/><path d="M9 21v-2a4 4 0 0 1 4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <div class="stat-icon" style="background-color:var(--accent); color:#fff;">
+              <svg viewBox="0 0 24 24" fill="none" class="dash-icon" style="width:18px;height:18px;stroke:currentColor;stroke-width:2;"><path d="M17 21v-2a4 4 0 0 0-3-3.87"/><path d="M9 21v-2a4 4 0 0 1 4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
           </div>
-          <div class="stat-content">
-            <div class="stat-label">Engajamento</div>
-            <div class="stat-value" style="font-size:16px; opacity:0.5;">PREMIUM</div>
-          </div>
+          <div class="stat-value" style="font-size:24px;">PREMIUM</div>
+          <div class="stat-label">Modo Ativo</div>
         </div>
       </div>
 
@@ -608,34 +642,38 @@ window.loadCampanhaHistorico = async function() {
       return;
     }
 
-    tbody.innerHTML = campanhas.map(c => {
-      const p = c.total_contatos ? Math.round(((c.enviados || 0) / c.total_contatos) * 100) : 0;
-      return `
-        <tr onclick="window.displayCampanhaDetails('${c.id}')" style="cursor:pointer;">
-           <td>
-              <div style="font-weight:700; color:var(--text-primary);">${c.nome}</div>
-              <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px;">#${c.id.slice(0,8)}</div>
-           </td>
-           <td>
-              <span class="status-badge ${c.status || 'concluida'}">
-                 ${c.status === 'andamento' ? 'OPERANDO' : (c.status === 'pausado' ? 'PAUSADA' : 'FINALIZADA')}
-              </span>
-           </td>
-           <td style="font-weight:600;">${c.total_contatos || 0} Leads</td>
-           <td>
-              <div style="display:flex; align-items:center; gap:12px; min-width:140px;">
-                 <div class="rs-progress-wrap" style="flex:1;">
-                    <div class="rs-progress-fill" style="width:${p}%"></div>
-                 </div>
-                 <span style="font-size:12px; font-weight:800; color:var(--text-primary);">${p}%</span>
-              </div>
-           </td>
-           <td style="font-size:12px; color:var(--text-muted); font-weight:500;">
-              ${new Date(c.created_at).toLocaleDateString()}
-           </td>
-        </tr>
-      `;
-    }).join('');
+      tbody.innerHTML = campanhas.map(c => {
+        const p = c.total_contatos ? Math.round(((c.enviados || 0) / c.total_contatos) * 100) : 0;
+        return `
+          <tr onclick="window.displayCampanhaDetails('${c.id}')" style="cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.02); transition:all 0.2s;">
+             <td style="padding:16px 24px;">
+                <div style="font-weight:800; color:#fff; font-size:15px;">${c.nome}</div>
+                <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-top:4px;">PROT: #${c.id.slice(0,8)}</div>
+             </td>
+             <td>
+                <span class="status-badge ${c.status || 'concluida'}" style="padding:4px 12px; font-weight:800; border-radius:8px;">
+                   ${c.status === 'andamento' ? 'EM PROCESSAMENTO' : (c.status === 'pausado' ? 'PAUSADA' : 'FINALIZADA')}
+                </span>
+             </td>
+             <td style="font-weight:700; color:var(--text-secondary);">${c.total_contatos || 0} Contatos</td>
+             <td>
+                <div style="display:flex; align-items:center; gap:16px; min-width:180px;">
+                   <div style="flex:1; height:6px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden;">
+                      <div style="width:${p}%; height:100%; background:var(--accent-gradient); box-shadow:0 0 10px var(--accent-glow); transition:width 0.8s ease;"></div>
+                   </div>
+                   <span style="font-size:13px; font-weight:900; color:#fff; width:35px; text-align:right;">${p}%</span>
+                </div>
+                <div style="font-size:11px; margin-top:6px; font-weight:700; display:flex; gap:10px;">
+                   <span style="color:var(--success);">● ${c.enviados || 0} Enviados</span>
+                   ${c.falhas > 0 ? `<span style="color:var(--danger);">● ${c.falhas} Erros</span>` : ''}
+                </div>
+             </td>
+             <td style="font-size:12px; color:var(--text-muted); font-weight:600;">
+                ${new Date(c.created_at).toLocaleDateString()}
+             </td>
+          </tr>
+        `;
+      }).join('');
   } catch(e) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger)">Erro: ${e.message}</td></tr>`; }
 };
 

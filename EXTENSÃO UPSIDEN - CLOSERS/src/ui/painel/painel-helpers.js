@@ -162,21 +162,23 @@ function renderSection(section) {
 // ═══ BIBLIOTECA HEADER NAVIGATION ════════════════════════════
 function renderBibliotecaHeader() {
   const subNav = document.getElementById('page-controls-bar');
-  if (subNav) subNav.innerHTML = '';
+  if (!subNav) return;
+  subNav.innerHTML = ''; 
 }
 
 window.switchBibliotecaTab = function(tab) {
-  console.log('[Painel] Biblioteca Switch ->', tab);
+  console.log('[Painel] Clique recebido ->', tab);
+  if (!tab) return;
+
   window.bibliotecaTabAtiva = tab;
   localStorage.setItem('upsiden_last_lib_tab', tab);
   
-  // Re-render header to update active state
-  renderBibliotecaHeader();
-
   const c = document.getElementById('main-content');
-  if (!c) return;
+  if (!c) {
+    console.error('[Painel] Erro: main-content não encontrado');
+    return;
+  }
 
-  // Render the specific module directly as an iframe (Simplified Hub)
   const moduleUrls = {
     'audios': '../modules/audios.html',
     'documentos': '../modules/documentos.html',
@@ -185,25 +187,34 @@ window.switchBibliotecaTab = function(tab) {
 
   const url = moduleUrls[tab] || moduleUrls['audios'];
   
+  // Limpar conteúdo e injetar novo iframe para garantir recarregamento limpo
   c.innerHTML = `
-    <div class="animate-in" style="height: 100%; width: 100%; overflow: hidden;">
+    <div class="animate-in" style="height: 100%; width: 100%; overflow: hidden; opacity: 0; animation: fadeIn 0.3s forwards;">
       <iframe src="${url}" frameborder="0" style="width: 100%; height: 100%; display: block; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-primary);"></iframe>
     </div>
   `;
 };
 
 async function atualizarBadgesBiblioteca() {
+  // Primário: Usar dados do cache global (painelData) para resposta instantânea
+  if (typeof painelData !== 'undefined') {
+    const ba = document.getElementById('badge-audios'); if(ba) ba.textContent = (painelData.audios || []).length;
+    const bd = document.getElementById('badge-documentos'); if(bd) bd.textContent = (painelData.documentos || []).length;
+    const bm = document.getElementById('badge-midias'); if(bm) bm.textContent = (painelData.midias || []).length;
+  }
+
+  // Secundário: Buscar no DB para garantir sincronia total
   try {
     const [a, d, m] = await Promise.all([
-      UpsidenDB.from('audios').select('id', { count: 'exact' }).execute(),
-      UpsidenDB.from('documentos').select('id', { count: 'exact' }).execute(),
-      UpsidenDB.from('midias').select('id', { count: 'exact' }).execute()
+      UpsidenDB.from('audios').select('id').execute().catch(()=>[]),
+      UpsidenDB.from('documentos').select('id').execute().catch(()=>[]),
+      UpsidenDB.from('midias').select('id').execute().catch(()=>[])
     ]);
     
     const ba = document.getElementById('badge-audios'); if(ba) ba.textContent = a?.length || 0;
     const bd = document.getElementById('badge-documentos'); if(bd) bd.textContent = d?.length || 0;
     const bm = document.getElementById('badge-midias'); if(bm) bm.textContent = m?.length || 0;
-  } catch(e) { /* ignore */ }
+  } catch(e) { /* ignore silent failure */ }
 }
 
 // ═══ ACTIONS ═════════════════════════════════════════════════

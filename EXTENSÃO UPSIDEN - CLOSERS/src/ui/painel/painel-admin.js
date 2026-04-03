@@ -8,6 +8,15 @@
  * @date 21/03/2026
  */
 
+const ADMIN_ICONS = {
+  user: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+  shield: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+  chart: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
+  audio: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`,
+  doc: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+  image: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`
+};
+
 // === ADMIN ===
 async function renderAdmin(c) {
   if (!userData.isAdmin) {
@@ -51,17 +60,31 @@ async function renderAdmin(c) {
         <tr class="animate-in">
           <td>
             <div class="cell-name">
-              <div class="cell-icon" style="font-size:14px;">${(m.nome||'U')[0].toUpperCase()}</div>
-              <span>${m.nome || 'Sem nome'}</span>
+              <div class="cell-icon" style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--accent);">
+                ${ADMIN_ICONS.user}
+              </div>
+              <div style="display:flex; flex-direction:column;">
+                <span style="font-weight:600;">${m.nome || 'Sem nome'}</span>
+                <span style="font-size:11px; color:var(--text-muted);">${m.role === 'admin' ? 'Administrador' : 'Equipe de Vendas'}</span>
+              </div>
             </div>
           </td>
           <td style="color:var(--text-muted)">${m.email || ''}</td>
-          <td><span class="badge ${badgeClass}">${role}</span></td>
-          <td style="color:var(--text-muted)">${m.admin_id ? 'Vinculado' : 'Global'}</td>
+          <td><span class="badge ${badgeClass}" style="padding: 4px 10px; border-radius: 20px;">${role}</span></td>
+          <td style="color:var(--text-muted)">
+            <div style="display:flex; align-items:center; gap:6px;">
+               <div style="width:8px; height:8px; border-radius:50%; background:${m.admin_id ? 'var(--success)' : 'var(--warning)'};"></div>
+               ${m.admin_id ? 'Vinculado' : 'Aguardando'}
+            </div>
+          </td>
           <td>
             <div style="display:flex; gap:8px;">
-              <button class="btn-icon" title="Permissões" data-click="abrirPermissoes('${m.id}')" style="color:var(--accent);"><svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path fill="currentColor" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.11v4.71c0 4.52-2.98 8.69-7 9.88-4.02-1.19-7-5.36-7-9.88V6.29l7-3.11zM10.5 7v2h3V7h-3zm0 4v2h3v-2h-3zm0 4v2h3v-2h-3z"/></svg></button>
-              <button class="btn-icon" title="Ver Métricas" data-click="abrirMetricasMembro('${m.id}')"><svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path fill="currentColor" d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg></button>
+              <button class="btn-icon" title="Permissões" data-click="abrirPermissoes('${m.id}')" style="background: var(--bg-secondary); border-color:var(--border);">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              </button>
+              <button class="btn-icon" title="Ver Métricas" data-click="abrirMetricasMembro('${m.id}')" style="background: var(--bg-secondary); border-color:var(--border);">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+              </button>
             </div>
           </td>
         </tr>
@@ -72,10 +95,6 @@ async function renderAdmin(c) {
   html += `
           </tbody>
         </table>
-
-        <div class="section-header" style="margin-top:40px;">
-          <h2>Arquivos Globais da Equipe</h2>
-        </div>
   `;
 
   const allFiles = [
@@ -85,15 +104,34 @@ async function renderAdmin(c) {
   ];
 
   if (allFiles.length === 0) {
-    html += `<p style="color:var(--text-muted);font-size:14px;">Nenhum arquivo compartilhado com a equipe ainda.</p>`;
+    html += `<p style="color:var(--text-muted);font-size:14px; margin-top:20px;">Nenhum arquivo compartilhado com a equipe ainda.</p>`;
   } else {
     html += `
+        <div class="section-header" style="margin-top:40px;">
+          <h2>Arquivos Globais da Equipe</h2>
+          <span style="font-size:12px; color:var(--text-muted);">${allFiles.length} arquivos compartilhados</span>
+        </div>
+    `;
+
+    html += `
       <table class="data-table">
-        <thead><tr><th></th><th>Nome</th><th>Tamanho</th><th>Data</th></tr></thead>
+        <thead><tr><th>Tipo</th><th>Nome</th><th>Tamanho</th><th>Data</th><th style="text-align:right;">Ação</th></tr></thead>
         <tbody>
     `;
     allFiles.forEach(f => {
-      html += `<tr><td>${f._tipo}</td><td>${f.nome}</td><td style="color:var(--text-muted)">${fmtSize(f.tamanho||0)}</td><td style="color:var(--text-muted)">${fmtDate(f.created_at)}</td></tr>`;
+      const icon = f._tipo === '🎵' ? ADMIN_ICONS.audio : (f._tipo === '🖼️' ? ADMIN_ICONS.image : ADMIN_ICONS.doc);
+      html += `
+        <tr class="animate-in row-selectable" style="cursor:pointer;" data-click="previewFile('${f.id}', '${f._tipo}')">
+          <td><div style="color:var(--accent);">${icon}</div></td>
+          <td style="font-weight:600;">${f.nome}</td>
+          <td style="color:var(--text-muted)">${fmtSize(f.tamanho||0)}</td>
+          <td style="color:var(--text-muted)">${fmtDate(f.created_at)}</td>
+          <td style="text-align:right;">
+             <button class="btn-icon" style="width:28px; height:28px; border:none; background:var(--accent-dim); color:var(--accent);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+             </button>
+          </td>
+        </tr>`;
     });
     html += `</tbody></table>`;
   }
@@ -193,27 +231,27 @@ window.abrirPermissoes = function(userId) {
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   modal.innerHTML = `
-    <div class="modal-card animate-in" style="max-width:400px;">
-      <div class="modal-header">
-        <h3>Permissões: ${m.nome || m.email}</h3>
-        <button class="btn-icon" data-click="closeModal()"><svg viewBox="0 0 24 24" style="width:20px;height:20px;"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    <div class="modal animate-in" style="max-width:440px;">
+      <div class="modal-header" style="padding: 24px 28px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+        <h3 style="font-size:16px; margin:0;">Permissões: <span style="color:var(--accent);">${m.nome || m.email}</span></h3>
+        <button class="btn-icon" style="width:32px; height:32px; border:none; background:rgba(255,255,255,0.03);" data-click="closeModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
-      <div class="modal-body">
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Defina quais áreas este closer pode acessar na extensão.</p>
-        <div class="perms-list" style="display:grid; gap:12px;">
-          ${renderPermSwitch('Audios', 'audios', perms.audios)}
+      <div class="modal-body" style="padding: 32px;">
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:24px; font-weight:500;">Defina quais áreas este closer pode acessar na extensão.</p>
+        <div class="perms-list" style="display:grid; gap:16px;">
+          ${renderPermSwitch('Áudios da Biblioteca', 'audios', perms.audios)}
           ${renderPermSwitch('Mídias (Imagens/Vídeos)', 'midias', perms.midias)}
-          ${renderPermSwitch('Documentos', 'documentos', perms.documentos)}
+          ${renderPermSwitch('Documentos Gerenciais', 'documentos', perms.documentos)}
           ${renderPermSwitch('Templates de Mensagem', 'templates', perms.templates)}
-          ${renderPermSwitch('CRM & Leads', 'crm', perms.crm)}
-          ${renderPermSwitch('Config. Automação', 'automacao', perms.automacao)}
-          ${renderPermSwitch('Gatilhos de Resposta', 'gatilhos', perms.gatilhos)}
-          ${renderPermSwitch('Fluxos Inteligentes', 'fluxos', perms.fluxos)}
+          ${renderPermSwitch('Visualizar CRM & Leads', 'crm', perms.crm)}
+          ${renderPermSwitch('Configurações de Automação', 'automacao', perms.automacao)}
+          ${renderPermSwitch('Gatilhos de Resposta Zap', 'gatilhos', perms.gatilhos)}
+          ${renderPermSwitch('Fluxos Inteligentes (IA)', 'fluxos', perms.fluxos)}
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" data-click="closeModal()">Cancelar</button>
-        <button class="btn-primary" data-click="salvarPermissoes('${userId}')">Salvar Alterações</button>
+      <div class="modal-footer" style="padding: 24px 32px; background: rgba(0,0,0,0.1);">
+        <button class="btn btn-secondary" style="border:none;" data-click="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" style="padding: 10px 24px;" data-click="salvarPermissoes('${userId}')">Salvar Alterações</button>
       </div>
     </div>
   `;
@@ -275,27 +313,27 @@ window.abrirMetricasMembro = async function(userId) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
-      <div class="modal-card animate-in" style="max-width:450px;">
-        <div class="modal-header">
-          <h3>Atividade de: ${m.nome || m.email}</h3>
-          <button class="btn-icon" data-click="closeModal()"><svg viewBox="0 0 24 24" style="width:20px;height:20px;"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+      <div class="modal animate-in" style="max-width:480px;">
+        <div class="modal-header" style="padding: 24px 28px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+          <h3 style="font-size:16px; margin:0;">Atividade de: <span style="color:var(--accent);">${m.nome || m.email}</span></h3>
+          <button class="btn-icon" style="width:32px; height:32px; border:none; background:rgba(255,255,255,0.03);" data-click="closeModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="padding: 32px;">
           <div class="metrics-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-            ${renderMetricItem('🎵 Áudios', audios.length)}
-            ${renderMetricItem('🖼️ Mídias', midias.length)}
-            ${renderMetricItem('📄 Docs', docs.length)}
-            ${renderMetricItem('⚡ Gatilhos', gatilhos.length)}
-            ${renderMetricItem('👥 Leads', leads.length)}
+            ${renderMetricItem(ADMIN_ICONS.audio, 'Áudios', audios.length)}
+            ${renderMetricItem(ADMIN_ICONS.image, 'Mídias', midias.length)}
+            ${renderMetricItem(ADMIN_ICONS.doc, 'Docs', docs.length)}
+            ${renderMetricItem(`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`, 'Gatilhos', gatilhos.length)}
+            ${renderMetricItem(ADMIN_ICONS.user, 'Leads', leads.length)}
           </div>
-          <div style="margin-top:24px; padding-top:16px; border-top:1px solid var(--border);">
-             <p style="font-size:12px; color:var(--text-muted);">
-               * Estas métricas representam o total acumulado de recursos criados/gerenciados por este closer.
+          <div style="margin-top:32px; padding:16px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05);">
+             <p style="font-size:12px; color:var(--text-muted); margin:0; line-height:1.5;">
+               * Estas métricas representam o total acumulado de recursos criados e gerenciados por este closer dentro da plataforma.
              </p>
           </div>
         </div>
-        <div class="modal-footer">
-          <button class="btn-primary" style="width:100%" data-click="closeModal()">Fechar</button>
+        <div class="modal-footer" style="padding: 24px 32px; background: rgba(0,0,0,0.1);">
+          <button class="btn btn-primary" style="width:100%; height:44px; justify-content:center;" data-click="closeModal()">Fechar Relatório</button>
         </div>
       </div>
     `;
@@ -306,11 +344,99 @@ window.abrirMetricasMembro = async function(userId) {
   }
 };
 
-function renderMetricItem(label, value) {
+function renderMetricItem(icon, label, value) {
   return `
-    <div class="metric-card-mini" style="background:var(--bg-secondary); padding:16px; border-radius:12px; border:1px solid var(--border); text-align:center;">
-      <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">${label}</div>
-      <div style="font-size:24px; font-weight:bold; color:var(--accent);">${value}</div>
+    <div class="metric-card-mini" style="background:var(--bg-secondary); padding:24px 16px; border-radius:16px; border:1px solid rgba(255,255,255,0.03); text-align:center; transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--accent-glow)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.03)';this.style.transform='none'">
+      <div style="color:var(--text-muted); margin-bottom:12px; display:flex; justify-content:center;">${icon}</div>
+      <div style="font-size:32px; font-weight:800; color:var(--text-primary); margin-bottom:4px; letter-spacing:-1px;">${value}</div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:var(--text-muted);">${label}</div>
     </div>
   `;
+}
+
+// --- PREVIEW DE ARQUIVOS ---
+window.previewFile = function(fileId, tipoEmoji) {
+    let file = null;
+    let bucket = '';
+
+    if (tipoEmoji === '🎵') {
+        file = painelData.audios.find(x => x.id === fileId);
+        bucket = 'audios';
+    } else if (tipoEmoji === '🖼️') {
+        file = painelData.midias.find(x => x.id === fileId);
+        bucket = 'midias';
+    } else {
+        file = painelData.documentos.find(x => x.id === fileId);
+        bucket = 'documentos';
+    }
+
+    if (!file) {
+        toast('Arquivo não encontrado.', 'error');
+        return;
+    }
+
+    // Gerar URL real via UpsidenStorage
+    const fileUrl = UpsidenStorage.signedUrl(bucket, file.storage_path);
+    console.log('[Admin] Preview URL:', fileUrl);
+
+    if (!fileUrl) {
+        toast('URL do arquivo inválida.', 'error');
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    
+    let previewContent = '';
+
+    if (bucket === 'audios') {
+        previewContent = `
+            <div style="padding:32px; text-align:center; background:var(--bg-secondary);">
+                <div style="width:64px; height:64px; background:var(--accent-dim); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
+                    ${ADMIN_ICONS.audio}
+                </div>
+                <h4 style="margin-bottom:16px; font-size:15px;">${file.nome}</h4>
+                <audio src="${fileUrl}" controls autoplay style="width:100%; border-radius:12px;"></audio>
+            </div>
+        `;
+    } else if (bucket === 'midias') {
+        const isVideo = file.tipo && file.tipo.startsWith('video');
+        previewContent = `
+            <div style="max-height:85vh; overflow:hidden; border-radius:12px; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                ${isVideo 
+                  ? `<video src="${fileUrl}" controls autoplay style="max-width:100%; max-height:80vh;"></video>` 
+                  : `<img src="${fileUrl}" style="max-width:100%; max-height:80vh; object-fit:contain;">`
+                }
+                <div style="padding:16px; width:100%; background:rgba(0,0,0,0.8); color:#fff; font-size:13px; text-align:center; border-top:1px solid rgba(255,255,255,0.1);">
+                  ${file.nome}
+                </div>
+            </div>
+        `;
+    } else {
+        previewContent = `
+            <div style="padding:48px; text-align:center; background:var(--bg-secondary);">
+                <div style="width:64px; height:64px; background:var(--accent-dim); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
+                    ${ADMIN_ICONS.doc}
+                </div>
+                <h4 style="margin-bottom:8px;">${file.nome}</h4>
+                <p style="margin-bottom:32px; color:var(--text-muted); font-size:13px;">O documento está pronto para ser visualizado em uma nova guia segura.</p>
+                <a href="${fileUrl}" target="_blank" class="btn btn-primary" style="width:100%; height:46px; justify-content:center; font-size:14px; font-weight:700;">
+                  Visualizar Documento Real
+                </a>
+            </div>
+        `;
+    }
+
+    modal.innerHTML = `
+      <div class="modal animate-in" style="max-width: ${bucket==='midias' ? '900px' : '480px'}; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
+        <div class="modal-header" style="background: rgba(0,0,0,0.2);">
+          <h3 style="font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:1px; opacity:0.7;">Preview do Recurso Global</h3>
+          <button class="btn-icon" style="width:28px; height:28px; border:none; background:rgba(255,255,255,0.05);" data-click="closeModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <div class="modal-body" style="padding:0;">
+          ${previewContent}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
 }

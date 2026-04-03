@@ -271,15 +271,17 @@ async function renderSyncLabelsCRM(c) {
                   <div class="kanban-card ws-card-premium wpp-sync-card" draggable="true" 
                        data-contact-id="${contato.id}" data-old-label-id="${lbl.id}">
                      
+                     <!-- Priority Banner nativo -->
                      <div class="card-priority-banner" style="--urgency-color: var(--success); background:var(--success);">
                        SINCRONIZADO
                      </div>
 
+                     <!-- Inner Box nativa restaurada -->
                      <div class="card-inner-box">
                        <h3 class="card-title-premium" data-click="showWppContactModal('${contato.id}', '${nomeEscapado}', '${fotoUrlEscapada}')">${contato.nome || 'Contato Zap'}</h3>
                        
                        <p class="card-desc-premium">
-                         Contato vinculado via Etiquetas. Use o arraste lateral para trocar de etiqueta instantaneamente.
+                         Contato vinculado via Etiquetas WPP. Use o arraste lateral para trocar a categoria dele lá no WhatsApp.
                        </p>
                        
                        <div class="card-mid-row">
@@ -287,15 +289,15 @@ async function renderSyncLabelsCRM(c) {
                            ${photoAvatar}
                          </div>
                          
-                         <div class="card-status-badge-rs" style="--status-color: ${corHex}; --status-bg: ${corHex}15;">
+                         <div class="card-status-badge-rs" style="background:${corHex}26; color:${corHex}; border:1px solid ${corHex}40; box-shadow:0 0 8px ${corHex}20;">
                            ${lbl.name}
                          </div>
                        </div>
 
                        <div class="card-footer-premium">
                          <div class="card-meta-rs">
-                           <div class="meta-rs-item">
-                             <span style="color:var(--success); font-size:14px; line-height:1;">●</span> Online
+                           <div class="meta-rs-item" style="border:none; padding:0; background:transparent;">
+                             <span style="color:var(--success); font-size:14px; margin-right:4px; line-height:1;">●</span> <span style="font-size:11px; font-weight:600; color:var(--text-muted);">Online</span>
                            </div>
                          </div>
                          <div class="card-actions-rs">
@@ -381,6 +383,25 @@ function assignSyncKanbanDragDrop() {
             const cardElement = document.querySelector(`.wpp-sync-card[data-contact-id="${contactId}"]`);
             if (cardElement) {
                 cardsContainer.appendChild(cardElement);
+                
+                // Muta o visual da badge para emular a nova coluna sem refresh
+                const novoTitulo = col.querySelector('.ws-col-title-rs')?.textContent;
+                const headerColorStyle = col.querySelector('.ws-col-header-rs')?.style.getPropertyValue('--col-color');
+                const corHex = headerColorStyle ? headerColorStyle.trim() : '#8696a0';
+                
+                const statusBadge = cardElement.querySelector('.card-status-badge-rs');
+                if (statusBadge && novoTitulo) {
+                   statusBadge.textContent = novoTitulo;
+                   statusBadge.style.background = corHex + '26';
+                   statusBadge.style.color = corHex;
+                   statusBadge.style.borderColor = corHex + '40';
+                   statusBadge.style.boxShadow = '0 0 8px ' + corHex + '20';
+                }
+                
+                // Remove mensagem temporária de pipeline vazio se existir
+                const emptyMsg = cardsContainer.querySelector('div[style*="font-style:italic"]');
+                if (emptyMsg) emptyMsg.style.display = 'none';
+
                 // Atualizar contadores visuais
                 updateSyncBadges();
             }
@@ -421,35 +442,58 @@ function updateSyncBadges() {
     });
 }
 
-// Modal Rápido do Modo Sync com Suporte a Foto Reais
+// Modal Rápido do Modo Sync com Estética Premium Red Sun
 window.showWppContactModal = function(contactId, nome, fotoUrl) {
   const existing = document.querySelector('.modal-overlay'); if (existing) existing.remove();
-  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
-  overlay.style.cssText = 'backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;';
   
   const fone = contactId.replace('@c.us','').replace('@g.us','').replace('@lid','');
   
-  const hgFoto = fotoUrl && fotoUrl.startsWith('http') ?
-      `<img src="${fotoUrl}" style="width:80px;height:80px;border-radius:50%;margin:0 auto 16px;object-fit:cover;border:2px solid var(--accent);box-shadow:0 8px 16px rgba(255,98,0,0.2);">` :
-      `<div style="width:80px;height:80px;border-radius:50%;background:rgba(255, 98, 0, 0.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:bold;margin:0 auto 16px;box-shadow:0 8px 16px rgba(255,98,0,0.2);">${(nome||'C').charAt(0).toUpperCase()}</div>`;
+  // 🔍 Tentar encontrar o Lead completo no CRM por telefone
+  const leadExistente = painelData.leads.find(l => (l.telefone || '').replace(/\D/g, '').includes(fone.slice(-8)));
+  if (leadExistente) {
+     editLeadModal(leadExistente.id);
+     return;
+  }
 
-  overlay.innerHTML = `<div class="modal" style="width:100%; max-width:400px; border-radius:16px; backdrop-filter:blur(20px); background:var(--bg-secondary); border: 1px solid var(--border);">
-    <div class="modal-header">
-       <h3>👤 Perfil Live do Zap</h3>
-       <button class="btn-ghost" data-click="closeModal()"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center;';
+  
+  const hgFoto = fotoUrl && fotoUrl.startsWith('http') ?
+      `<img src="${fotoUrl}" style="width:100px;height:100px;border-radius:50%;margin:0 auto 20px;object-fit:cover;border:3px solid var(--accent);box-shadow:0 12px 24px rgba(255,98,0,0.3);">` :
+      `<div style="width:100px;height:100px;border-radius:50%;background:rgba(255, 98, 0, 0.1);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:700;margin:0 auto 20px;border:1px solid rgba(255,75,0,0.2);">${(nome||'C').charAt(0).toUpperCase()}</div>`;
+
+  overlay.innerHTML = `
+    <div class="modal rs-modal-premium animate-in" style="width:100%; max-width:440px; border-radius:24px; background:var(--bg-secondary); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 40px 60px -15px rgba(0,0,0,0.7); overflow:hidden;">
+      <div class="modal-header" style="padding:24px 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.03);">
+         <h3 style="margin:0; font-size:16px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:1px;">👤 Perfil Live do Zap</h3>
+         <button class="rs-close-btn" data-click="closeModal()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+         </button>
+      </div>
+      <div class="modal-body" style="padding:40px 32px; text-align:center;">
+         ${hgFoto}
+         <h2 style="margin:0 0 4px 0; font-size:24px; font-weight:700; color:#fff;">${nome || 'Contato Zap'}</h2>
+         <p style="color:var(--accent); font-family:'Outfit', sans-serif; font-weight:600; font-size:16px; margin-bottom:32px;">📱 ${fone}</p>
+         
+         <div style="display:grid; grid-template-columns: 1fr; gap:12px;">
+            <button class="rs-btn-save-lead" style="width:100%;" data-click="newLeadFromSync('${fone}', '${nome}')">
+               ➕ Cadastrar Lead no CRM
+            </button>
+            <button class="rs-btn-cancel" style="width:100%; border-color:var(--accent-dim); color:var(--accent);" data-click="openWppChatSync('${fone}')">
+               💬 Abrir Conversa no Web
+            </button>
+         </div>
+      </div>
     </div>
-    <div class="modal-body" style="text-align:center;">
-       ${hgFoto}
-       <h2 style="margin-bottom:8px;font-size:22px;color:var(--text-primary);">${nome}</h2>
-       <p style="color:var(--text-muted);font-size:15px;margin-bottom:24px;font-family:monospace;">📱 ${fone}</p>
-       
-       <button class="btn btn-primary" style="width:100%; justify-content:center;font-weight:bold;padding:12px;" data-click="openWppChatSync('${fone}')">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="margin-right:8px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Abrir Conversa no Web
-       </button>
-    </div>
-  </div>`;
+  `;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+}
+
+window.newLeadFromSync = function(fone, nome) {
+  // Preencher modal de novo lead com dados do sync
+  closeModal();
+  showLeadEditModal({ nome, telefone: fone });
 }
 
 window.openWppChatSync = function(fone) {

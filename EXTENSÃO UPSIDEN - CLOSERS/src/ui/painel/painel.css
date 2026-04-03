@@ -331,7 +331,7 @@ html, body {
   overflow: hidden;
 }
 .user-card:hover { 
-  background: rgba(255,255,255,0.04); 
+  background: rgba(255,255,255,0.02); 
 }
 
 .user-avatar {
@@ -370,27 +370,28 @@ html, body {
 /* ─ User menu popup ─ */
 .user-menu-popup {
   position: fixed;
-  bottom: 80px;
-  left: calc(var(--sidebar-width) + 8px);
-  width: 230px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  bottom: 85px;
+  left: 15px;
+  width: 210px;
+  background: #111113; /* Darker, solid background */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
   z-index: 1000;
   opacity: 0;
-  transform: translateX(-8px) scale(0.97);
+  transform: translateY(10px) scale(0.97);
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
-  transform-origin: bottom left;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: bottom center;
 }
 .user-menu-popup.open {
   opacity: 1;
-  transform: translateX(0) scale(1);
+  transform: translateY(0) scale(1);
   pointer-events: all;
 }
 .painel-sidebar.collapsed ~ .user-menu-popup {
-  left: calc(var(--sidebar-collapsed) + 8px);
+  left: 8px;
+  width: calc(var(--sidebar-collapsed) - 16px);
 }
 
 .user-menu-header {
@@ -403,10 +404,10 @@ html, body {
 .user-avatar-lg {
   width: 36px; height: 36px;
   border-radius: 50%;
-  background: var(--accent-dim);
-  border: 2px solid var(--accent);
+  background: #27272a;
+  border: 1px solid rgba(255,255,255,0.1);
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 700; color: var(--accent);
+  font-size: 15px; font-weight: 700; color: #fff;
   flex-shrink: 0;
 }
 .ump-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }

@@ -172,11 +172,22 @@ async function initPainel() {
     const userMenuOverlay = document.getElementById('user-menu-overlay');
 
     function updateUserMenuPosition() {
-      if (!userMenuPopup || !sidebar) return;
-      const sidebarW = sidebar.classList.contains('collapsed')
-        ? getComputedStyle(document.documentElement).getPropertyValue('--sidebar-collapsed').trim()
-        : getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width').trim();
-      userMenuPopup.style.left = `calc(${sidebarW} + 8px)`;
+      if (!userMenuPopup || !sidebar || !btnUserMenu) return;
+      const rect = btnUserMenu.getBoundingClientRect();
+      const isCollapsed = sidebar.classList.contains('collapsed');
+      
+      // Posicionamento horizontal (Dentro da sidebar)
+      if (isCollapsed) {
+        userMenuPopup.style.left = '8px';
+        userMenuPopup.style.width = 'calc(var(--sidebar-collapsed) - 16px)';
+      } else {
+        userMenuPopup.style.left = '12px';
+        userMenuPopup.style.width = 'calc(var(--sidebar-width) - 24px)';
+      }
+      
+      // Posicionamento vertical: ACIMA do card
+      const distanceToBottom = window.innerHeight - rect.top;
+      userMenuPopup.style.bottom = `${distanceToBottom + 12}px`;
     }
 
     function openUserMenu() {

@@ -55,23 +55,8 @@ const AGEND_CORE_STYLE = `
         opacity: 1;
      }
 
-     /* Seletor Segmentado Profissional */
-     .segmented-control-rs { 
-        display: flex; background: var(--bg-input); padding: 5px; border-radius: 16px; 
-        border: 1px solid var(--border); margin-bottom: 28px; position: relative; gap: 5px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-     }
-     .segmented-item-rs { 
-        flex: 1; padding: 12px 6px; border-radius: 12px; cursor: pointer; text-align: center;
-        font-size: 13.5px; font-weight: 700; color: var(--text-muted); transition: all 0.25s;
-        display: flex; align-items: center; justify-content: center; gap: 10px; z-index: 2;
-     }
-     .segmented-item-rs.active { 
-        color: #fff; background: var(--accent); 
-        box-shadow: var(--shadow-accent); 
-        border: 1px solid rgba(255,255,255,0.1); 
-     }
-     .segmented-item-rs:hover:not(.active) { color: var(--text-secondary); background: rgba(255,255,255,0.05); }
+     /* Seletor Segmentado Profissional (Migrado para Global) */
+     
      
      /* Form Elements */
      .form-label-rs { 
@@ -184,19 +169,19 @@ window.renderAgendamentos = async function(c) {
            Programar Disparo
         </h2>
         
-        <div class="segmented-control-rs">
-           <div class="segmented-item-rs active" data-value="contato">
+        <div class="selector-group full-width animate-in" style="margin-bottom: 28px;">
+           <button class="selector-item active" data-value="contato">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               <span>Individual</span>
-           </div>
-           <div class="segmented-item-rs" data-value="grupo">
+           </button>
+           <button class="selector-item" data-value="grupo">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
               <span>Grupos</span>
-           </div>
-           <div class="segmented-item-rs" data-value="status">
+           </button>
+           <button class="selector-item" data-value="status">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg>
               <span>Status</span>
-           </div>
+           </button>
         </div>
         <input type="hidden" id="agend-alvo-val" value="contato">
 
@@ -306,7 +291,7 @@ window.renderAgendamentos = async function(c) {
   `;
 
   // --- Lógica do Seletor Segmentado ---
-  const segments = document.querySelectorAll('.segmented-item-rs');
+  const segments = document.querySelectorAll('.selector-group.full-width .selector-item');
   const alvoHidden = document.getElementById('agend-alvo-val');
   const wrappers = {
     contato: document.getElementById('wrapper-contato'),

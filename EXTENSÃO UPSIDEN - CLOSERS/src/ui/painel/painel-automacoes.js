@@ -8,124 +8,200 @@
  */
 
 // ═══ STATE ═══════════════════════════════════════════════════
-if (typeof window.autoSubTab === 'undefined') window.autoSubTab = 'saudacao';
-
 window.renderAutomacoes = function(c) {
+  if (typeof window.autoSelectedFolder === 'undefined') window.autoSelectedFolder = 'todos';
   const tabs = [
-    { id: 'saudacao', label: '💬 Saudação' },
-    { id: 'gatilhos', label: '⚡ Gatilhos' },
-    { id: 'horario', label: '🕐 Horário de F.' },
-    { id: 'regras', label: '⚙️ Regras do Robô' }
+    { id: 'saudacao', label: 'Saudação' },
+    { id: 'gatilhos', label: 'Gatilhos' },
+    { id: 'horario', label: 'Horário' },
+    { id: 'regras', label: 'Anti-Ban' }
   ];
 
-  let html = `<div class="rs-tabs-switcher">`;
-  tabs.forEach(t => {
-    html += `<button class="rs-tab-btn ${window.autoSubTab === t.id ? 'active' : ''}" data-click="switchTab('${t.id}')">${t.label}</button>`;
-  });
-  html += `</div>`;
-
+  let html = `
+    <div class="rs-crm-header-wrap" style="margin-bottom: 24px;">
+       <div class="rs-controls-row" style="justify-content: flex-start;">
+          <div class="selector-group animate-in">
+             ${tabs.map(t => {
+               const icons = {
+                 saudacao: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+                 gatilhos: '<svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+                 horario: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+                 regras: '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+               };
+               return `
+                 <button class="selector-item ${window.autoSubTab === t.id ? 'active' : ''}" 
+                         data-click="switchTab('${t.id}')">
+                   ${icons[t.id] || ''}
+                   ${t.label}
+                 </button>
+               `;
+             }).join('')}
+          </div>
+       </div>
+    </div>
+  `;
+  
   if (window.autoSubTab === 'saudacao') {
-    html += `<div class="rs-card rs-card-accent animate-in">
-      <h3 style="margin-bottom:8px; display:flex; align-items:center; gap:8px;">💬 Resposta Automática (Saudação)</h3>
-      <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px; font-weight:500;">Configure uma mensagem automática de boas-vindas para novos contatos de forma profissional.</p>
+    html += `<div class="rs-card rs-card-accent animate-in" style="width:100%; padding:32px;">
+      <h3 style="margin-bottom:4px; font-size:18px; font-weight:800;">Resposta Automática (Saudação)</h3>
+      <p style="color:var(--text-muted); font-size:12px; margin-bottom:20px;">Configure uma mensagem automática de boas-vindas para novos contatos de forma profissional.</p>
       
-      <div class="form-group"><label class="form-label">Mensagem de Saudação Global</label><textarea class="form-textarea" id="auto-saudacao" rows="4" placeholder="Ex: Olá! Obrigado por entrar em contato com a Upsiden."></textarea></div>
+      <div class="form-group" style="margin-bottom:16px;"><label class="form-label" style="margin-bottom:6px;">Mensagem de Saudação Global</label><textarea class="form-textarea" id="auto-saudacao" rows="3" placeholder="Ex: Olá! Obrigado por entrar em contato com a Upsiden." style="padding:12px; font-size:13px;"></textarea></div>
       
-      <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:center; margin-top:16px; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border);">
-        <div style="display:flex; align-items:center; gap:12px;">
-          <label class="toggle-switch"><input type="checkbox" id="auto-saudacao-ativo"><span class="toggle-slider"></span></label>
-          <span style="font-size:13px; font-weight:600;">Ativar saudação</span>
+      <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-top:12px; padding:12px 16px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <label class="toggle-switch" style="scale:0.8; margin:0;"><input type="checkbox" id="auto-saudacao-ativo"><span class="toggle-slider"></span></label>
+          <span style="font-size:12px; font-weight:700; color:#fff;">Ativar saudação</span>
         </div>
+        <div style="height:20px; width:1px; background:rgba(255,255,255,0.1); margin:0 4px;"></div>
         <div style="display:flex; align-items:center; gap:16px;">
-           <label style="font-size:13px; color:var(--text-secondary); display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="auto-privado" checked style="accent-color:var(--accent);"> Aceitar Privado</label>
-           <label style="font-size:13px; color:var(--text-secondary); display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="auto-grupo" style="accent-color:var(--accent);"> Aceitar Grupos</label>
+           <label style="font-size:12px; font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="auto-privado" checked style="accent-color:var(--accent);"> Privado</label>
+           <label style="font-size:12px; font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="auto-grupo" style="accent-color:var(--accent);"> Grupos</label>
         </div>
       </div>
       
-      <div style="margin-top:32px; padding-top:24px; border-top:1px dashed var(--border);">
-        <h4 style="font-size:15px; font-weight:800; color:var(--text-primary); margin-bottom:8px;">🚀 Funil de Follow-ups (Mensagens Sequenciais)</h4>
-        <p style="color:var(--text-muted); font-size:12px; margin-bottom:20px;">Dê um ar humano salvando áudios ou mídias para dispararem segundos após a saudação.</p>
+      <div style="margin-top:24px; padding-top:20px; border-top:1px dashed rgba(255,255,255,0.05);">
+        <h4 style="font-size:14px; font-weight:800; color:var(--text-primary); margin-bottom:4px;">🚀 Funil de Follow-ups</h4>
+        <p style="color:var(--text-muted); font-size:11px; margin-bottom:16px;">Adicione mensagens, áudios ou documentos sequenciais.</p>
         
         <div id="followups-list"></div>
         
-        <button class="btn btn-secondary" data-click="addFollowupRow('followups-list')" style="margin-top:12px; margin-bottom:24px; background:transparent; border:1px dashed var(--accent); color:var(--accent); font-weight:700;">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Adicionar Novo Passo de Fluxo
+        <button class="rs-btn-dark" data-click="addFollowupRow('followups-list')" style="margin-top:12px; margin-bottom:20px; padding:10px 16px; font-size:12px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M12 5v14M5 12h14"/></svg> Adicionar Passo de Fluxo
         </button>
       </div>
 
-      <button class="btn btn-primary" data-click="salvarSaudacao()" style="display:flex; width:100%; justify-content:center; padding:14px; font-size:14px; font-weight:800; border-radius:var(--radius-sm); margin-top:10px;">Salvar Estrutura de Saudação</button>
+      <button class="rs-btn-plus" data-click="salvarSaudacao()" style="width:100%; padding:12px;">Salvar Saudação</button>
     </div>`;
   } else if (window.autoSubTab === 'gatilhos') {
-    html += `<div class="rs-card rs-card-accent animate-in">
-      <h3 style="margin-bottom:8px; display:flex; align-items:center; gap:8px;">⚡ Inteligência de Gatilhos</h3>
-      <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px; font-weight:500;">Defina palavras-chave que disparam respostas ou áudios automáticos com perfeição.</p>
-      
-      <div id="triggers-list" style="display:flex; flex-direction:column; gap:16px;"></div>
-      
-      <div style="display:flex; gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
-        <button class="btn btn-secondary" data-click="addTriggerRow()" style="flex:1; justify-content:center; font-weight:700;"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Gatilho</button>
-        <button class="btn btn-primary" data-click="salvarGatilhos()" style="flex:1; justify-content:center; font-weight:700; box-shadow: 0 4px 15px var(--accent-glow);">Salvar Todas as Regras</button>
-      </div>
+    html += `
+    <div class="auto-container animate-in">
+       <aside class="auto-sidebar-rs">
+          <div style="font-size:10px; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; padding:0 12px;">Pastas da Inteligência</div>
+          <button class="rs-folder-btn ${window.autoSelectedFolder === 'todos' ? 'active' : ''}" data-click="switchAutoFolder('todos')">
+             <svg class="folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v11z"/></svg> Todos os Gatilhos <span class="folder-count" id="count-all">0</span>
+          </button>
+          <div id="auto-folders-list" style="display:flex; flex-direction:column; gap:6px;">
+             <!-- Dinâmico -->
+          </div>
+          <div class="sidebar-divider" style="height:1px; background:rgba(255,255,255,0.05); margin:12px 0;"></div>
+          <button class="rs-btn-premium" style="width:100%; padding:10px; font-size:12px; background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.15); color:var(--text-muted); box-shadow:none; text-align:center; justify-content:center;" data-click="addAutoFolder()">+ Criar Nova Pasta</button>
+       </aside>
+
+       <div class="auto-content-rs">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+             <div>
+                <h3 style="font-size:18px; font-weight:800; color:#fff; margin:0;" id="folder-title">Todos os Gatilhos</h3>
+                <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">Combine palavras-chave para criar fluxos inquebráveis.</p>
+             </div>
+              <div style="display:flex; gap:12px;">
+                <button class="rs-btn-premium" style="background:rgba(255,255,255,0.03); color:white; border:1px solid rgba(255,255,255,0.08); box-shadow:none; padding:10px 20px;" data-click="addTriggerRow()">
+                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:8px;"><path d="M12 5v14M5 12h14"/></svg>
+                   Novo Gatilho
+                </button>
+                <button class="rs-btn-plus" data-click="salvarGatilhos()" style="padding:10px 24px;">Salvar Alterações</button>
+             </div>
+          </div>
+          
+          <div id="triggers-list" style="display:flex; flex-direction:column; gap:20px;">
+             <div class="rs-empty-automations animate-in">
+                <div style="width:60px; height:60px; background:rgba(255,255,255,0.03); border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; color:var(--text-muted);">
+                   <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                </div>
+                <h4 style="color:#fff; margin:0 0 8px 0; font-weight:800;">Nenhum gatilho nesta pasta</h4>
+                <p style="font-size:12px; color:var(--text-muted); margin:0;">Clique em 'Novo Gatilho' para expandir sua inteligência artificial.</p>
+             </div>
+          </div>
+       </div>
     </div>`;
   } else if (window.autoSubTab === 'horario') {
-    html += `<div class="rs-card rs-card-accent animate-in">
-      <h3 style="margin-bottom:8px; display:flex; align-items:center; gap:8px;">🕐 Filtro de Expediente</h3>
-      <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px; font-weight:500;">Evite que seus automações rodem fora do horário comercial, ou envie mensagens de fechado.</p>
-      
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; background:var(--bg-secondary); padding:20px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-        <div class="form-group" style="margin:0;"><label class="form-label">Início das Operações</label><input type="time" class="form-input" id="hora-ini" value="08:00" style="width:100%;"></div>
-        <div class="form-group" style="margin:0;"><label class="form-label">Término das Operações</label><input type="time" class="form-input" id="hora-fim" value="18:00" style="width:100%;"></div>
+    html += `
+    <div class="rs-card rs-card-accent animate-in" style="width:100%; padding:32px; border-left-width:4px;">
+      <div style="text-align:center; margin-bottom:24px;">
+         <div style="width:48px; height:48px; background:var(--accent-dim); color:var(--accent); border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+         </div>
+         <h3 style="font-size:18px; font-weight:800; color:#fff; margin:0;">Filtro de Expediente</h3>
+         <p style="color:var(--text-muted); font-size:12px; margin-top:6px;">Controle quando seu robô deve responder.</p>
       </div>
       
-      <div class="form-group" style="margin-top:24px;">
-        <label class="form-label">Mensagem para Mensagens Fora de Horário (Opcional)</label>
-        <textarea class="form-textarea" id="msg-fechado" rows="4" placeholder="Ex: Olá! No momento não estamos em horário comercial..."></textarea>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; background:rgba(255,255,255,0.02); padding:16px; border-radius:16px; border:1px solid rgba(255,255,255,0.05);">
+        <div class="form-group-rs" style="margin:0;"><label class="rs-label">Início</label><input type="time" class="rs-input" id="hora-ini" value="08:00" style="text-align:center; font-size:16px; font-weight:800; padding:10px;"></div>
+        <div class="form-group-rs" style="margin:0;"><label class="rs-label">Término</label><input type="time" class="rs-input" id="hora-fim" value="18:00" style="text-align:center; font-size:16px; font-weight:800; padding:10px;"></div>
       </div>
       
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; margin-top:8px; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border);">
-        <label class="toggle-switch"><input type="checkbox" id="horario-ativo"><span class="toggle-slider"></span></label>
-        <span style="font-size:13px; font-weight:600;">Habilitar bloqueio de horário</span>
+      <div class="form-group-rs" style="margin-bottom:24px;">
+        <label class="rs-label">Mensagem de "Fechado"</label>
+        <textarea class="rs-input" id="msg-fechado" rows="3" placeholder="Ex: Olá! No momento estamos fora do horário de atendimento..." style="min-height:80px; padding:12px; font-size:13px;"></textarea>
       </div>
       
-      <button class="btn btn-primary" data-click="salvarHorario()" style="display:flex; width:100%; justify-content:center; padding:14px; font-size:14px; font-weight:800;">Salvar Disposições de Horário</button>
+      <button class="rs-btn-plus" data-click="salvarHorario()" style="width:100%; padding:12px;">Salvar Expediente</button>
     </div>`;
   } else if (window.autoSubTab === 'regras') {
-    html += `<div class="rs-card rs-card-accent animate-in">
-      <h3 style="margin-bottom:8px; display:flex; align-items:center; gap:8px;">⚙️ Configurações Anti-Banimento</h3>
-      <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px; font-weight:500;">Simule comportamentos humanos para proteger sua conta durante disparos automáticos.</p>
-      
-      <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:24px;">
-         <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border);">
-            <div style="display:flex; flex-direction:column; gap:4px;">
-               <span style="font-size:14px; font-weight:700;">Simular "Digitando..."</span>
-               <span style="font-size:12px; color:var(--text-muted);">Exibe status de digitação antes de enviar texto.</span>
-            </div>
-            <label class="toggle-switch"><input type="checkbox" id="regra-digitando" checked><span class="toggle-slider"></span></label>
-         </div>
-         
-         <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border);">
-            <div style="display:flex; flex-direction:column; gap:4px;">
-               <span style="font-size:14px; font-weight:700;">Simular "Gravando Áudio..."</span>
-               <span style="font-size:12px; color:var(--text-muted);">Exibe status de gravação antes de enviar áudio.</span>
-            </div>
-            <label class="toggle-switch"><input type="checkbox" id="regra-gravando" checked><span class="toggle-slider"></span></label>
+    html += `<div class="rs-card rs-card-accent animate-in" style="width:100%; padding:32px;">
+      <h3 style="margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:18px; font-weight:800;">Regras de Humanização</h3>
+      <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:24px;">Pausas randômicas entre o envio das mensagens.</p>
+      <div style="background:rgba(255,255,255,0.02); padding:20px; border-radius:16px; border:1px solid rgba(255,255,255,0.05); margin-bottom:20px;">
+         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+           <div class="form-group" style="margin:0;"><label class="form-label" style="margin-bottom:6px;">Atraso Mínimo (seg)</label><input type="number" class="rs-input" id="regra-min" value="2" style="width:100%; padding:10px;"></div>
+           <div class="form-group" style="margin:0;"><label class="form-label" style="margin-bottom:6px;">Atraso Máximo (seg)</label><input type="number" class="rs-input" id="regra-max" value="5" style="width:100%; padding:10px;"></div>
          </div>
       </div>
-
-      <div style="background:var(--bg-card-hover); padding:24px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:24px;">
-         <label class="form-label" style="margin-bottom:16px; color:var(--accent);">Intervalos Randômicos de Segurança</label>
-         <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-           <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:10px;">Atraso Mínimo (seg)</label><input type="number" class="form-input" id="regra-min" value="2" min="0" style="width:100%;"></div>
-           <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:10px;">Atraso Máximo (seg)</label><input type="number" class="form-input" id="regra-max" value="5" min="0" style="width:100%;"></div>
-         </div>
-      </div>
-
-      <button class="btn btn-primary" data-click="salvarRegrasGlobais()" style="display:flex; width:100%; justify-content:center; padding:14px; font-size:14px; font-weight:800;">Aplicar Regras de Segurança</button>
+      <button class="rs-btn-plus" data-click="salvarRegrasGlobais()" style="width:100%; padding:12px;">Aplicar Regras</button>
     </div>`;
   }
 
   c.innerHTML = html;
-  setTimeout(loadAutomationConfig, 50);
+  
+  if (window.autoSubTab === 'gatilhos') {
+    setTimeout(renderFoldersSidebar, 50);
+  }
+  setTimeout(loadAutomationConfig, 100);
+};
+
+// --- NOVAS FUNÇÕES DE GESTÃO DE PASTAS ---
+window.switchAutoFolder = function(id) {
+  window.autoSelectedFolder = id;
+  const title = document.getElementById('folder-title');
+  if (title) title.textContent = id === 'todos' ? 'Todos os Gatilhos' : `Pasta: ${id}`;
+  
+  // Atualizar botões da sidebar
+  document.querySelectorAll('.rs-folder-btn').forEach(b => {
+     b.classList.toggle('active', b.getAttribute('data-click').includes(`'${id}'`));
+  });
+
+  // Filtrar gatilhos visíveis
+  document.querySelectorAll('.trigger-wrapper').forEach(card => {
+     if (id === 'todos') card.style.display = 'flex';
+     else card.style.display = card.dataset.pasta === id ? 'flex' : 'none';
+  });
+};
+
+window.addAutoFolder = function() {
+  const nome = prompt("Nome da nova pasta:");
+  if (!nome) return;
+  const folders = JSON.parse(localStorage.getItem('ups_auto_folders') || '["Geral", "Vendas", "Suporte"]');
+  if (folders.includes(nome)) return toast("Esta pasta já existe!", "warning");
+  folders.push(nome);
+  localStorage.setItem('ups_auto_folders', JSON.stringify(folders));
+  renderFoldersSidebar();
+  toast("Pasta criada!", "success");
+};
+
+window.renderFoldersSidebar = function() {
+  const container = document.getElementById('auto-folders-list');
+  if (!container) return;
+  const folders = JSON.parse(localStorage.getItem('ups_auto_folders') || '["Geral", "Vendas", "Suporte"]');
+  
+  container.innerHTML = folders.map(f => `
+     <button class="rs-folder-btn ${window.autoSelectedFolder === f ? 'active' : ''}" data-click="switchAutoFolder('${f}')">
+        <svg class="folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v11z"/></svg> ${f}
+     </button>
+  `).join('');
+  
+  // Contagens
+  const cards = document.querySelectorAll('.trigger-wrapper');
+  if (document.getElementById('count-all')) document.getElementById('count-all').textContent = cards.length;
 };
 
 window.addFollowupRow = function(containerId, stepObj = {}) {
@@ -146,50 +222,42 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
   else if (['imagem', 'midia', 'video', 'documento'].includes(tipo)) icon = '🖼️';
 
   row.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:12px;">
-       <div style="display:flex; align-items:center; gap:10px;">
-          <div style="width:32px; height:32px; border-radius:8px; background:var(--accent-dim); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:16px;">${icon}</div>
-          <select class="form-input fup-tipo" style="width:130px; height:32px; padding:2px 8px; font-weight:700;">
-             <option value="texto">Texto</option>
-             <option value="audio">Áudio</option>
-             <option value="imagem">Imagem</option>
-             <option value="documento">Documento</option>
-          </select>
+    <div class="rs-step-pill" style="padding: 16px; display:flex; align-items:center; gap:16px; margin-bottom:12px; border-radius:12px; flex-wrap:nowrap; overflow:hidden;">
+       
+       <div style="display:flex; flex-direction:column; width:130px; flex-shrink:0;">
+         <select class="rs-input fup-tipo" style="height:38px; padding:0 10px; font-size:12px; font-weight:700;">
+            <option value="texto">Texto Escrito</option>
+            <option value="audio">Áudio (PTT)</option>
+            <option value="imagem">Mídia/Imagem</option>
+            <option value="documento">Documento</option>
+         </select>
        </div>
-       <div style="display:flex; align-items:center; gap:8px;">
-          <div style="display:flex; align-items:center; gap:6px; background:var(--bg-input); padding:4px 10px; border-radius:6px; border:1px solid var(--border);">
-            <span style="font-size:11px; color:var(--text-muted); font-weight:700;">ESPERA:</span>
-            <input type="number" class="fup-delay" value="${delay_segundos}" min="0" style="width:40px; background:transparent; border:none; color:var(--text-primary); font-weight:700; outline:none; font-size:12px;">
-            <span style="font-size:11px; color:var(--text-muted);">s</span>
+
+       <div style="flex:1; display:flex; flex-direction:column; gap:8px; min-width:0;">
+          <textarea class="rs-input fup-conteudo" rows="2" placeholder="Conteúdo da resposta..." 
+                style="width:100%; min-height:46px; height:auto; padding:10px 14px; font-size:13px; resize:vertical; line-height:1.4;">${conteudo}</textarea>
+          
+          <div class="media-fields" style="display: ${tipo === 'texto' ? 'none' : 'flex'}; gap:10px;">
+             <select class="fup-midia-url rs-input" style="height:32px; font-size:11px; padding:0 10px; flex:1; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05);"><option value="">-- Selecione a Mídia --</option></select>
+             <select class="fup-send-as rs-input fup-send-as-container" style="height:32px; font-size:11px; padding:0 10px; flex:1; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); display:none;"></select>
           </div>
-          <div style="display:flex; align-items:center; gap:6px; background:var(--bg-input); padding:4px 10px; border-radius:6px; border:1px solid var(--border);">
-            <span style="font-size:11px; color:var(--text-muted); font-weight:700;">HUMANO:</span>
-            <input type="number" class="fup-duracao" value="${duracaoSimulacao}" min="0" style="width:40px; background:transparent; border:none; color:var(--text-primary); font-weight:700; outline:none; font-size:12px;">
-            <span style="font-size:11px; color:var(--text-muted);">s</span>
+       </div>
+
+       <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+          <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.03); padding:0 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.05); height:38px;">
+            <span style="font-size:10px; color:var(--text-muted); font-weight:800;">TIMER:</span>
+            <input type="number" class="fup-delay" value="${delay_segundos}" min="0" style="width:36px; background:transparent; border:none; color:#fff; font-weight:800; font-size:14px; outline:none; text-align:center;">
+            <span style="font-size:10px; color:var(--text-muted);">s</span>
           </div>
-          <button class="btn-icon btn-remove" style="color:var(--danger); margin-left:8px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+          <button class="btn-remove" title="Remover Etapa" style="background:rgba(241, 92, 109, 0.1); border:1px solid rgba(241, 92, 109, 0.15); color:var(--danger); cursor:pointer; width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; transition:all 0.2s;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
        </div>
     </div>
     
-    <div style="display:flex; flex-direction:column; gap:10px;">
-       <textarea class="form-textarea fup-conteudo" rows="2" placeholder="Digite sua mensagem de follow-up aqui..." style="width:100%; min-height:60px;">${conteudo}</textarea>
-       
-       <div class="media-fields" style="display: ${tipo === 'texto' ? 'none' : 'flex'}; flex-direction:column; gap:8px;">
-          <div class="form-group" style="margin:0;">
-             <label class="form-label" style="font-size:10px;">Selecionar da Biblioteca</label>
-             <select class="form-input fup-midia-url" style="width:100%"><option value="">-- Selecione do Seu Cofre --</option></select>
-          </div>
-          <div class="form-group fup-send-as-container" style="margin:0; display:none;">
-             <label class="form-label" style="font-size:10px;">Modo de Envio</label>
-             <select class="form-input fup-send-as" style="width:100%"></select>
-          </div>
-       </div>
-    </div>
-
     <input type="hidden" class="fup-url" value="${url}">
     <input type="hidden" class="fup-mime" value="${mime}">
     <input type="hidden" class="fup-nome" value="${nome}">
     <input type="hidden" class="fup-base64" value="${base64}">
+    <input type="hidden" class="fup-duracao" value="${duracaoSimulacao}">
   `;
 
   list.appendChild(row);
@@ -220,7 +288,7 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
      const baseUrl = 'https://imxwpacwtphekrbgwbph.supabase.co/storage/v1/object/public/';
      
      if (tipoAtivo === 'audio') {
-        selSendAs.innerHTML = '<option value="ptt">🎙️ Áudio Gravado na Hora (Voz PTT)</option><option value="audio_play">▶️ Música (Player no WhatsApp)</option><option value="document">📄 Enviar como Documento</option>';
+        selSendAs.innerHTML = '<option value="ptt">Áudio Gravado na Hora (Voz PTT)</option><option value="audio_play">Música / Faixa Pronta</option><option value="document">Enviar como Arquivo Documento</option>';
         sendAsContainer.style.display = 'block';
         if (sendAs) selSendAs.value = sendAs;
 
@@ -228,12 +296,12 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
            const op = document.createElement('option');
            op.value = baseUrl + 'audios/' + a.storage_path;
            op.dataset.nome = a.nome; op.dataset.mime = a.tipo_mime || 'audio/ogg';
-           op.textContent = `🎙️ ${a.nome}`;
+           op.textContent = `${a.nome}`;
            if (op.value === url) op.selected = true;
            selMidia.appendChild(op);
         });
      } else {
-        selSendAs.innerHTML = '<option value="nativo">🖼️ Visual Nativo (Foto/Vídeo/Doc)</option><option value="document">📄 Forçar Envio como Arquivo</option>';
+        selSendAs.innerHTML = '<option value="nativo">Visual Nativo (Galeria WPP)</option><option value="document">Forçar como Arquivo Documento</option>';
         sendAsContainer.style.display = 'block';
         if (sendAs) selSendAs.value = sendAs;
 
@@ -241,7 +309,7 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
            const op = document.createElement('option');
            op.value = baseUrl + 'midias/' + m.storage_path;
            op.dataset.nome = m.nome; op.dataset.mime = m.tipo;
-           op.textContent = `🖼️ ${m.nome}`;
+           op.textContent = `${m.nome}`;
            if (op.value === url) op.selected = true;
            selMidia.appendChild(op);
         });
@@ -249,7 +317,7 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
            const op = document.createElement('option');
            op.value = baseUrl + 'documentos/' + d.storage_path;
            op.dataset.nome = d.nome; op.dataset.mime = d.tipo;
-           op.textContent = `📄 ${d.nome}`;
+           op.textContent = `${d.nome}`;
            if (op.value === url) op.selected = true;
            selMidia.appendChild(op);
         });
@@ -326,6 +394,7 @@ window.salvarGatilhos = async function() {
     const p = row.querySelector('.trigger-palavra')?.value?.trim();
     if (!p) return;
     
+    const pst = row.querySelector('.trigger-pasta')?.value || 'Geral';
     const stepsListParams = [];
     const stepRows = row.querySelectorAll('.followup-row');
     stepRows.forEach(sr => {
@@ -350,7 +419,8 @@ window.salvarGatilhos = async function() {
         resposta: JSON.stringify(stepsListParams), 
         condicao: 'exata', 
         ativo: true,
-        apenas_privado: true
+        apenas_privado: true,
+        pasta: pst
     });
   });
   
@@ -360,46 +430,64 @@ window.salvarGatilhos = async function() {
       await UpsidenDB.from('gatilhos').insert({
         palavra: t.palavra, resposta: t.resposta, condicao: t.condicao,
         ativo: true, criado_por: userData.userId, simular_digitacao: true,
-        apenas_privado: true
+        apenas_privado: true, pasta: t.pasta
       }).execute();
     }
   } catch(e) { /* silent */ }
   chrome.storage.local.set({ ups_config_triggers: triggers }, () => toast(`${triggers.length} gatilho(s) salvo(s) com sequência multidimensional!`, 'success'));
 };
 
-window.addTriggerRow = function(palavra='', respostaObj={}) {
+window.addTriggerRow = function(palavra='', respostaObj={}, pasta='Geral') {
   const list = document.getElementById('triggers-list');
   if(!list) return;
   const uid = 'gatilho-fluxo-' + Date.now() + Math.random().toString(36).substring(2,6);
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'rs-action-row trigger-wrapper animate-in';
-  wrapper.style.borderLeft = '4px solid var(--accent)';
-  wrapper.style.padding = '20px';
+  wrapper.className = 'rs-trigger-card trigger-wrapper animate-in';
+  wrapper.dataset.pasta = pasta;
 
   wrapper.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px;">
-       <div style="flex:1; position:relative;">
-          <label style="font-size:10px; font-weight:800; color:var(--text-muted); position:absolute; top:-8px; left:12px; background:var(--bg-secondary); padding:0 6px; z-index:2;">PALAVRA(S) CHAVE</label>
-          <input type="text" class="form-input trigger-palavra" placeholder="Ex: preco, valor, comprar" value="${palavra}" style="width:100%; font-weight:700; border-radius:8px;">
+    <div class="trigger-header-rs">
+       <div class="trigger-title-wrap">
+          <div class="trigger-word-label">
+             <span>Regra de Ativação (Palavras-chave)</span>
+             <input type="text" class="trigger-palavra rs-input" placeholder="Ex: preco, valor, comprar" value="${palavra}" 
+                    style="font-size:16px; font-weight:700; padding:10px 16px; margin-top:8px; width:100%; min-width:320px;">
+          </div>
        </div>
-       <div style="display:flex; gap:8px;">
-          <button class="btn btn-secondary btn-add-step" style="height:42px; font-weight:700; gap:8px;">
-             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> 
-             Add Resposta
-          </button>
-          <button class="btn-icon btn-remove-trigger" style="color:var(--danger); background:var(--bg-input); width:42px; height:42px; border-radius:8px; border:1px solid var(--border);">
-             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-          </button>
+       <div style="display:flex; gap:12px; align-items:center;">
+          <div style="text-align:left;">
+             <div style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Pasta do Gatilho</div>
+             <select class="trigger-pasta rs-input" style="height:36px; padding:0 12px; font-size:13px; font-weight:600; min-width:140px; cursor:pointer;">
+                <!-- Dinâmico -->
+             </select>
+          </div>
+          <div style="display:flex; flex-direction:column; justify-content:flex-end;">
+             <div style="height:21px;"></div><!-- placeholder -->
+             <div style="display:flex; gap:8px;">
+                <button class="rs-btn-premium btn-add-step" style="padding:0 16px; height:36px; font-size:12px; gap:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); box-shadow:none;">
+                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg> Adicionar Ação
+                </button>
+                <button class="btn-remove-trigger" style="background:rgba(241, 92, 109, 0.1); color:var(--danger); width:36px; height:36px; border-radius:12px; border:1px solid rgba(241, 92, 109, 0.15); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;">
+                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+             </div>
+          </div>
        </div>
     </div>
+
     
-    <div id="${uid}" class="trigger-steps-container" style="padding-left:16px; border-left:2px dashed var(--border); margin-left:8px; display:flex; flex-direction:column; gap:12px;">
+    <div id="${uid}" class="action-flow-container">
        <!-- Followup Rows nested here -->
     </div>
   `;
 
   list.appendChild(wrapper);
+
+  // Popular seletor de pastas no gatilho
+  const selPasta = wrapper.querySelector('.trigger-pasta');
+  const folders = JSON.parse(localStorage.getItem('ups_auto_folders') || '["Geral", "Vendas", "Suporte"]');
+  selPasta.innerHTML = folders.map(f => `<option value="${f}" ${f === pasta ? 'selected' : ''}>${f}</option>`).join('');
 
   wrapper.querySelector('.btn-add-step').onclick = () => window.addFollowupRow(uid);
   wrapper.querySelector('.btn-remove-trigger').onclick = () => wrapper.remove();
@@ -445,7 +533,8 @@ window.loadAutomationConfig = async function() {
       if(window.autoSubTab === 'gatilhos') {
         const triggers = res.ups_config_triggers || [];
         if(!triggers.length) window.addTriggerRow();
-        else triggers.forEach(t => window.addTriggerRow(t.palavra, t.resposta));
+        else triggers.forEach(t => window.addTriggerRow(t.palavra, t.resposta, t.pasta || 'Geral'));
+        setTimeout(renderFoldersSidebar, 100);
       }
       if (window.autoSubTab === 'horario' && res.ups_config_horario) {
         if(document.getElementById('hora-ini')) document.getElementById('hora-ini').value = res.ups_config_horario.ini || '08:00';
@@ -493,7 +582,8 @@ window.loadAutomationConfig = async function() {
       const resGatilhos = await UpsidenDB.from('gatilhos').select('*').eq('criado_por', userData.userId).order('created_at', { ascending: false });
       const gatilhos = resGatilhos.data || resGatilhos || [];
       if (!gatilhos.length) fallbackLocal();
-      else gatilhos.forEach(t => window.addTriggerRow(t.palavra, t.resposta));
+      else gatilhos.forEach(t => window.addTriggerRow(t.palavra, t.resposta, t.pasta || 'Geral'));
+      setTimeout(renderFoldersSidebar, 100);
     }
     if (window.autoSubTab === 'horario') {
       const results = await UpsidenDB.from('config_automacao').select('*').eq('closer_id', userData.userId);

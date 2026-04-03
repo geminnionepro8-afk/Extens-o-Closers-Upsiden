@@ -1,62 +1,113 @@
-/* --- Unified Library Sub-Nav (V3 - Red Sun Style) --- */
-.header-title-row {
-    display: flex;
-    align-items: flex-end; /* Align tabs to bottom of title */
-    gap: 32px;
-}
-.header-sub-nav {
+/* --- Unified Library Header (Red Sun Style) --- */
+.lib-header-container {
     display: flex;
     align-items: center;
-    gap: 4px;
-    height: 100%;
+    gap: 16px;
+    padding: 10px 24px;
+    background: transparent;
+    width: 100%;
 }
-.sub-nav-btn {
-    padding: 0 16px 14px 16px;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--text-muted);
-    background: transparent !important; /* Force transparent since parent header.css may set a background */
-    border: none !important;
-    cursor: pointer;
-    transition: all var(--transition);
-    white-space: nowrap;
+
+/* Selector Group (Tabs) */
+.lib-header-container .selector-group {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.lib-header-container .selector-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    position: relative;
-    border-bottom: 2px solid transparent !important;
-    box-shadow: none !important;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
 }
-.sub-nav-btn:hover {
-    color: var(--text-primary);
-    background: transparent !important;
-}
-.sub-nav-btn.active {
-    color: var(--accent) !important;
-    border-bottom-color: var(--accent) !important;
-    opacity: 1 !important;
-}
-.sub-nav-btn svg {
+
+.lib-header-container .selector-item svg {
     width: 15px;
     height: 15px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.2;
     opacity: 0.7;
-    stroke-width: 2.2px;
 }
-.sub-nav-btn.active svg {
+
+.lib-header-container .selector-item:hover {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.lib-header-container .selector-item.active {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--accent);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.lib-header-container .selector-item.active svg {
+    stroke: var(--accent);
     opacity: 1;
-    color: var(--accent);
 }
-.sub-nav-btn .badge {
-    font-size: 10px;
-    background: rgba(255, 77, 0, 0.1);
+
+.lib-header-container .badge {
+    background: rgba(255, 98, 0, 0.1);
     color: var(--accent);
-    padding: 2px 7px;
+    padding: 1px 7px;
     border-radius: 6px;
-    border: 1px solid rgba(255, 77, 0, 0.2);
+    font-size: 10px;
     font-weight: 700;
+    margin-left: 4px;
+    border: 1px solid rgba(255, 98, 0, 0.2);
 }
-.sub-nav-btn.active .badge {
+
+.lib-header-container .selector-item.active .badge {
     background: var(--accent);
     color: #fff;
-    border-color: var(--accent);
+}
+
+/* Search Wrap */
+.lib-header-container .search-wrap {
+    width: 280px;
+    position: relative;
+}
+
+.lib-header-container .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    opacity: 1 !important;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.lib-header-container .search-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 14px !important;
+    padding: 11px 16px 11px 40px !important;
+    color: #fff !important;
+    font-size: 13.5px !important;
+    font-family: inherit !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.lib-header-container .search-input:focus {
+    border-color: var(--accent) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 0 0 4px rgba(255, 98, 0, 0.1) !important;
 }
