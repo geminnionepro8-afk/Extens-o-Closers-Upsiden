@@ -81,6 +81,18 @@ class InjetorWPP {
     });
   }
 
+  static base64ToBlob(base64, mime) {
+    try {
+        const binStr = atob(base64);
+        const len = binStr.length;
+        const arr = new Uint8Array(len);
+        for (let i = 0; i < len; i++) arr[i] = binStr.charCodeAt(i);
+        return new Blob([arr], { type: mime });
+    } catch(e) { 
+        return null; 
+    }
+  }
+
   // ── HELPERS ──
   static registrarLogGlobal(chatId, descricao) {
      window.postMessage({ origem: 'INJETOR_PAGINA', ev: 'upsiden_interaction_log', dados: { chatId, descricao } }, '*');
@@ -224,15 +236,20 @@ class InjetorWPP {
          
          if (!b64) throw new Error('Falha ao obter binário do áudio');
          
+         // ── FIX: Converter B64 para BLOB para envio nativo de PTT sem crash WA-JS ──
+         const b64Data = b64.includes(',') ? b64.split(',')[1] : b64;
          const mime = payload.mime || 'audio/ogg';
-         if (!b64.startsWith('data:')) {
-             b64 = `data:${mime};base64,${b64}`;
-         }
+         const blob = InjetorWPP.base64ToBlob(b64Data, mime);
+         if (!blob) throw new Error('Falha ao parsear Blob nativo do Áudio');
+
+         const file = new File([blob], payload.nome || `ptt_${Date.now()}.ogg`, { type: mime });
+         const isPtt = payload.sendAs !== 'audio_play';
+         const waveform = new Uint8Array(64).map(() => Math.floor(Math.random() * 50) + 10);
          
-         const resAudio = await window.WPP.chat.sendFileMessage(chatId, b64, { 
+         const resAudio = await window.WPP.chat.sendFileMessage(chatId, file, { 
              type: 'audio', 
-             isPtt: payload.sendAs !== 'audio_play',
-             filename: payload.nome || 'audio.ogg'
+             isPtt: isPtt,
+             waveform: isPtt ? Array.from(waveform) : undefined
          });
 
          if (textResolved.trim()) {
