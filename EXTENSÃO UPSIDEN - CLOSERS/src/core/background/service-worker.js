@@ -87,11 +87,11 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
              const buffer = await r.arrayBuffer();
              const bytes = new Uint8Array(buffer);
              
-             // Otimização Crítica: Previne Crash do Service Worker por Thread Locking em arquivos longos (Áudios MP3/OGG).
-             const CHUNK_SIZE = 0x8000; // 32768 bytes por vez
-             const chunks = [];
-             for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-                 chunks.push(String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK_SIZE)));
+             // Otimização Crítica Segura: O uso de apply() causa RangeError em Workers. 
+             // Usamos um array indexado simples para construir a string sem locking.
+             const chunks = new Array(bytes.length);
+             for (let i = 0; i < bytes.length; i++) {
+                 chunks[i] = String.fromCharCode(bytes[i]);
              }
              
              const b64 = btoa(chunks.join(''));
