@@ -87,13 +87,14 @@ chrome.runtime.onMessage.addListener((mensagem, remetente, responder) => {
              const buffer = await r.arrayBuffer();
              const bytes = new Uint8Array(buffer);
              
-             let binary = '';
-             const len = bytes.byteLength;
-             for (let i = 0; i < len; i++) {
-                 binary += String.fromCharCode(bytes[i]);
+             // Otimização Crítica: Previne Crash do Service Worker por Thread Locking em arquivos longos (Áudios MP3/OGG).
+             const CHUNK_SIZE = 0x8000; // 32768 bytes por vez
+             const chunks = [];
+             for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+                 chunks.push(String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK_SIZE)));
              }
              
-             const b64 = btoa(binary);
+             const b64 = btoa(chunks.join(''));
              const dataUrl = `data:${contentType};base64,${b64}`;
              
              clearTimeout(downloadTimeout);
