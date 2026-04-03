@@ -1,15 +1,20 @@
 /**
  * @file painel-automacoes.js
  * @description Renderiza a seção Automações do Painel Upsiden.
- *              Sub-abas: Saudação, Gatilhos, Horário de Funcionamento, Regras do Robô.
- *              Cada sub-aba tem formulários para configurar o engine de automação.
+ *              Sub-abas: Saudação, Gatilhos, Horário de Funcionamento, Anti-Ban.
+ *              Versão: 3.0 — REESTRUTURADO
+ *                - Recarga instantânea do Engine ao salvar
+ *                - Dropdown de condição (exata/contém) por gatilho
+ *                - Suporte multi-palavra (vírgula)
  * @module Módulo 06: UI — Painel (Automações)
- * @date 21/03/2026
+ * @date 03/04/2026
  */
 
 // ═══ STATE ═══════════════════════════════════════════════════
 window.renderAutomacoes = function(c) {
   if (typeof window.autoSelectedFolder === 'undefined') window.autoSelectedFolder = 'todos';
+  if (typeof window.autoSubTab === 'undefined') window.autoSubTab = 'saudacao';
+  
   const tabs = [
     { id: 'saudacao', label: 'Saudação' },
     { id: 'gatilhos', label: 'Gatilhos' },
@@ -61,7 +66,7 @@ window.renderAutomacoes = function(c) {
       </div>
       
       <div style="margin-top:24px; padding-top:20px; border-top:1px dashed rgba(255,255,255,0.05);">
-        <h4 style="font-size:14px; font-weight:800; color:var(--text-primary); margin-bottom:4px;">🚀 Funil de Follow-ups</h4>
+        <h4 style="font-size:14px; font-weight:800; color:var(--text-primary); margin-bottom:4px;">Funil de Follow-ups</h4>
         <p style="color:var(--text-muted); font-size:11px; margin-bottom:16px;">Adicione mensagens, áudios ou documentos sequenciais.</p>
         
         <div id="followups-list"></div>
@@ -159,18 +164,16 @@ window.renderAutomacoes = function(c) {
   setTimeout(loadAutomationConfig, 100);
 };
 
-// --- NOVAS FUNÇÕES DE GESTÃO DE PASTAS ---
+// --- FUNÇÕES DE GESTÃO DE PASTAS ---
 window.switchAutoFolder = function(id) {
   window.autoSelectedFolder = id;
   const title = document.getElementById('folder-title');
   if (title) title.textContent = id === 'todos' ? 'Todos os Gatilhos' : `Pasta: ${id}`;
   
-  // Atualizar botões da sidebar
   document.querySelectorAll('.rs-folder-btn').forEach(b => {
      b.classList.toggle('active', b.getAttribute('data-click').includes(`'${id}'`));
   });
 
-  // Filtrar gatilhos visíveis
   document.querySelectorAll('.trigger-wrapper').forEach(card => {
      if (id === 'todos') card.style.display = 'flex';
      else card.style.display = card.dataset.pasta === id ? 'flex' : 'none';
@@ -199,11 +202,11 @@ window.renderFoldersSidebar = function() {
      </button>
   `).join('');
   
-  // Contagens
   const cards = document.querySelectorAll('.trigger-wrapper');
   if (document.getElementById('count-all')) document.getElementById('count-all').textContent = cards.length;
 };
 
+// ═══ FOLLOWUP ROW (SHARED: Saudação + Gatilhos) ═════════════
 window.addFollowupRow = function(containerId, stepObj = {}) {
   const list = document.getElementById(containerId);
   if(!list) return;
@@ -215,11 +218,6 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
 
   const row = document.createElement('div');
   row.className = 'rs-action-row followup-row animate-in';
-  
-  // Icon based on type
-  let icon = '💬';
-  if (tipo === 'audio') icon = '🎵';
-  else if (['imagem', 'midia', 'video', 'documento'].includes(tipo)) icon = '🖼️';
 
   row.innerHTML = `
     <div class="rs-step-pill" style="padding: 16px; display:flex; align-items:center; gap:16px; margin-bottom:12px; border-radius:12px; flex-wrap:nowrap; overflow:hidden;">
@@ -336,6 +334,16 @@ window.addFollowupRow = function(containerId, stepObj = {}) {
   populatarMidias(selTipo.value);
 };
 
+// ═══ HELPER: Forçar recarga do Engine ════════════════════════
+function forcarReloadEngine() {
+  try {
+    chrome.runtime.sendMessage({ tipo: 'reload_automation_config' });
+  } catch(e) {
+    console.warn('[Painel] Falha ao enviar reload para background:', e);
+  }
+}
+
+// ═══ SALVAR SAUDAÇÃO ════════════════════════════════════════
 window.salvarSaudacao = async function() {
   const msg = document.getElementById('auto-saudacao').value.trim();
   const ativo = document.getElementById('auto-saudacao-ativo').checked;
@@ -363,6 +371,7 @@ window.salvarSaudacao = async function() {
     }
   });
   
+  // Salvar no Supabase (silencioso)
   try {
     await UpsidenDB.from('config_automacao').upsert({
       closer_id: userData.userId,
@@ -375,6 +384,7 @@ window.salvarSaudacao = async function() {
     }).execute();
   } catch(e) { /* silent */ }
   
+  // Salvar no chrome.storage.local (PRIMÁRIO — dispara storage.onChanged)
   const storageData = { 
     saudacao_ativa: ativo, 
     saudacao_mensagem: msg, 
@@ -383,10 +393,12 @@ window.salvarSaudacao = async function() {
     followup_steps: followups 
   };
   chrome.storage.local.set({ ups_config_saudacao: storageData }, () => {
-    toast('Saudação salva com ' + followups.length + ' passo(s) programado(s)!', 'success');
+    forcarReloadEngine();
+    toast(`Saudação salva com ${followups.length} passo(s) e sincronizada com o WhatsApp!`, 'success');
   });
 };
 
+// ═══ SALVAR GATILHOS ════════════════════════════════════════
 window.salvarGatilhos = async function() {
   const rows = document.querySelectorAll('.trigger-wrapper');
   const triggers = [];
@@ -395,6 +407,7 @@ window.salvarGatilhos = async function() {
     if (!p) return;
     
     const pst = row.querySelector('.trigger-pasta')?.value || 'Geral';
+    const cond = row.querySelector('.trigger-condicao')?.value || 'exata';
     const stepsListParams = [];
     const stepRows = row.querySelectorAll('.followup-row');
     stepRows.forEach(sr => {
@@ -417,13 +430,14 @@ window.salvarGatilhos = async function() {
     triggers.push({ 
         palavra: p, 
         resposta: JSON.stringify(stepsListParams), 
-        condicao: 'exata', 
+        condicao: cond, 
         ativo: true,
         apenas_privado: true,
         pasta: pst
     });
   });
   
+  // Supabase (silencioso)
   try {
     await UpsidenDB.from('gatilhos').delete().eq('criado_por', userData.userId);
     for (const t of triggers) {
@@ -434,13 +448,23 @@ window.salvarGatilhos = async function() {
       }).execute();
     }
   } catch(e) { /* silent */ }
-  chrome.storage.local.set({ ups_config_triggers: triggers }, () => toast(`${triggers.length} gatilho(s) salvo(s) com sequência multidimensional!`, 'success'));
+
+  // chrome.storage.local (dispara storage.onChanged → Engine recebe instantaneamente)
+  chrome.storage.local.set({ ups_config_triggers: triggers }, () => {
+    forcarReloadEngine();
+    toast(`${triggers.length} gatilho(s) salvo(s) e sincronizado(s) com o WhatsApp!`, 'success');
+  });
 };
 
-window.addTriggerRow = function(palavra='', respostaObj={}, pasta='Geral') {
+// ═══ ADD TRIGGER ROW ════════════════════════════════════════
+window.addTriggerRow = function(palavra='', respostaObj={}, pasta='Geral', condicao='exata') {
   const list = document.getElementById('triggers-list');
   if(!list) return;
   const uid = 'gatilho-fluxo-' + Date.now() + Math.random().toString(36).substring(2,6);
+
+  // Remover empty state se existir
+  const emptyState = list.querySelector('.rs-empty-automations');
+  if (emptyState) emptyState.remove();
 
   const wrapper = document.createElement('div');
   wrapper.className = 'rs-trigger-card trigger-wrapper animate-in';
@@ -450,12 +474,19 @@ window.addTriggerRow = function(palavra='', respostaObj={}, pasta='Geral') {
     <div class="trigger-header-rs">
        <div class="trigger-title-wrap">
           <div class="trigger-word-label">
-             <span>Regra de Ativação (Palavras-chave)</span>
+             <span>Regra de Ativação (Palavras-chave separadas por vírgula)</span>
              <input type="text" class="trigger-palavra rs-input" placeholder="Ex: preco, valor, comprar" value="${palavra}" 
                     style="font-size:16px; font-weight:700; padding:10px 16px; margin-top:8px; width:100%; min-width:320px;">
           </div>
        </div>
        <div style="display:flex; gap:12px; align-items:center;">
+          <div style="text-align:left;">
+             <div style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Condição</div>
+             <select class="trigger-condicao rs-input" style="height:36px; padding:0 12px; font-size:13px; font-weight:600; min-width:120px; cursor:pointer;">
+                <option value="exata" ${condicao === 'exata' ? 'selected' : ''}>Exata</option>
+                <option value="contem" ${condicao === 'contem' ? 'selected' : ''}>Contém</option>
+             </select>
+          </div>
           <div style="text-align:left;">
              <div style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Pasta do Gatilho</div>
              <select class="trigger-pasta rs-input" style="height:36px; padding:0 12px; font-size:13px; font-weight:600; min-width:140px; cursor:pointer;">
@@ -463,7 +494,7 @@ window.addTriggerRow = function(palavra='', respostaObj={}, pasta='Geral') {
              </select>
           </div>
           <div style="display:flex; flex-direction:column; justify-content:flex-end;">
-             <div style="height:21px;"></div><!-- placeholder -->
+             <div style="height:21px;"></div>
              <div style="display:flex; gap:8px;">
                 <button class="rs-btn-premium btn-add-step" style="padding:0 16px; height:36px; font-size:12px; gap:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); box-shadow:none;">
                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg> Adicionar Ação
@@ -507,11 +538,11 @@ window.addTriggerRow = function(palavra='', respostaObj={}, pasta='Geral') {
 
      steps.forEach(p => window.addFollowupRow(uid, p));
   } else {
-     // Gatilho vazio, auto criamos primeira acao de texto
      window.addFollowupRow(uid);
   }
 };
 
+// ═══ LOAD CONFIG ════════════════════════════════════════════
 window.loadAutomationConfig = async function() {
   const fallbackLocal = () => {
     chrome.storage.local.get(['ups_config_saudacao', 'ups_config_triggers', 'ups_config_horario', 'ups_config_regras'], res => {
@@ -522,7 +553,6 @@ window.loadAutomationConfig = async function() {
         if(eAtivo) eAtivo.checked = s.saudacao_ativa || s.ativo || false;
         if(document.getElementById('auto-privado')) document.getElementById('auto-privado').checked = s.apenas_privado !== false;
         if(document.getElementById('auto-grupo')) document.getElementById('auto-grupo').checked = s.apenas_grupo || false;
-        // Restore followups
         const list = document.getElementById('followups-list');
         if (list) list.innerHTML = '';
         const steps = s.followup_steps || s.followupSteps;
@@ -533,18 +563,15 @@ window.loadAutomationConfig = async function() {
       if(window.autoSubTab === 'gatilhos') {
         const triggers = res.ups_config_triggers || [];
         if(!triggers.length) window.addTriggerRow();
-        else triggers.forEach(t => window.addTriggerRow(t.palavra, t.resposta, t.pasta || 'Geral'));
+        else triggers.forEach(t => window.addTriggerRow(t.palavra, t.resposta, t.pasta || 'Geral', t.condicao || 'exata'));
         setTimeout(renderFoldersSidebar, 100);
       }
       if (window.autoSubTab === 'horario' && res.ups_config_horario) {
         if(document.getElementById('hora-ini')) document.getElementById('hora-ini').value = res.ups_config_horario.ini || '08:00';
         if(document.getElementById('hora-fim')) document.getElementById('hora-fim').value = res.ups_config_horario.fim || '18:00';
         if(document.getElementById('msg-fechado')) document.getElementById('msg-fechado').value = res.ups_config_horario.msg || '';
-        if(document.getElementById('horario-ativo')) document.getElementById('horario-ativo').checked = res.ups_config_horario.ativo || false;
       }
       if (window.autoSubTab === 'regras' && res.ups_config_regras) {
-        if(document.getElementById('regra-digitando')) document.getElementById('regra-digitando').checked = res.ups_config_regras.simular !== false;
-        if(document.getElementById('regra-gravando')) document.getElementById('regra-gravando').checked = res.ups_config_regras.simularGravacao !== false;
         if(document.getElementById('regra-min')) document.getElementById('regra-min').value = res.ups_config_regras.delayMin || 2;
         if(document.getElementById('regra-max')) document.getElementById('regra-max').value = res.ups_config_regras.delayMax || 5;
       }
@@ -563,12 +590,11 @@ window.loadAutomationConfig = async function() {
         if(document.getElementById('auto-privado')) document.getElementById('auto-privado').checked = data.apenas_privado !== false;
         if(document.getElementById('auto-grupo')) document.getElementById('auto-grupo').checked = data.apenas_grupo || false;
         
-        // Restore followups
         const list = document.getElementById('followups-list');
         if (list) list.innerHTML = '';
         if (data.followup_steps) {
            try {
-             const passos = JSON.parse(data.followup_steps);
+             const passos = typeof data.followup_steps === 'string' ? JSON.parse(data.followup_steps) : data.followup_steps;
              if (Array.isArray(passos)) {
                 passos.forEach(p => window.addFollowupRow('followups-list', p));
              }
@@ -582,7 +608,7 @@ window.loadAutomationConfig = async function() {
       const resGatilhos = await UpsidenDB.from('gatilhos').select('*').eq('criado_por', userData.userId).order('created_at', { ascending: false });
       const gatilhos = resGatilhos.data || resGatilhos || [];
       if (!gatilhos.length) fallbackLocal();
-      else gatilhos.forEach(t => window.addTriggerRow(t.palavra, t.resposta, t.pasta || 'Geral'));
+      else gatilhos.forEach(t => window.addTriggerRow(t.palavra, t.resposta, t.pasta || 'Geral', t.condicao || 'exata'));
       setTimeout(renderFoldersSidebar, 100);
     }
     if (window.autoSubTab === 'horario') {
@@ -592,71 +618,56 @@ window.loadAutomationConfig = async function() {
         if(document.getElementById('hora-ini')) document.getElementById('hora-ini').value = data.hora_inicio || '08:00';
         if(document.getElementById('hora-fim')) document.getElementById('hora-fim').value = data.hora_fim || '18:00';
         if(document.getElementById('msg-fechado')) document.getElementById('msg-fechado').value = data.msg_fora_horario || '';
-        if(document.getElementById('horario-ativo')) document.getElementById('horario-ativo').checked = data.usar_horario || false;
       } else { fallbackLocal(); }
     }
     if (window.autoSubTab === 'regras') {
       const results = await UpsidenDB.from('config_automacao').select('*').eq('closer_id', userData.userId);
       const data = results && results.length > 0 ? results[0] : null;
       if (data) {
-        if(document.getElementById('regra-digitando')) document.getElementById('regra-digitando').checked = data.simular_digitacao !== false;
-        if(document.getElementById('regra-gravando')) document.getElementById('regra-gravando').checked = data.simular_gravacao !== false;
         if(document.getElementById('regra-min')) document.getElementById('regra-min').value = data.delay_min || 2;
         if(document.getElementById('regra-max')) document.getElementById('regra-max').value = data.delay_max || 5;
       } else { fallbackLocal(); }
     }
   } catch(e) {
+    console.error('[Painel-Automações] Erro ao carregar config:', e);
     fallbackLocal();
   }
 };
 
+// ═══ SALVAR HORÁRIO ════════════════════════════════════════
 window.salvarHorario = async function() {
   const ini = document.getElementById('hora-ini')?.value || '08:00';
   const fim = document.getElementById('hora-fim')?.value || '18:00';
   const msg = document.getElementById('msg-fechado')?.value?.trim() || '';
-  const ativo = document.getElementById('horario-ativo')?.checked || false;
   try {
     await UpsidenDB.from('config_automacao').upsert({
       closer_id: userData.userId,
-      usar_horario: ativo,
       hora_inicio: ini,
       hora_fim: fim,
       msg_fora_horario: msg,
       updated_at: new Date().toISOString()
     }).execute();
   } catch(e) { /* silent */ }
-  chrome.storage.local.set({ ups_config_horario: { ini, fim, msg, ativo } }, () => toast('Horário de atendimento salvo!', 'success'));
+  chrome.storage.local.set({ ups_config_horario: { ini, fim, msg } }, () => {
+    forcarReloadEngine();
+    toast('Horário de atendimento salvo e sincronizado!', 'success');
+  });
 };
 
+// ═══ SALVAR REGRAS GLOBAIS ═════════════════════════════════
 window.salvarRegrasGlobais = async function() {
-  const simula = document.getElementById('regra-digitando')?.checked || false;
-  const simulaGrav = document.getElementById('regra-gravando')?.checked || false;
   const delayMin = Number(document.getElementById('regra-min')?.value) || 2;
   const delayMax = Number(document.getElementById('regra-max')?.value) || 5;
   try {
     await UpsidenDB.from('config_automacao').upsert({
       closer_id: userData.userId,
-      simular_digitacao: simula,
-      simular_gravacao: simulaGrav,
       delay_min: delayMin,
       delay_max: delayMax,
       updated_at: new Date().toISOString()
     }).execute();
   } catch(e) { /* silent */ }
-  chrome.storage.local.set({ ups_config_regras: { simular: simula, simularGravacao: simulaGrav, delayMin, delayMax } }, () => toast('Regras de humanização globais salvas!', 'success'));
-};
-
-// Anti-Ban functions (SSOT: single source for salvarConfigAntiBan/loadAntiBan)
-window.salvarConfigAntiBan = function() {
-  chrome.storage.local.set({
-    ups_antiban_min: document.getElementById('anti-min').value,
-    ups_antiban_max: document.getElementById('anti-max').value
-  }, () => toast('Configuração salva!', 'success'));
-};
-window.loadAntiBan = function() {
-  chrome.storage.local.get(['ups_antiban_min', 'ups_antiban_max'], (res) => {
-    const min = document.getElementById('anti-min'); const max = document.getElementById('anti-max');
-    if(min) min.value = res.ups_antiban_min || 4;
-    if(max) max.value = res.ups_antiban_max || 10;
+  chrome.storage.local.set({ ups_config_regras: { delayMin, delayMax } }, () => {
+    forcarReloadEngine();
+    toast('Regras de humanização salvas e sincronizadas!', 'success');
   });
 };
