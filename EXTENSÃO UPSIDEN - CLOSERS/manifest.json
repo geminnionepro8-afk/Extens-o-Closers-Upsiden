@@ -80,6 +80,7 @@
         "src/ui/painel/painel-crm-kanban.js",
         "src/ui/painel/painel-crm-modals.js",
         "src/ui/painel/painel-automacoes.js",
+        "src/ui/painel/painel-flow.js",
         "src/ui/painel/painel-campanhas.js",
         "src/ui/painel/painel-admin.js",
         "src/ui/styles/painel.css",

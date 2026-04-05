@@ -1,59 +1,81 @@
 <div class="module-wrapper module-flow" id="module-flow" style="display: none; width: 100%; height: 100%;">
   
-  <!-- Flow Header -->
-  <div class="flow-header">
-    <div class="flow-title">
-      <h2>Automacao Visual</h2>
-      <span class="flow-status badge-active">Ativo</span>
+  <!-- NEW TOP BAR (Manychat Inspired) -->
+  <div class="flow-top-bar">
+    <div class="top-left">
+      <button class="back-btn" data-click="goBackToDashboard()" id="flow-back-btn">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <div class="flow-name-container">
+        <input type="text" class="flow-name-input" id="flow-display-name" value="Carregando fluxo..." spellcheck="false">
+        <span class="flow-badge" id="flow-status-badge">Draft</span>
+      </div>
     </div>
-    <div class="flow-actions">
-      <button class="btn btn-outline" id="flow-btn-zoom-out">-</button>
-      <span id="flow-zoom-level">100%</span>
-      <button class="btn btn-outline" id="flow-btn-zoom-in">+</button>
-      <button class="btn btn-primary" id="flow-btn-save">Salvar Fluxo</button>
+
+    <div class="top-center">
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="flow-btn-zoom-out">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+        <span class="zoom-text" id="flow-zoom-level">100%</span>
+        <button class="zoom-btn" id="flow-btn-zoom-in">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+      <div class="tool-divider"></div>
+      <button class="tool-icon-btn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+      </button>
+    </div>
+
+    <div class="top-right">
+      <div class="action-buttons">
+        <button class="btn-publish-main" id="flow-btn-save">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:8px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Publicar Fluxo
+        </button>
+      </div>
     </div>
   </div>
 
   <div class="flow-layout">
-    <!-- Tools Sidebar (Palette) -->
-    <aside class="flow-sidebar-tools">
-      <div class="palette-section-title">Gatilhos</div>
-      <div class="palette-node" draggable="true" data-type="trigger">
-        <div class="pn-icon">⚡</div>
-        <div class="pn-text">Disparo Manual</div>
-      </div>
-      <div class="palette-node" draggable="true" data-type="keyword">
-        <div class="pn-icon">🔑</div>
-        <div class="pn-text">Palavra-chave</div>
-      </div>
+    <!-- LEFT SIDEBAR (Nodes Palette - Cards Laranjas) -->
+    <aside class="flow-sidebar-palette">
+      <div class="palette-scroll">
+        
+        <div class="palette-card orange" draggable="true" data-type="message" title="Mensagem">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>
+        </div>
 
-      <div class="palette-section-title">Ações</div>
-      <div class="palette-node" draggable="true" data-type="message">
-        <div class="pn-icon">💬</div>
-        <div class="pn-text">Enviar Mensagem</div>
-      </div>
-      <div class="palette-node" draggable="true" data-type="audio">
-        <div class="pn-icon">🎵</div>
-        <div class="pn-text">Enviar Áudio</div>
-      </div>
-      
-      <div class="palette-section-title">Lógica</div>
-      <div class="palette-node" draggable="true" data-type="delay">
-        <div class="pn-icon">⏳</div>
-        <div class="pn-text">Atraso Inteligente</div>
-      </div>
-      <div class="palette-node" draggable="true" data-type="condition">
-        <div class="pn-icon">🔀</div>
-        <div class="pn-text">Condição (Se)</div>
+        <div class="palette-card orange" draggable="true" data-type="audio" title="Áudio">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        </div>
+
+        <div class="palette-card orange" draggable="true" data-type="image" title="Imagem">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+
+        <div class="palette-card orange" draggable="true" data-type="document" title="Documento">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+
+        <div class="palette-card orange" draggable="true" data-type="pause" title="Pausa">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+
+        <div class="palette-divider"></div>
+
+        <div class="palette-card dark" draggable="true" data-type="condition" title="Lógica">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+        </div>
+
       </div>
     </aside>
 
     <!-- Infinite Canvas Workspace -->
     <div class="flow-workspace-container" id="flow-workspace">
-      <!-- Movel layer: zoom and pan applied here -->
-      <div class="flow-canvas" id="flow-canvas" style="transform: translate(0px, 0px) scale(1);">
+      <div class="flow-canvas" id="flow-canvas">
         
-        <!-- SVG Connections Layer -->
         <svg class="flow-svg-layer" id="flow-svg-layer">
           <defs>
             <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -66,65 +88,44 @@
             </filter>
           </defs>
           <g id="flow-edges-group"></g>
-          <!-- The floating drag line -->
           <path id="flow-drag-line" class="flow-edge drag-edge" d="" style="display: none;"></path>
         </svg>
 
-        <!-- Nodes Container -->
         <div class="flow-nodes-container" id="flow-nodes-container">
-          <!-- Dynamically injected nodes go here -->
+          <!-- Dynamically injected nodes -->
         </div>
 
+      </div>
+
+      <!-- BOTTOM RIGHT CONTROLS -->
+      <div class="flow-floating-controls">
+        <div class="status-toggle-wrap">
+           <span class="toggle-label" id="flow-status-text">Draft</span>
+           <label class="toggle-switch">
+              <input type="checkbox" id="flow-active-toggle" checked>
+              <span class="toggle-slider"></span>
+           </label>
+        </div>
       </div>
     </div>
 
-    <!-- Right Sidebar (Properties / Simulator) -->
-    <aside class="flow-right-sidebar" id="flow-right-sidebar">
-      <div class="sidebar-tabs">
-        <button class="tab-btn active" data-target="panel-properties">Propriedades</button>
-        <button class="tab-btn" data-target="panel-simulator">Simulador</button>
-      </div>
+    <!-- Properties Popover (Floating Card) -->
+    <div class="node-popover" id="flow-node-popover" style="display: none;">
+       <div class="popover-header">
+          <h3 id="popover-node-title">Propriedades</h3>
+          <div class="popover-actions">
+            <button class="pop-action-btn delete" id="pop-btn-delete" title="Excluir No">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+            <button class="pop-action-btn close" id="pop-btn-close">
+               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+       </div>
+       <div class="popover-body" id="popover-content">
+          <!-- Dynamically Injected Content -->
+       </div>
+    </div>
 
-      <!-- Tab: Properties -->
-      <div class="sidebar-pane active" id="panel-properties">
-        <div class="fp-empty">
-          <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <p>Selecione um no para editar suas propriedades.</p>
-        </div>
-        <div class="fp-content" style="display: none;">
-          <!-- Config forms injected here -->
-        </div>
-      </div>
-
-      <!-- Tab: Simulator -->
-      <div class="sidebar-pane" id="panel-simulator" style="display: none;">
-        <div class="whatsapp-simulator">
-          <div class="wa-sim-header">
-            <div class="wa-avatar">👤</div>
-            <div class="wa-info">
-              <div class="wa-name">Cliente Teste</div>
-              <div class="wa-status" id="wa-sim-typing-indicator">online</div>
-            </div>
-          </div>
-          <div class="wa-sim-body" id="wa-sim-messages">
-            <div class="wa-msg received">
-              <div class="wa-msg-text">Olá! Tenho interesse.</div>
-              <div class="wa-msg-time">10:00</div>
-            </div>
-            <!-- Dynamic Messages Go Here -->
-          </div>
-          <div class="wa-sim-controls">
-            <div class="wa-sim-progress" id="wa-sim-progress-bar">
-              <div class="wa-sim-progress-inner" style="width: 0%"></div>
-            </div>
-            <div class="wa-sim-actions">
-              <button class="btn btn-icon sim-action-btn" id="sim-btn-play" title="Iniciar Simulação">▶</button>
-              <button class="btn btn-icon sim-action-btn" id="sim-btn-pause" title="Pausar" disabled>⏸</button>
-              <button class="btn btn-icon sim-action-btn" id="sim-btn-reset" title="Reiniciar">🔄</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
   </div>
 </div>

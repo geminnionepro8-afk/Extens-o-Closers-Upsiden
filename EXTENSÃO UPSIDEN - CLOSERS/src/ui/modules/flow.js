@@ -1,7 +1,7 @@
 /**
  * @file flow.js
- * @description Engine Vanilla JS para o Canvas Infinito e Drag-and-Drop (Visual Flow Builder).
- * Matemática de Pan, Zoom e Bezier Connections. Estilo RedSun DNA.
+ * @description Engine Vanilla JS para o Visual Flow Builder.
+ * Matemática de Pan, Zoom e conexões Bezier. Estilo RedSun DNA v3.0.
  */
 
 class FlowEngine {
@@ -12,109 +12,110 @@ class FlowEngine {
     this.edgesGroup = document.getElementById('flow-edges-group');
     this.nodesContainer = document.getElementById('flow-nodes-container');
     this.dragLine = document.getElementById('flow-drag-line');
-    
     this.zoomLabel = document.getElementById('flow-zoom-level');
-    
+
     this.zoom = 1;
     this.panX = 0;
     this.panY = 0;
-    
+
     this.isPanning = false;
     this.panStartX = 0;
     this.panStartY = 0;
-    
-    this.nodes = {}; // Map id -> data
-    this.edges = []; // Array of {id, source, target}
-    this.nodeCounter = 0;
-    this.edgeCounter = 0;
-    
-    // Connection Drag State
+
+    this.nodes = {}; // node_id -> { el, data, x, y }
+    this.edges = []; // { id, source, target, pathEl }
+
+    // Connection State
     this.isConnecting = false;
     this.connSourceNode = null;
     this.connStartX = 0;
     this.connStartY = 0;
-    
+
     // Node Drag State
     this.draggedNodeId = null;
     this.nodeDragStartX = 0;
     this.nodeDragStartY = 0;
-    
+
+    this.selectedNodeId = null;
+    this.currentFlowId = null;
+    this.currentFlowName = "Novo Fluxo";
+
     this.init();
   }
 
   init() {
     this.bindGlobalEvents();
     this.bindPaletteDnD();
-    
+
+    // Initial Pan
     const rect = this.container.getBoundingClientRect();
-    this.panX = rect.width / 2 - 140;
+    this.panX = rect.width / 2 - 100;
     this.panY = rect.height / 2 - 100;
     this.updateTransform();
+
+    const nameEl = document.getElementById('flow-display-name');
+    if (nameEl) this.currentFlowName = nameEl.textContent;
   }
 
-  /* ═══ 1. GLOBAL PAN, ZOOM E MOUSE ═════════════════════════════ */
+  /* ═══ 1. GLOBAL EVENTS & CANVAS MATH ══════════════════════════ */
   bindGlobalEvents() {
-    // Zoom (Wheel)
     this.container.addEventListener('wheel', (e) => {
       e.preventDefault();
       const direction = e.deltaY > 0 ? -1 : 1;
       const change = 1 + direction * 0.05;
-      
       let newZoom = this.zoom * change;
       newZoom = Math.min(Math.max(0.3, newZoom), 2);
-      
       const rect = this.container.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
-      
       this.panX = mouseX - (mouseX - this.panX) * (newZoom / this.zoom);
       this.panY = mouseY - (mouseY - this.panY) * (newZoom / this.zoom);
       this.zoom = newZoom;
       this.updateTransform();
-      this.updateEdges(); 
+      this.updateEdges();
+      this.updatePopoverPosition();
     }, { passive: false });
 
-    // Pan / Drag Nodes / Draw Lines
     this.container.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.flow-node') || e.target.closest('.node-handle')) return;
-      
+      if (e.target.closest('.flow-node') || e.target.closest('.node-port') || e.target.closest('.node-popover')) return;
       this.isPanning = true;
       this.panStartX = e.clientX - this.panX;
       this.panStartY = e.clientY - this.panY;
       this.container.classList.add('panning');
+      this.closePopover();
     });
 
     window.addEventListener('mousemove', (e) => {
-      // 1. Panning Canvas
       if (this.isPanning) {
         this.panX = e.clientX - this.panStartX;
         this.panY = e.clientY - this.panStartY;
         this.updateTransform();
+        this.updatePopoverPosition();
         return;
       }
-      
-      // 2. Dragging Node
       if (this.draggedNodeId) {
         const dx = (e.clientX - this.nodeDragStartX) / this.zoom;
         const dy = (e.clientY - this.nodeDragStartY) / this.zoom;
-        
+
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+          this.nodeDragDidMove = true;
+        }
+
         const node = this.nodes[this.draggedNodeId];
         node.x += dx;
         node.y += dy;
         node.el.style.transform = `translate(${node.x}px, ${node.y}px)`;
-        
         this.nodeDragStartX = e.clientX;
         this.nodeDragStartY = e.clientY;
         this.updateEdges();
+        if (this.selectedNodeId === this.draggedNodeId) this.updatePopoverPosition();
         return;
       }
-      
-      // 3. Drawing Connection Line
       if (this.isConnecting) {
         const rect = this.canvas.getBoundingClientRect();
-        const mouseCanvasX = (e.clientX - rect.left) / this.zoom;
-        const mouseCanvasY = (e.clientY - rect.top) / this.zoom;
-        this.drawBezier(this.dragLine, this.connStartX, this.connStartY, mouseCanvasX, mouseCanvasY);
+        const mx = (e.clientX - rect.left) / this.zoom;
+        const my = (e.clientY - rect.top) / this.zoom;
+        this.drawBezier(this.dragLine, this.connStartX, this.connStartY, mx, my);
       }
     });
 
@@ -129,629 +130,487 @@ class FlowEngine {
       if (this.isConnecting) {
         this.isConnecting = false;
         this.dragLine.style.display = 'none';
-        
-        const dropHandle = e.target.closest('.handle-in');
-        if (dropHandle) {
-          const targetNodeId = dropHandle.dataset.nodeId;
+        const dropPort = e.target.closest('.node-port.input');
+        if (dropPort) {
+          const targetNodeId = dropPort.closest('.flow-node').id;
           if (targetNodeId !== this.connSourceNode) {
             this.createEdge(this.connSourceNode, targetNodeId);
           }
         }
       }
     });
-    
+
     document.getElementById('flow-btn-zoom-in')?.addEventListener('click', () => this.zoomManual(0.1));
     document.getElementById('flow-btn-zoom-out')?.addEventListener('click', () => this.zoomManual(-0.1));
     document.getElementById('flow-btn-save')?.addEventListener('click', () => this.saveFlow());
+    document.getElementById('flow-back-btn')?.addEventListener('click', () => this.closeFlowBuilder());
+
+    document.getElementById('pop-btn-close')?.addEventListener('click', () => this.closePopover());
+    document.getElementById('pop-btn-delete')?.addEventListener('click', () => this.deleteNode(this.selectedNodeId));
+  }
+
+  updateTransform() {
+    this.canvas.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
+    if (this.zoomLabel) this.zoomLabel.textContent = `${Math.round(this.zoom * 100)}%`;
   }
 
   zoomManual(amount) {
     let newZoom = this.zoom + amount;
     newZoom = Math.min(Math.max(0.3, newZoom), 2);
     const rect = this.container.getBoundingClientRect();
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    this.panX = centerX - (centerX - this.panX) * (newZoom / this.zoom);
-    this.panY = centerY - (centerY - this.panY) * (newZoom / this.zoom);
+    this.panX = (rect.width / 2) - ((rect.width / 2) - this.panX) * (newZoom / this.zoom);
+    this.panY = (rect.height / 2) - ((rect.height / 2) - this.panY) * (newZoom / this.zoom);
     this.zoom = newZoom;
     this.updateTransform();
     this.updateEdges();
+    this.updatePopoverPosition();
   }
 
-  updateTransform() {
-    this.canvas.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
-    this.container.style.backgroundPosition = `${this.panX}px ${this.panY}px`;
-    this.container.style.backgroundSize = `${24 * this.zoom}px ${24 * this.zoom}px`;
-    if (this.zoomLabel) this.zoomLabel.textContent = `${Math.round(this.zoom * 100)}%`;
+  closeFlowBuilder() {
+    const wrapper = document.getElementById('module-flow');
+    if (wrapper) wrapper.remove();
+    if (typeof window.navigate === 'function') window.navigate('automacoes');
   }
 
-  async saveFlow() {
-    const btn = document.getElementById('flow-btn-save');
-    if (btn) btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:4px;display:inline-block;vertical-align:middle;"></div> Salvando...';
-
-    const payload = {
-      id: this.currentFlowId || null,
-      name: this.currentFlowName || 'Novo Fluxo Automático',
-      nodes: Object.values(this.nodes).map(n => ({
-        id: n.id,
-        type: n.type,
-        position: { x: Math.round(n.x), y: Math.round(n.y) },
-        data: n.data
-      })),
-      edges: this.edges.map(e => ({
-        id: e.id,
-        source: e.source,
-        target: e.target
-      }))
-    };
-    
-    if (!payload.id) {
-       payload.id = 'flow_' + Date.now();
-       this.currentFlowId = payload.id;
-    }
-    
-    try {
-      if (window.FlowService) {
-        await window.FlowService.saveFlow(payload);
-        if (typeof window.toast === 'function') window.toast('Fluxo salvo com sucesso no banco de dados!', 'success');
-      } else {
-        console.warn('[Flow Builder] FlowService não encontrado. Print local:', payload);
-        if (typeof window.toast === 'function') window.toast('Progresso do fluxo salvo localmente!', 'success');
-      }
-    } catch (err) {
-      if (typeof window.toast === 'function') window.toast('Erro ao salvar fluxo: ' + err.message, 'error');
-    } finally {
-      if (btn) btn.innerHTML = 'Salvar Fluxo';
-    }
-    
-    return payload;
-  }
-
-  loadFlow(flowData) {
-    this.nodesContainer.innerHTML = '';
-    this.edgesGroup.innerHTML = '';
-    if (this.dragLine) this.dragLine.style.display = 'none';
-    
-    this.nodes = {};
-    this.edges = [];
-    this.nodeCounter = 0;
-    this.edgeCounter = 0;
-    this.currentFlowId = flowData.id;
-    this.currentFlowName = flowData.name;
-    
-    if (flowData.nodes_json) {
-      flowData.nodes_json.forEach(n => {
-        // Find max ID sequence to restore counters
-        const numId = parseInt(n.id.replace('node_', '')) || 0;
-        if (numId > this.nodeCounter) this.nodeCounter = numId;
-        
-        this.createNode(n.type, n.position.x, n.position.y, n.id, n.data);
-      });
-    }
-    
-    if (flowData.edges_json) {
-      flowData.edges_json.forEach(e => {
-        const numId = parseInt(e.id.replace('edge_', '')) || 0;
-        if (numId > this.edgeCounter) this.edgeCounter = numId;
-        
-        this.createEdge(e.source, e.target, e.id);
-      });
-    }
-  }
-
-  /* ═══ 2. PALETTE DRAG & DROP ══════════════════════════════════ */
+  /* ═══ 2. PALETTE & NODE CREATION ══════════════════════════════ */
   bindPaletteDnD() {
-    const paletteItems = document.querySelectorAll('.palette-node');
-    paletteItems.forEach(item => {
+    const items = document.querySelectorAll('.palette-card');
+    items.forEach(item => {
       item.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('application/upsiden-node-type', item.dataset.type);
+        e.dataTransfer.setData('node-type', item.dataset.type);
         e.dataTransfer.effectAllowed = 'copy';
       });
     });
 
-    this.container.addEventListener('dragover', (e) => {
-      e.preventDefault(); // allow drop
-      e.dataTransfer.dropEffect = 'copy';
-    });
-
+    this.container.addEventListener('dragover', (e) => e.preventDefault());
     this.container.addEventListener('drop', (e) => {
       e.preventDefault();
-      const type = e.dataTransfer.getData('application/upsiden-node-type');
+      const type = e.dataTransfer.getData('node-type');
       if (!type) return;
-      
-      // Calculate drop position relative to canvas
       const rect = this.canvas.getBoundingClientRect();
       const x = (e.clientX - rect.left) / this.zoom;
       const y = (e.clientY - rect.top) / this.zoom;
-      
-      this.createNode(type, x, y);
+      this.createNode(type, x - 100, y - 40);
     });
   }
 
-  /* ═══ 3. NODE CREATION & DRAGGING ═════════════════════════════ */
-  createNode(type, x, y, forceId = null, initialData = {}) {
-    const id = forceId || `node_${++this.nodeCounter}`;
-    
-    const titles = {
-      'trigger': '⚡ Gatilho Manual',
-      'keyword': '🔑 Palavra-Chave',
-      'message': '💬 Enviar Mensagem',
-      'audio': '🎵 Enviar Áudio',
-      'delay': '⏳ Atraso Inteligente',
-      'condition': '🔀 Condição (Se)'
+  createNode(type, x, y, id = null, data = null) {
+    const nodeId = id || `node_${Date.now()}`;
+    const nodeData = data || {
+      type: type,
+      name: this.getNodeName(type),
+      content: '',
+      delay: 3,
+      url: '',
+      mime: '',
+      fileName: ''
     };
 
     const el = document.createElement('div');
     el.className = 'flow-node';
-    el.dataset.id = id;
+    el.id = nodeId;
     el.dataset.type = type;
     el.style.transform = `translate(${x}px, ${y}px)`;
-    
+
+    const icon = this.getNodeIcon(type);
+
     el.innerHTML = `
-      <div class="node-header">
-        <div class="node-icon">${titles[type].split(' ')[0]}</div>
-        <div class="node-title">${titles[type].substring(2)}</div>
+      <div class="node-content">
+        <div class="node-icon-wrap">${icon}</div>
+        <div class="node-info-wrap">
+          <div class="node-label">${nodeData.name}</div>
+          <div class="node-subtext">${type}</div>
+        </div>
       </div>
-      <div class="node-body">
-        <div class="node-content-preview">Configure as propriedades...</div>
-      </div>
-      <div class="node-handle handle-in" data-node-id="${id}" title="Entrada"></div>
-      <div class="node-handle handle-out" data-node-id="${id}" title="Saída (Puxe para conectar)"></div>
+      <div class="node-port input"></div>
+      <div class="node-port output"></div>
     `;
 
-    // Remove input handle for triggers
-    if (type === 'trigger' || type === 'keyword') {
-      el.querySelector('.handle-in').style.display = 'none';
-    }
-
     this.nodesContainer.appendChild(el);
-    this.nodes[id] = { id, type, x, y, el, data: initialData };
+    this.nodes[nodeId] = { el, data: nodeData, x, y, id: nodeId };
 
-    // Set initial preview if properties exist
-    if (initialData && Object.keys(initialData).length > 0) {
-       this.updateNodePreview(id, initialData);
-    }
-
-    this.bindNodeInteractions(id, el);
-  }
-
-  updateNodePreview(id, data) {
-    const node = this.nodes[id];
-    if (!node) return;
-    const preview = node.el.querySelector('.node-content-preview');
-    if (!preview) return;
-    
-    if (node.type === 'message' && data.text) preview.textContent = data.text;
-    if (node.type === 'audio' && data.audioId) preview.textContent = data.audioName || 'Áudio ' + data.audioId;
-    if ((node.type === 'trigger' || node.type === 'keyword') && data.keyword) preview.textContent = data.keyword;
-    if (node.type === 'delay' && data.seconds) preview.textContent = data.seconds + 's';
-    if (node.type === 'condition' && data.tag) preview.textContent = 'Tag: ' + data.tag;
-  }
-
-  bindNodeInteractions(id, el) {
-    const header = el.querySelector('.node-header');
-    
-    // Select node
-    el.addEventListener('mousedown', (e) => {
-      // Remove selected class from all
-      Object.values(this.nodes).forEach(n => n.el.classList.remove('selected'));
-      el.classList.add('selected');
-      // show properties panel
-      this.openPropertiesPanel(id);
+    el.addEventListener('mousedown', (e) => this.onNodeMouseDown(e, nodeId));
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // If we moved the node during mousedown, don't trigger the selection popover
+      if (this.nodeDragDidMove) return;
+      this.selectNode(nodeId);
     });
 
-    // Move node
-    header.addEventListener('mousedown', (e) => {
-      e.stopPropagation();
-      this.draggedNodeId = id;
-      this.nodeDragStartX = e.clientX;
-      this.nodeDragStartY = e.clientY;
-      // bring to front
-      this.nodesContainer.appendChild(el);
-    });
+    return nodeId;
+  }
 
-    // Start connection
-    const handleOut = el.querySelector('.handle-out');
-    handleOut.addEventListener('mousedown', (e) => {
-      e.stopPropagation();
+  getNodeIcon(type) {
+    const icons = {
+      message: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          <path d="M8 9h8"></path>
+          <path d="M8 13h6"></path>
+        </svg>`,
+      audio: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>`,
+      image: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>`,
+      document: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>`,
+      pause: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>`,
+      condition: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <polyline points="23 21 23 16 18 16"></polyline>
+          <path d="M17 11V9a4 4 0 0 1 4-4h1"></path>
+        </svg>`
+    };
+    return icons[type] || icons.message;
+  }
+
+  getNodeName(type) {
+    const names = {
+      message: 'Enviar Mensagem', audio: 'Enviar Áudio', image: 'Enviar Imagem',
+      document: 'Enviar Documento', pause: 'Pausa (Delay)', condition: 'Condição'
+    };
+    return names[type] || 'Ação';
+  }
+
+  onNodeMouseDown(e, nodeId) {
+    const port = e.target.closest('.node-port');
+    if (port && port.classList.contains('output')) {
       this.isConnecting = true;
-      this.connSourceNode = id;
+      this.connSourceNode = nodeId;
       this.dragLine.style.display = 'block';
-      
-      // Calculate absolute center of the handle in the canvas
-      const node = this.nodes[id];
-      const hRect = handleOut.getBoundingClientRect();
-      const cRect = this.canvas.getBoundingClientRect();
-      this.connStartX = (hRect.left + hRect.width/2 - cRect.left) / this.zoom;
-      this.connStartY = (hRect.top + hRect.height/2 - cRect.top) / this.zoom;
-      
-      this.drawBezier(this.dragLine, this.connStartX, this.connStartY, this.connStartX, this.connStartY);
-    });
+      const sNode = this.nodes[nodeId];
+      this.connStartX = sNode.x + port.offsetLeft + port.offsetWidth / 2;
+      this.connStartY = sNode.y + port.offsetTop + port.offsetHeight / 2;
+      return;
+    }
+
+    // Bring to front with z-index, don't move in DOM (to avoid breaking click event)
+    Object.values(this.nodes).forEach(n => n.el.style.zIndex = 10);
+    this.nodes[nodeId].el.style.zIndex = 100;
+
+    e.stopPropagation();
+    this.draggedNodeId = nodeId;
+    this.nodeDragStartX = e.clientX;
+    this.nodeDragStartY = e.clientY;
+
+    // Record start position to determine if it was a drag or a click
+    this.nodeDragDidMove = false;
   }
 
-  /* ═══ 4. PROPRIEDADES & DATA (SPRINT 8) ══════════════════════ */
-  openPropertiesPanel(id) {
-    const node = this.nodes[id];
-    const panelEmpty = document.querySelector('.flow-properties-panel .fp-empty');
-    const panelContent = document.querySelector('.flow-properties-panel .fp-content');
-    
-    if (panelEmpty) panelEmpty.style.display = 'none';
-    if (panelContent) panelContent.style.display = 'flex';
-    
-    let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-      <h3 style="font-size:14px; color:var(--text-primary); margin:0;">Propriedades</h3>
-      <button class="btn-ghost" onclick="window.flowEngine?.closePropertiesPanel()" style="padding:4px;color:var(--text-muted);cursor:pointer;"><svg viewBox="0 0 24 24" width="16" stroke="currentColor" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>`;
+  /* ═══ 3. POPOVER (THE "JANELINHA") ══════════════════════════ */
+  selectNode(nodeId) {
+    if (this.selectedNodeId && this.nodes[this.selectedNodeId]) {
+      this.nodes[this.selectedNodeId].el.classList.remove('selected');
+    }
+    this.selectedNodeId = nodeId;
+    this.nodes[nodeId].el.classList.add('selected');
+    this.openPopover(nodeId);
+  }
 
-    if (node.type === 'message') {
+  openPopover(nodeId) {
+    const node = this.nodes[nodeId];
+    const popover = document.getElementById('flow-node-popover');
+    const content = document.getElementById('popover-content');
+    const titleEl = document.getElementById('popover-node-title');
+    if (!popover || !content) return;
+
+    popover.style.display = 'flex';
+    this.updatePopoverPosition();
+
+    if (titleEl) titleEl.textContent = this.getNodeName(node.data.type);
+
+    let html = `
+      <div class="fp-content">
+        <div class="prop-group">
+          <label class="prop-label">Título do Nó</label>
+          <input type="text" class="prop-input" id="prop-name" value="${node.data.name}">
+        </div>
+    `;
+
+    if (node.data.type === 'message') {
       html += `
-        <div class="fp-form-group">
-          <label>Texto da Mensagem</label>
-          <textarea class="fp-input fp-textarea" id="fp-msg-text" placeholder="Olá {nome}! Tudo bem?">${node.data.text || ''}</textarea>
+        <div class="prop-group">
+          <label class="prop-label">Texto da Mensagem</label>
+          <textarea class="prop-textarea" id="prop-content" rows="4">${node.data.content || ''}</textarea>
         </div>
       `;
-    } else if (node.type === 'audio') {
-      const audios = window.painelData?.audios || [];
-      let options = '<option value="">-- Selecione o Áudio --</option>';
-      audios.forEach(a => {
-        options += `<option value="${a.id}" ${node.data.audioId === a.id ? 'selected' : ''}>${a.nome}</option>`;
-      });
+    } else if (['audio', 'image', 'document'].includes(node.data.type)) {
+      const typeKey = node.data.type === 'audio' ? 'audios' : (node.data.type === 'image' ? 'midias' : 'documentos');
+      const library = window.painelData?.[typeKey] || [];
+      const baseUrl = 'https://imxwpacwtphekrbgwbph.supabase.co/storage/v1/object/public/';
+
       html += `
-        <div class="fp-form-group">
-          <label>Áudio Gravado na Biblioteca</label>
-          <select class="fp-input" id="fp-audio-select" style="background:var(--bg-input);">
-            ${options}
+        <div class="prop-group">
+          <label class="prop-label">Arquivo da Biblioteca</label>
+          <select class="prop-select" id="prop-library">
+            <option value="">-- Selecione arquivo --</option>
+            ${library.map(m => {
+        const url = baseUrl + m.storage_path;
+        return `<option value="${url}" ${node.data.url === url ? 'selected' : ''} data-mime="${m.tipo_mime || m.tipo}" data-name="${m.nome}">${m.nome}</option>`;
+      }).join('')}
           </select>
+          <button class="direct-upload-btn" id="prop-upload-btn" style="margin-top:8px;">
+             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+             Upload Direto
+          </button>
         </div>
       `;
-    } else if (node.type === 'trigger' || node.type === 'keyword') {
+    } else if (node.data.type === 'pause') {
       html += `
-        <div class="fp-form-group">
-          <label>Palavra-chave Disparadora</label>
-          <input type="text" class="fp-input" id="fp-trigger-kw" value="${node.data.keyword || ''}" placeholder="Ex: valor, quero, preco">
-        </div>
-      `;
-    } else if (node.type === 'delay') {
-      html += `
-        <div class="fp-form-group">
-          <label>Tempo de Espera (Segundos)</label>
-          <input type="number" class="fp-input" id="fp-delay-sec" value="${node.data.seconds || 5}" min="1">
-        </div>
-      `;
-    } else if (node.type === 'condition') {
-      html += `
-        <div class="fp-form-group">
-          <label>Filtrar por Tag no CRM</label>
-          <input type="text" class="fp-input" id="fp-cond-tag" value="${node.data.tag || ''}" placeholder="Ex: VIP">
+        <div class="prop-group">
+          <label class="prop-label">Espera (segundos)</label>
+          <input type="number" class="prop-input" id="prop-delay" value="${node.data.delay || 3}">
         </div>
       `;
     }
 
-    panelContent.innerHTML = html;
+    html += `</div>`;
+    content.innerHTML = html;
 
-    // Bind live updates
-    if (node.type === 'message') {
-      document.getElementById('fp-msg-text').addEventListener('input', (e) => this.updateNodeData(id, 'text', e.target.value));
-    } else if (node.type === 'audio') {
-      document.getElementById('fp-audio-select').addEventListener('change', (e) => {
-        const title = e.target.options[e.target.selectedIndex].text;
-        node.data.audioName = title; // save name too
-        this.updateNodeData(id, 'audioId', e.target.value, title);
-      });
-    } else if (node.type === 'trigger' || node.type === 'keyword') {
-      document.getElementById('fp-trigger-kw').addEventListener('input', (e) => this.updateNodeData(id, 'keyword', e.target.value));
-    } else if (node.type === 'delay') {
-      document.getElementById('fp-delay-sec').addEventListener('input', (e) => this.updateNodeData(id, 'seconds', e.target.value + ' Segundos'));
-    } else if (node.type === 'condition') {
-      document.getElementById('fp-cond-tag').addEventListener('input', (e) => this.updateNodeData(id, 'tag', e.target.value));
+    // Listeners
+    document.getElementById('prop-name')?.addEventListener('input', (e) => {
+      node.data.name = e.target.value;
+      node.el.querySelector('.node-label').textContent = e.target.value;
+    });
+    document.getElementById('prop-content')?.addEventListener('input', (e) => node.data.content = e.target.value);
+    document.getElementById('prop-delay')?.addEventListener('input', (e) => node.data.delay = parseInt(e.target.value));
+    document.getElementById('prop-library')?.addEventListener('change', (e) => {
+      const opt = e.target.options[e.target.selectedIndex];
+      node.data.url = e.target.value;
+      node.data.mime = opt.dataset.mime || '';
+      node.data.fileName = opt.dataset.name || '';
+    });
+    document.getElementById('prop-upload-btn')?.addEventListener('click', () => this.handleDirectUpload(node.data.type));
+  }
+
+  updatePopoverPosition() {
+    const popover = document.getElementById('flow-node-popover');
+    if (!popover || !this.selectedNodeId) return;
+    const node = this.nodes[this.selectedNodeId];
+    const rect = node.el.getBoundingClientRect();
+    const workspaceRect = this.container.getBoundingClientRect();
+
+    popover.style.left = `${rect.right - workspaceRect.left + 15}px`;
+    popover.style.top = `${rect.top - workspaceRect.top}px`;
+  }
+
+  closePopover() {
+    const popover = document.getElementById('flow-node-popover');
+    if (popover) popover.style.display = 'none';
+    if (this.selectedNodeId && this.nodes[this.selectedNodeId]) {
+      this.nodes[this.selectedNodeId].el.classList.remove('selected');
     }
+    this.selectedNodeId = null;
   }
 
-  closePropertiesPanel() {
-    Object.values(this.nodes).forEach(n => n.el.classList.remove('selected'));
-    const empty = document.querySelector('.flow-properties-panel .fp-empty');
-    const content = document.querySelector('.flow-properties-panel .fp-content');
-    if (empty) empty.style.display = 'flex';
-    if (content) content.style.display = 'none';
-  }
-
-  updateNodeData(id, key, value, displayOverride = null) {
-    const node = this.nodes[id];
-    node.data[key] = value;
-    
-    const preview = node.el.querySelector('.node-content-preview');
-    if (preview) {
-      if (displayOverride) {
-        preview.textContent = displayOverride;
-      } else {
-        preview.textContent = value || 'Configure as propriedades...';
+  deleteNode(nodeId) {
+    if (!nodeId || !this.nodes[nodeId]) return;
+    const node = this.nodes[nodeId];
+    node.el.remove();
+    this.edges = this.edges.filter(edge => {
+      if (edge.source === nodeId || edge.target === nodeId) {
+        edge.bgPath.remove();
+        edge.animPath.remove();
+        return false;
       }
-    }
+      return true;
+    });
+    delete this.nodes[nodeId];
+    this.closePopover();
   }
 
-  /* ═══ 5. EDGE CONNECTIONS (BEZIER MATH) ═══════════════════════ */
-  createEdge(sourceId, targetId, forceId = null) {
-    if (this.edges.some(e => e.source === sourceId && e.target === targetId)) return; // Prevent duplicate
+  async handleDirectUpload(type) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const userId = (await chrome.storage.local.get('userData'))?.userData?.userId;
+        const table = type === 'audio' ? 'audios' : (type === 'image' ? 'midias' : 'documentos');
+        const path = `${userId}/flow/${Date.now()}_${file.name}`;
+        await window.UpsidenStorage.upload(table, path, file, file.type);
+        const res = await window.UpsidenDB.from(table).insert({
+          nome: file.name, tipo_mime: file.type, tamanho: file.size,
+          storage_path: path, criado_por: userId, admin_id: userId, compartilhado: true
+        }).select().execute();
+        if (res?.length) {
+          if (!window.painelData[table]) window.painelData[table] = [];
+          window.painelData[table].unshift(res[0]);
+          this.openPopover(this.selectedNodeId);
+        }
+      } catch (err) { console.error(err); }
+    };
+    input.click();
+  }
+
+  /* ═══ 4. EDGES (Flowing Energy DNA) ══════════════════════════ */
+  createEdge(src, tgt) {
+    if (this.edges.some(e => e.source === src && e.target === tgt)) return;
+    const id = `edge_${Date.now()}`;
     
-    const id = forceId || `edge_${++this.edgeCounter}`;
+    const bgPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    bgPath.setAttribute('class', 'flow-edge-underlay');
     
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute('id', id);
-    path.setAttribute('class', 'flow-edge');
-    path.setAttribute('stroke', 'url(#line-gradient)');
-    this.edgesGroup.appendChild(path);
+    const animPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    animPath.setAttribute('class', 'flow-edge');
     
-    this.edges.push({ id, source: sourceId, target: targetId, pathEl: path });
+    this.edgesGroup.appendChild(bgPath);
+    this.edgesGroup.appendChild(animPath);
+    
+    this.edges.push({ id, source: src, target: tgt, bgPath, animPath });
     this.updateEdges();
   }
 
   updateEdges() {
+    // Reset all ports first
+    document.querySelectorAll('.node-port').forEach(p => p.classList.remove('connected'));
+
     this.edges.forEach(edge => {
-      const sourceNode = this.nodes[edge.source];
-      const targetNode = this.nodes[edge.target];
-      if (!sourceNode || !targetNode) return;
+      const sNode = this.nodes[edge.source];
+      const tNode = this.nodes[edge.target];
+      if (!sNode || !tNode) return;
 
-      const sourceHandle = sourceNode.el.querySelector('.handle-out');
-      const targetHandle = targetNode.el.querySelector('.handle-in');
+      const sPort = sNode.el.querySelector('.node-port.output');
+      const tPort = tNode.el.querySelector('.node-port.input');
       
-      const sRect = sourceHandle.getBoundingClientRect();
-      const tRect = targetHandle.getBoundingClientRect();
-      const cRect = this.canvas.getBoundingClientRect();
+      if (sPort) sPort.classList.add('connected');
+      if (tPort) tPort.classList.add('connected');
+
+      const x1 = sNode.x + sPort.offsetLeft + sPort.offsetWidth / 2;
+      const y1 = sNode.y + sPort.offsetTop + sPort.offsetHeight / 2;
+      const x2 = tNode.x + tPort.offsetLeft + tPort.offsetWidth / 2;
+      const y2 = tNode.y + tPort.offsetTop + tPort.offsetHeight / 2;
       
-      const startX = (sRect.left + sRect.width/2 - cRect.left) / this.zoom;
-      const startY = (sRect.top + sRect.height/2 - cRect.top) / this.zoom;
-      const endX = (tRect.left + tRect.width/2 - cRect.left) / this.zoom;
-      const endY = (tRect.top + tRect.height/2 - cRect.top) / this.zoom;
-      
-      this.drawBezier(edge.pathEl, startX, startY, endX, endY);
+      const d = this.getBezierD(x1, y1, x2, y2);
+      edge.bgPath.setAttribute('d', d);
+      edge.animPath.setAttribute('d', d);
     });
   }
 
-  drawBezier(pathEl, x1, y1, x2, y2) {
-    // Curvature logic: Control points are pulled horizontally based on distance
-    const dist = Math.abs(x2 - x1);
-    const curvature = Math.max(dist * 0.4, 40); 
-    const cp1x = x1 + curvature;
-    const cp1y = y1;
-    const cp2x = x2 - curvature;
-    const cp2y = y2;
-    
-    const pathStr = `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
-    pathEl.setAttribute('d', pathStr);
-  }
-}
-
-/* ═══ 6. CHAT SIMULATOR (SPRINT 9) ════════════════════════════ */
-class FlowSimulator {
-  constructor(engine) {
-    this.engine = engine;
-    this.container = document.getElementById('wa-sim-messages');
-    this.progressBar = document.querySelector('#wa-sim-progress-bar .wa-sim-progress-inner');
-    this.btnPlay = document.getElementById('sim-btn-play');
-    this.btnPause = document.getElementById('sim-btn-pause');
-    this.btnReset = document.getElementById('sim-btn-reset');
-    this.typingIndicator = document.getElementById('wa-sim-typing-indicator');
-    
-    this.isPlaying = false;
-    this.isPaused = false;
-    this.simulationSequence = [];
-    this.currentIndex = 0;
-    this.timer = null;
-    
-    this.bindEvents();
-    this.bindTabs();
+  drawBezier(path, x1, y1, x2, y2) {
+    path.setAttribute('d', this.getBezierD(x1, y1, x2, y2));
   }
 
-  bindTabs() {
-    const tabs = document.querySelectorAll('.flow-right-sidebar .tab-btn');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        tabs.forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.flow-right-sidebar .sidebar-pane').forEach(p => {
-          p.classList.remove('active');
-          p.style.display = 'none';
-        });
-        
-        tab.classList.add('active');
-        const target = tab.getAttribute('data-target');
-        const targetEl = document.getElementById(target);
-        if(targetEl) {
-          targetEl.classList.add('active');
-          targetEl.style.display = 'flex';
-        }
+  getBezierD(x1, y1, x2, y2) {
+    const dx = Math.abs(x2 - x1) * 0.5;
+    return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+  }
+
+  /* ═══ 5. LOAD / SAVE ════════════════════════════════════════ */
+  async loadFlow(flowId) {
+    console.log('[FlowEngine] Loading flow:', flowId);
+    this.currentFlowId = flowId;
+    const loadingOverlay = document.getElementById('flow-loading-overlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
+
+    try {
+      const flows = await window.FlowService.getFlows();
+      const flow = flows.find(f => f.id === flowId);
+      if (!flow) throw new Error('Flow not found');
+
+      this.currentFlow = JSON.parse(JSON.stringify(flow));
+    
+      // Update Header
+      const nameInput = document.getElementById('flow-display-name');
+      if (nameInput) nameInput.value = this.currentFlow.name || 'Sem título';
+      
+      const statusBadge = document.getElementById('flow-status-badge');
+      const statusText = document.getElementById('flow-status-text');
+      const activeToggle = document.getElementById('flow-active-toggle');
+      
+      if (statusBadge) {
+        statusBadge.textContent = this.currentFlow.is_active ? 'Published' : 'Draft';
+        statusBadge.classList.toggle('published', !!this.currentFlow.is_active);
+      }
+      if (statusText) statusText.textContent = this.currentFlow.is_active ? 'Published' : 'Draft';
+      if (activeToggle) activeToggle.checked = !!this.currentFlow.is_active;
+
+      // Clear existing
+      this.nodesContainer.innerHTML = '';
+      this.edgesGroup.innerHTML = '';
+      this.nodes = {};
+      this.edges = [];
+
+      // Restore Nodes
+      const nodesData = flow.nodes_json || flow.nodes || [];
+      nodesData.forEach(n => {
+        this.createNode(n.type, n.x, n.y, n.id, n.data);
       });
-    });
+
+      // Restore Edges
+      const edgesData = flow.edges_json || flow.edges || [];
+      edgesData.forEach(e => {
+        this.createEdge(e.source, e.target);
+      });
+
+    } catch (err) {
+      console.error('[FlowEngine] Error loading flow:', err);
+    } finally {
+      if (loadingOverlay) loadingOverlay.style.display = 'none';
+      const wrapper = document.getElementById('module-flow');
+      if (wrapper) wrapper.style.display = 'flex';
+    }
   }
 
-  bindEvents() {
-    this.btnPlay?.addEventListener('click', () => {
-      if (this.isPaused) {
-        this.resume();
-      } else {
-        this.start();
+  async saveFlow() {
+    const btn = document.getElementById('flow-btn-save');
+    const originalText = btn ? btn.textContent : 'Publish';
+    if (btn) btn.textContent = 'Saving...';
+    
+    // Sync current values from Header
+    const nameInput = document.getElementById('flow-display-name');
+    const activeToggle = document.getElementById('flow-active-toggle');
+    
+    if (nameInput) this.currentFlow.name = nameInput.value;
+    if (activeToggle) this.currentFlow.is_active = activeToggle.checked;
+
+    const flow = {
+      ...this.currentFlow,
+      nodes: Object.values(this.nodes).map(n => ({
+        id: n.id,
+        type: n.data.type,
+        x: n.x,
+        y: n.y,
+        data: n.data
+      })),
+      edges: this.edges.map(e => ({ source: e.source, target: e.target })),
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      if (window.FlowService) {
+        await window.FlowService.saveFlow(flow);
+        if (typeof window.showToast === 'function') window.showToast('Fluxo publicado com sucesso!', 'success');
+        this.currentFlow = flow;
+        this.loadFlow(flow.id);
       }
-    });
-
-    this.btnPause?.addEventListener('click', () => {
-      this.pause();
-    });
-
-    this.btnReset?.addEventListener('click', () => {
-      this.reset();
-    });
-  }
-
-  buildSequence() {
-    // Find a trigger node to start
-    let startNode = Object.values(this.engine.nodes).find(n => n.type === 'trigger' || n.type === 'keyword');
-    if (!startNode) return [];
-
-    let seq = [];
-    let currentNodeId = startNode.id;
-    let visited = new Set();
-
-    while (currentNodeId && !visited.has(currentNodeId)) {
-      visited.add(currentNodeId);
-      const node = this.engine.nodes[currentNodeId];
-      if (node) seq.push(node);
-
-      // Find next edge
-      const edge = this.engine.edges.find(e => e.source === currentNodeId);
-      if (edge) {
-        currentNodeId = edge.target;
-      } else {
-        currentNodeId = null;
-      }
+    } catch (e) {
+      console.error('[FlowEngine] Error saving flow:', e);
+      if (typeof window.showToast === 'function') window.showToast('Erro ao salvar fluxo', 'error');
+    } finally {
+      if (btn) btn.textContent = originalText;
     }
-    return seq;
-  }
-
-  reset() {
-    this.isPlaying = false;
-    this.isPaused = false;
-    clearTimeout(this.timer);
-    this.currentIndex = 0;
-    
-    if (this.container) {
-      this.container.innerHTML = `
-        <div class="wa-msg received">
-          <div class="wa-msg-text">Olá! Tenho interesse.</div>
-          <div class="wa-msg-time">10:00</div>
-        </div>
-      `;
-    }
-    if (this.progressBar) this.progressBar.style.width = '0%';
-    this.updateControls();
-    this.setTyping(false);
-  }
-
-  start() {
-    this.simulationSequence = this.buildSequence();
-    if (this.simulationSequence.length === 0) {
-      if (typeof window.toast === 'function') window.toast('Adicione um Gatilho e conecte os nós!', 'warning');
-      return;
-    }
-    
-    this.reset();
-    this.isPlaying = true;
-    this.isPaused = false;
-    this.updateControls();
-    this.processNext();
-  }
-
-  pause() {
-    this.isPaused = true;
-    clearTimeout(this.timer);
-    this.updateControls();
-    this.setTyping(false);
-  }
-
-  resume() {
-    this.isPaused = false;
-    this.updateControls();
-    this.processNext();
-  }
-
-  updateControls() {
-    if (this.btnPlay) {
-      this.btnPlay.disabled = this.isPlaying && !this.isPaused;
-      this.btnPlay.innerHTML = this.isPaused ? '▶ Continuar' : '▶ Simular';
-    }
-    if (this.btnPause) this.btnPause.disabled = !this.isPlaying || this.isPaused;
-  }
-  
-  setTyping(isTyping) {
-    if(!this.typingIndicator) return;
-    if(isTyping) {
-      this.typingIndicator.textContent = 'digitando...';
-      this.typingIndicator.classList.add('typing');
-    } else {
-      this.typingIndicator.textContent = 'online';
-      this.typingIndicator.classList.remove('typing');
-    }
-  }
-
-  processNext() {
-    if (!this.isPlaying || this.isPaused) return;
-
-    if (this.currentIndex >= this.simulationSequence.length) {
-      this.isPlaying = false;
-      this.updateControls();
-      if (this.progressBar) this.progressBar.style.width = '100%';
-      this.setTyping(false);
-      return;
-    }
-
-    const node = this.simulationSequence[this.currentIndex];
-    
-    // update progress
-    if (this.progressBar) {
-      const pct = (this.currentIndex / this.simulationSequence.length) * 100;
-      this.progressBar.style.width = pct + '%';
-    }
-
-    // highlight node
-    Object.values(this.engine.nodes).forEach(n => n.el.classList.remove('selected'));
-    node.el.classList.add('selected');
-
-    let delay = 1000; // default delay between actions
-
-    if (node.type === 'trigger' || node.type === 'keyword') {
-       // just pass
-       delay = 500;
-    } else if (node.type === 'delay') {
-       let sec = parseInt(node.data.seconds) || 5;
-       // Simulate delay visually faster
-       delay = Math.max(sec * 100, 500); // 1s = 100ms in simulation
-    } else if (node.type === 'message') {
-       this.setTyping(true);
-       delay = 1200; // time to "type"
-       
-       this.timer = setTimeout(() => {
-         this.appendMessage(node.data.text || 'Mensagem Vazia');
-         this.setTyping(false);
-         this.currentIndex++;
-         this.timer = setTimeout(() => this.processNext(), 500);
-       }, delay);
-       return;
-    } else if (node.type === 'audio') {
-       this.setTyping(true);
-       if(this.typingIndicator) this.typingIndicator.textContent = 'gravando áudio...';
-       delay = 1800;
-       
-       this.timer = setTimeout(() => {
-         this.appendMessage('🎵 ' + (node.data.audioName || 'Áudio'));
-         this.setTyping(false);
-         this.currentIndex++;
-         this.timer = setTimeout(() => this.processNext(), 500);
-       }, delay);
-       return;
-    }
-
-    this.timer = setTimeout(() => {
-      this.currentIndex++;
-      this.processNext();
-    }, delay);
-  }
-
-  appendMessage(text) {
-    if (!this.container) return;
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const msg = document.createElement('div');
-    msg.className = 'wa-msg sent';
-    msg.innerHTML = `
-      <div class="wa-msg-text">${text}</div>
-      <div class="wa-msg-time">${time} <span style="margin-left:2px;color:#53bdeb;font-size:12px;">✓✓</span></div>
-    `;
-    this.container.appendChild(msg);
-    this.container.scrollTop = this.container.scrollHeight;
   }
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('module-flow')) {
-    window.flowEngine = new FlowEngine();
-    window.flowSimulator = new FlowSimulator(window.flowEngine);
-  }
-});
-
+// Inicialização manual removida. O motor agora é instanciado via loader (painel-flow.js)

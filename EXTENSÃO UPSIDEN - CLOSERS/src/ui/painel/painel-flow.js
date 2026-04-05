@@ -9,29 +9,31 @@ window.renderFlow = async function(c) {
     const link = document.createElement('link');
     link.id = 'flow-css';
     link.rel = 'stylesheet';
-    link.href = '../modules/flow.css';
+    link.href = chrome.runtime.getURL('src/ui/modules/flow.css');
     document.head.appendChild(link);
   }
 
   // 2. Fetch do HTML
   try {
-    const resp = await fetch('../modules/flow.html');
+    const urlHtml = chrome.runtime.getURL('src/ui/modules/flow.html');
+    const resp = await fetch(urlHtml);
     const html = await resp.text();
     c.innerHTML = html;
     
     const wrapper = document.getElementById('module-flow');
-    if (wrapper) wrapper.style.display = 'flex';
+    if (wrapper) {
+      wrapper.style.display = 'flex';
+    }
 
     // 3. Carregar o motor javascript do flow
     if (!document.getElementById('flow-js-script')) {
       const script = document.createElement('script');
       script.id = 'flow-js-script';
-      script.src = '../modules/flow.js';
+      script.src = chrome.runtime.getURL('src/ui/modules/flow.js');
       script.onload = () => {
-        if (window.flowEngine && typeof window.flowEngine.init === 'function') {
-          // Já iniciou automaticamente pelo onload do DOM, mas caso falhe
-        } else if (typeof FlowEngine !== 'undefined') {
+        if (typeof FlowEngine !== 'undefined') {
           window.flowEngine = new FlowEngine();
+          if (window.activeFlowId) window.flowEngine.loadFlow(window.activeFlowId);
         }
       };
       document.body.appendChild(script);
@@ -39,6 +41,7 @@ window.renderFlow = async function(c) {
       // Re-initiate if coming back to the tab
       if (typeof FlowEngine !== 'undefined') {
          window.flowEngine = new FlowEngine();
+         if (window.activeFlowId) window.flowEngine.loadFlow(window.activeFlowId);
       }
     }
 
