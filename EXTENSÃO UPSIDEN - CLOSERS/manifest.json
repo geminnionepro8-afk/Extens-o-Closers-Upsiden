@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Upsiden — Áudio Instantâneo",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Biblioteca de áudios com envio instantâneo como mensagem de voz no WhatsApp Web. Backend Supabase.",
   "permissions": [
     "storage",
